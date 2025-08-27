@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { IPC_CHANNELS } from '../../../shared/ipc';
-import { onWatchDirectorySet, onWatchStatusChanged } from '../ipcHandlers/listenToState';
+import { IPC_CHANNELS } from "../../../shared/ipc";
+import { onWatchDirectorySet, onWatchStatusChanged } from "../ipcHandlers";
 
 type WatchStore = {
   directory: string;
@@ -23,19 +23,20 @@ const watchStore = create<WatchStore>((set, get) => ({
   get isWatching() {
     return get().watching;
   },
-
+  // Selected dir is handled by `onWatchDirectorySet` below.
   promptDirectory: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.OPEN_WATCH_DIRECTORY);
   },
 
   startWatch: () => {
-    window.electron.ipcRenderer.send(IPC_CHANNELS.START_WATCHING, get().directory);
-    set(() => ({ watching: true }));
+    window.electron.ipcRenderer.send(
+      IPC_CHANNELS.START_WATCHING,
+      get().directory
+    );
   },
 
   stopWatch: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.STOP_WATCHING);
-    set(() => ({ watching: false }));
   },
 }));
 

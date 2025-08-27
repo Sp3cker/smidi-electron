@@ -1,23 +1,23 @@
 @font-face {
   font-family: "NBit";
-  src: url("/fonts/emerald-pro/nbit-Regular.ttf") format("truetype"),
-    url("/fonts/emerald-pro/nbit-Regular.woff2") format("woff2");
+  src: url("./fonts/emerald-pro/nbit-Regular.ttf") format("truetype"),
+    url("./fonts/emerald-pro/nbit-Regular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "NBit";
-  src: url("/fonts/emerald-pro/nbit-Bold.ttf") format("truetype"),
-    url("/fonts/emerald-pro/nbit-Bold.woff2") format("woff2");
+  src: url("./fonts/emerald-pro/nbit-Bold.ttf") format("truetype"),
+    url("./fonts/emerald-pro/nbit-Bold.woff2") format("woff2");
   font-weight: Bold;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Calamity";
-  src: url("/fonts/calamity/Calamity-Bold.otf") format("opentype"),
-    url("/fonts/calamity/Calamity-Bold.woff2") format("woff2");
+  src: url("./fonts/calamity/Calamity-Bold.otf") format("opentype"),
+    url("./fonts/calamity/Calamity-Bold.woff2") format("woff2");
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -26,8 +26,8 @@
 @font-face {
   font-family: "Calamity";
   src: local("Calamity"),
-    url("/fonts/calamity/Calamity-Regular.otf") format("opentype"),
-    url("/fonts/calamity/Calamity-Regular.woff2") format("woff2");
+    url("./fonts/calamity/Calamity-Regular.otf") format("opentype"),
+    url("./fonts/calamity/Calamity-Regular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

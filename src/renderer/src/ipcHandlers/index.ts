@@ -1,6 +1,6 @@
 import { IPC_CHANNELS } from "../../../shared/ipc";
 
-export const createIPCListener = <T>(
+const createIPCListener = <T>(
   channel: string,
   callback: (event: Electron.IpcRendererEvent, data: T) => void
 ) => {
