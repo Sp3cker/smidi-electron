@@ -1,31 +1,38 @@
-import tseslint from '@electron-toolkit/eslint-config-ts'
-import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier'
-import eslintPluginReact from 'eslint-plugin-react'
-import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
-import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from "@electron-toolkit/eslint-config-ts";
+import eslintConfigPrettier from "@electron-toolkit/eslint-config-prettier";
+import eslintPluginReact from "eslint-plugin-react";
+import eslintPluginReactHooks from "eslint-plugin-react-hooks";
+import eslintPluginReactRefresh from "eslint-plugin-react-refresh";
 
 export default tseslint.config(
-  { ignores: ['**/node_modules', '**/dist', '**/out'] },
+  { ignores: ["**/node_modules", "**/dist", "**/out"] },
   tseslint.configs.recommended,
   eslintPluginReact.configs.flat.recommended,
-  eslintPluginReact.configs.flat['jsx-runtime'],
+  eslintPluginReact.configs.flat["jsx-runtime"],
   {
     settings: {
       react: {
-        version: 'detect'
-      }
-    }
+        version: "detect",
+      },
+    },
   },
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     plugins: {
-      'react-hooks': eslintPluginReactHooks,
-      'react-refresh': eslintPluginReactRefresh
+      "react-hooks": eslintPluginReactHooks,
+      "react-refresh": eslintPluginReactRefresh,
     },
     rules: {
       ...eslintPluginReactHooks.configs.recommended.rules,
-      ...eslintPluginReactRefresh.configs.vite.rules
-    }
+      ...eslintPluginReactRefresh.configs.vite.rules,
+      "@typescript-eslint/explicit-function-return-type": "off",
+      // Disable formatting rules that conflict with Prettier
+      "@typescript-eslint/comma-dangle": "off",
+      "@typescript-eslint/comma-spacing": "off",
+      "@typescript-eslint/indent": "off",
+      "@typescript-eslint/quotes": "off",
+      "@typescript-eslint/semi": "off",
+    },
   },
   eslintConfigPrettier
-)
+);

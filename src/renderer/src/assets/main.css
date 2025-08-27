@@ -1,11 +1,36 @@
-@import './base.css';
+@import "./base.css";
+@import "tailwindcss";
+@import "./font.css";
+body {
+  font-family: "NBit", sans-serif;
+}
+@layer components {
+  .input {
+    @apply font-pkmnem text-stone-100 bg-zinc-900 border-2 border-zinc-600 focus:outline-none focus:border-amber-400 transition-colors duration-200 placeholder:text-zinc-500 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)];
+    text-shadow:
+      -0.3px 0px rgba(195, 191, 190, 0.25),
+      -0.3px -0.3px rgba(195, 191, 190, 0.25),
+      0px 0.5px #413141,
+      0.5px 0px #413141,
+      0.75px 0.75px rgba(106, 90, 90, 0.5);
+  }
+  .button {
+    @apply font-pkmnem px-2 font-bold text-stone-100 border-2 border-zinc-600 focus:outline-none focus:border-amber-400 transition-all duration-200 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)] active:shadow-[1px_1px_0px_rgba(0,0,0,0.8)] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[2px_2px_0px_rgba(0,0,0,0.8)];
+    text-shadow:
+      -0.3px 0px rgba(195, 191, 190, 0.25),
+      -0.3px -0.3px rgba(195, 191, 190, 0.25),
+      0px 0.5px #413141,
+      0.5px 0px #413141,
+      0.75px 0.75px rgba(106, 90, 90, 0.5);
+  }
+}
 
 body {
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-image: url('./wavy-lines.svg');
+  background-image: url("./wavy-lines.svg");
   background-size: cover;
   user-select: none;
 }
@@ -129,7 +154,7 @@ code {
   bottom: 30px;
   margin: 0 auto;
   padding: 15px 0;
-  font-family: 'Menlo', 'Lucida Console', monospace;
+  font-family: "Menlo", "Lucida Console", monospace;
   display: inline-flex;
   overflow: hidden;
   align-items: center;
