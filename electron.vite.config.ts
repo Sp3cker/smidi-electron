@@ -8,7 +8,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     build: {
       minify: "esbuild",
-      target: "node22",
+      target: "node24",
     },
   },
   preload: {

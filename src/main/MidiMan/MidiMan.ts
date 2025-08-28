@@ -8,17 +8,19 @@ class MidiMan {
   constructor() {
     return;
   }
-  setWatcher(
+  async setWatcher(
     directory: string,
     onFileListReady: (fileNames: string[]) => void
   ) {
+    console.log(JSON.stringify(process.memoryUsage().heapTotal));
+
     this.watchDirectory = directory;
     if (this.fileWatcher) {
-      this.fileWatcher.stop();
+      await this.fileWatcher.stop();
     }
     this.fileWatcher = new FileWatcher(directory);
     this.fileWatcher.emitter.on("add", (obj: { path: string }) => {
-      console.log("add", obj.path);
+      // console.log("add", obj.path);
     });
     this.fileWatcher.emitter.on(
       "change",

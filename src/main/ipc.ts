@@ -28,8 +28,8 @@ export const setMidiMan = (midiManInstance: MidiMan) => {
 
   // Handle watch start/stop commands
   ipcMain.on(IPC_CHANNELS.START_WATCHING, (_, directory: string) => {
-    console.log("START_WATCHING", directory);
     if (midiManInstance && directory) {
+      console.log("START_WATCHING", directory);
       // prolyl handle if this is false
       const success = midiManInstance.setWatcher(
         directory,
@@ -37,6 +37,8 @@ export const setMidiMan = (midiManInstance: MidiMan) => {
       );
 
       mainWindow.webContents.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, success);
+    } else {
+      console.error("MidiMan instance not set or directory is empty");
     }
   });
 

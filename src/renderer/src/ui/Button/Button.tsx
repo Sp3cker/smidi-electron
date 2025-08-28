@@ -28,6 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`
             button
+            focus:ring-0
           ${variantClasses[variant]}
 
           ${className}

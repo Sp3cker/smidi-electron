@@ -29,9 +29,6 @@ class FileWatcher {
       this.emitter.emit("ready", this.getAllWatchedFiles());
     });
   }
-  getFileNames() {
-    return this.watcher.getWatched();
-  }
 
   getAllWatchedFiles(): string[] {
     // chokidar.getWatched() returns an object where:
@@ -43,8 +40,8 @@ class FileWatcher {
         fileNames.map((fileName) => `${dirPath}/${fileName}`)
     );
   }
-  stop() {
-    this.watcher.close();
+  async stop() {
+    await this.watcher.close();
     this.emitter.removeAllListeners();
   }
 }

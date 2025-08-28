@@ -4,8 +4,9 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import MidiMan from "./MidiMan/MidiMan";
 import { setMainWindow, setMidiMan } from "./ipc";
-
+import { wrapper } from "./lib/db";
 function createWindow(): void {
+  console.log(wrapper.db.name)
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
