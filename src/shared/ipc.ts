@@ -9,4 +9,5 @@ export const IPC_CHANNELS = {
   SET_WATCH_DIRECTORY: "set-watch-directory",
   WATCH_STATUS_CHANGED: "watch-status-changed",
   FILE_CHANGED: "file-changed",
+  MIDI_FILES_LIST: "midi-files-list",
 } as const;

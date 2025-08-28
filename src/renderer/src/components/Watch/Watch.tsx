@@ -1,30 +1,44 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "../../ui/Input";
 import { useWatchStore } from "../../store";
 import { Button } from "../../ui/Button";
 
 const Watch: React.FC = () => {
-  const { directory, setDirectory, promptDirectory, isWatching, startWatch } = useWatchStore();
+  const [inputDirectory, setInputDirectory] = useState("");
+  const { directory, promptDirectory, setDirectory, isWatching, startWatch } =
+    useWatchStore();
 
   const handleClick = () => {
+    if (inputDirectory !== "") {
+      setDirectory(inputDirectory);
+    }
     startWatch();
   };
+  useEffect(() => {
+    setInputDirectory(directory);
+  }, [directory]);
   return (
     <section>
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-2 items-start justify-start">
         <Input
           label="Directory to watch"
           value={directory ?? ""}
-          onChange={(e) => setDirectory(e.target.value)}
+          onChange={(e) => setInputDirectory(e.target.value)}
         />
-        <Button onClick={promptDirectory}>Browse</Button>
+        <Button
+          className="hover-active-button rounded-sm"
+          onMouseDown={promptDirectory}
+        >
+          Browse
+        </Button>
+        <Button
+          className="hover-active-button rounded-sm"
+          variant={isWatching ? "secondary" : "primary"}
+          onClick={handleClick}
+        >
+          {isWatching ? "Stop" : "Watch"}
+        </Button>
       </div>
-      <Button
-        variant={isWatching ? "secondary" : "primary"}
-        onClick={handleClick}
-      >
-        {isWatching ? "Stop" : "Watch"}
-      </Button>
     </section>
   );
 };

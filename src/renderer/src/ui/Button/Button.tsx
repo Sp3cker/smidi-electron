@@ -9,7 +9,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant = "primary",
-      size = "md",
+
       className = "",
       disabled,
       children,
@@ -22,7 +22,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: "bg-zinc-700 hover:bg-zinc-600",
       danger: "bg-red-900 hover:bg-red-800 border-red-600",
     };
-
 
     return (
       <button

@@ -11,3 +11,6 @@
     - When FileWatcher detects a change, it tells Midiman:
         - Type of change: New File | Updated File | Deleted File
         - Change neccesitation: Update Midi data | Add new Midi | Remove Midi from store
+## Editor
+- Will need to be able to drag clips onto the same channel
+    - If two clips use pgm change they can be on the came channel.

@@ -1,22 +1,29 @@
 @font-face {
   font-family: "NBit";
-  src: url("./fonts/emerald-pro/nbit-Regular.ttf") format("truetype"),
-    url("./fonts/emerald-pro/nbit-Regular.woff2") format("woff2");
+  src: url("./fonts/neuebit/nbit-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "NBit";
-  src: url("./fonts/emerald-pro/nbit-Bold.ttf") format("truetype"),
-    url("./fonts/emerald-pro/nbit-Bold.woff2") format("woff2");
+  src: url("./fonts/neuebit/nbit-Bold.ttf") format("truetype");
   font-weight: Bold;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
+  font-family: "Mondwest";
+  src: url("./fonts/mondwest/mondwest-regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Calamity";
-  src: url("./fonts/calamity/Calamity-Bold.otf") format("opentype"),
+  src:
+    url("./fonts/calamity/Calamity-Bold.otf") format("opentype"),
     url("./fonts/calamity/Calamity-Bold.woff2") format("woff2");
   font-weight: bold;
   font-style: normal;
@@ -25,7 +32,8 @@
 
 @font-face {
   font-family: "Calamity";
-  src: local("Calamity"),
+  src:
+    local("Calamity"),
     url("./fonts/calamity/Calamity-Regular.otf") format("opentype"),
     url("./fonts/calamity/Calamity-Regular.woff2") format("woff2");
   font-weight: normal;
@@ -34,12 +42,11 @@
 }
 
 @theme {
-  --font-pixel: "Calamity", sans-serif;
   --font-pkmnem: "NBit", sans-serif;
-  --font-pkmnem-short: "Emerald-Short", sans-serif;
+  --font-mondwest: "Mondwest", sans-serif;
   --font-calamity: "Calamity", sans-serif;
 }
-.font-pkmnem {
+.font-neuebit {
   font-family: "NBit", sans-serif;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: subpixel-antialiased;
@@ -50,25 +57,34 @@
 
 /* Apply text shadow only on Windows */
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-  .font-pkmnem {
-    text-shadow: 0.25px 0 0 currentColor, 0 0.25px 0 currentColor;
+  .font-neuebit {
+    text-shadow:
+      0.25px 0 0 currentColor,
+      0 0.25px 0 currentColor;
   }
 }
 @layer components {
   .pkmn-types {
     margin-left: 1px;
     color: "#f6f5f5"; /* Pulled straight from the in-game type badges */
-    text-shadow: -0.3px 0px rgba(195, 191, 190, 0.25),
+    text-shadow:
+      -0.3px 0px rgba(195, 191, 190, 0.25),
       -0.3px -0.3px rgba(195, 191, 190, 0.25),
-      0px -0.3px rgba(195, 191, 190, 0.25), 0.25px 0px #9d9a99,
-      0px 0.25px #9d9a99, 0.85px 0px rgba(81, 76, 71, 0.15),
-      0.85px 0.85px rgba(81, 76, 71, 0.15), 0px 0.85px rgba(81, 76, 71, 0.15);
+      0px -0.3px rgba(195, 191, 190, 0.25),
+      0.25px 0px #9d9a99,
+      0px 0.25px #9d9a99,
+      0.85px 0px rgba(81, 76, 71, 0.15),
+      0.85px 0.85px rgba(81, 76, 71, 0.15),
+      0px 0.85px rgba(81, 76, 71, 0.15);
   }
 
   .pkmnem-face-shadow {
-    text-shadow: -0.3px 0px rgba(195, 191, 190, 0.25),
-      -0.3px -0.3px rgba(195, 191, 190, 0.25), 0px 0.5px #413141,
-      /* 0.5px 0.5px #413141, */ 0.5px 0px #413141, 0.75px 0.75px #6a5a5a80,
+    text-shadow:
+      -0.3px 0px rgba(195, 191, 190, 0.25),
+      -0.3px -0.3px rgba(195, 191, 190, 0.25),
+      0px 0.5px #413141,
+      /* 0.5px 0.5px #413141, */ 0.5px 0px #413141,
+      0.75px 0.75px #6a5a5a80,
       0.5px 0px 2px rgba(129, 119, 111, 0.6);
   }
 }

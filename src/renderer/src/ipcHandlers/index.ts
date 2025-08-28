@@ -28,7 +28,16 @@ export const onWatchStatusChanged = (
     }
   );
 };
-
+export const onMidiFilesList = (
+  callback: (midiFileNames: string[]) => void
+) => {
+  return createIPCListener(
+    IPC_CHANNELS.MIDI_FILES_LIST,
+    (_, midiFileNames: string[]) => {
+      callback(midiFileNames);
+    }
+  );
+};
 export const onFileChanged = (callback: (filePath: string) => void) => {
   return createIPCListener(IPC_CHANNELS.FILE_CHANGED, (_, filePath: string) => {
     callback(filePath);

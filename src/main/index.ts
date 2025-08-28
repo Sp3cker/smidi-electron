@@ -56,6 +56,7 @@ app.whenReady().then(() => {
 
   const midiMan = new MidiMan();
   setMidiMan(midiMan);
+
   createWindow();
 
   app.on("activate", function () {
