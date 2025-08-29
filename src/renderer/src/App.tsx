@@ -1,6 +1,7 @@
 import { Watch, ContextMenuExample, List } from "./components";
 import { useLayoutEffect } from "react";
 import useConfigStore from "./store/useConfigStore";
+import { GlobalConfig } from "./components/GlobalConfig";
 
 function App() {
   const { isLoading, config, getConfig } = useConfigStore();
@@ -22,6 +23,7 @@ function App() {
             <Watch />
             <List />
             <ContextMenuExample />
+            <GlobalConfig />
           </>
         )}
       </div>

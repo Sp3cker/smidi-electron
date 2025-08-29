@@ -11,6 +11,20 @@ body {
   --color-neir: oklch(0.7131 0.0342 97.45);
   --color-neir-dark: oklch(0.3118 0.0328 93.54);
   --color-neir-darkest: oklch(0.1918 0.0328 93.54);
+  --yatsugi-green: oklch(0.6196 0.1412 199.11);
+  --yatsugi-white: oklch(0.9691 0.0169 245.824);
+  --yatsugi-grey-1: oklch(0.7131 0.0328 245.824);
+  --yatsugi-grey-2: oklch(0.5993 0.0169 245.824);
+  --yatsugi-grey-3: oklch(0.3782 0.0169 245.824);
+  --yatsugi-orange: oklch(0.7641 0.163 39.01);
+  --yatsugi-blue: oklch(44.602% 0.0328 233);
+  --yatsugi-red: oklch(0.65309 0.020971 26.013);
+  /* --yatsugi-red: oklch(65.309% 0.20971 26.013); */
+  --yatsugi-blue-50: oklch(98.36% 0.01866 204.07);
+ --yatsugi-blue-600: oklch(60.601% 0.13179 230.44);
+  --yatsugi-blue-700: oklch(51.652% 0.11176 231.85);
+  --yatsugi-blue-900: oklch(39.601% 0.07386 236.11);
+
 }
 @layer components {
   .input {

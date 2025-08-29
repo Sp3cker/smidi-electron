@@ -1,0 +1,1 @@
+export {default as GlobalConfig} from './GlobalConfig';

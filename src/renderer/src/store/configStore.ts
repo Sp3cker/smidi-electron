@@ -3,14 +3,17 @@ import { create } from "zustand";
 
 type ConfigStore = {
   config: Record<string, string> | null;
+  configDrawerOpen: boolean;
+  isLoading: boolean; // Set by listener. No reason to have setter
   getConfig: () => void;
-  isLoading: boolean;
   updateConfig: (key: string, value: string) => void;
+  setConfigDrawerOpen: (open: boolean) => void;
 };
 
 const configStore = create<ConfigStore>((set, get) => ({
   config: null,
   isLoading: true,
+  configDrawerOpen: false,
   getConfig: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.GET_CONFIG);
   },
@@ -21,6 +24,7 @@ const configStore = create<ConfigStore>((set, get) => ({
     // Send to main process
     window.electron.ipcRenderer.send(IPC_CHANNELS.UPDATE_CONFIG, newConfig);
   },
+  setConfigDrawerOpen: (open: boolean) => set({ configDrawerOpen: open }),
 }));
 
 // Set up IPC listener to receive config updates from main process
