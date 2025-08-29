@@ -1,5 +1,5 @@
 import { IPC_CHANNELS } from "../../../shared/ipc";
-
+/** Mostly for *listening* for events from the server. */
 const createIPCListener = <T>(
   channel: string,
   callback: (event: Electron.IpcRendererEvent, data: T) => void
@@ -48,7 +48,7 @@ export const onConfigLoaded = (
   callback: (config: Record<string, string>) => void
 ) => {
   return createIPCListener(
-    IPC_CHANNELS.CONFIG_LOADED,
+    IPC_CHANNELS.NEW_CONFIG,
     (_, config: Record<string, string>) => {
       callback(config);
     }

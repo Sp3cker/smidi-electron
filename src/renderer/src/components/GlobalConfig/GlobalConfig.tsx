@@ -4,15 +4,8 @@ import { motion, useSpring } from "motion/react";
 import CloseButton from "@renderer/ui/CloseButton";
 import { useConfigStoreWithSelectors } from "@renderer/store/useConfigStore";
 import OpenButton from "./OpenButton";
-import { Input } from "@renderer/ui/Input";
-
-// Stable className for Clock to prevent re-renders
-
-// Extract unique map IDs from the mapsvgs data
-
-// Type for a clickable map area/location
-
-// Component to render individual place item
+import Directories from "./Directories";
+import { useToastStore } from "@renderer/ui/Toast/ToastStore";
 
 let currentBackdropAnimation: Animation | null = null;
 
@@ -84,12 +77,21 @@ const animateBackdrop = (
 
 const GlobalConfig = memo(function GlobalConfig() {
   const configDrawerOpen = useConfigStoreWithSelectors.use.configDrawerOpen();
+  const config = useConfigStoreWithSelectors.use.config();
+  const updateConfig = useConfigStoreWithSelectors.use.updateConfig();
   const setConfigDrawerOpen =
     useConfigStoreWithSelectors.use.setConfigDrawerOpen();
+  const toast = useToastStore();
   // Spring animations for sliding in from the left
   const translateX = useSpring("-100%", { stiffness: 300, damping: 30 });
-
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  const handleUpdateConfig = useCallback(
+    (key: string, value: any) => {
+      updateConfig(key, value);
+    },
+    [config, updateConfig]
+  );
 
   useEffect(() => {
     const backdrop = backdropRef.current;
@@ -128,8 +130,12 @@ const GlobalConfig = memo(function GlobalConfig() {
         style={{ translateX }}
         className=" fixed bottom-0 left-0 top-0 w-80 max-w-[80vw] bg-[var(--yatsugi-grey-1)] overflow-hidden  shadow-2xl"
       >
-        <div className="sticky top-0 z-10 flex flex-col items-center justify-between border-b border-gray-200 bg-[var(--yatsugi-white)] p-2">
-          <div className="flex w-full justify-end">
+        <div className=" p-1 sticky top-0 z-10 flex flex-row items-center justify-between border-b border-gray-200 bg-[var(--yatsugi-white)]">
+          <div className="flex flex-col flex-2 items-start justify-between pb-1">
+            <h3 className="text-lg">Decomp Midi Arranger</h3>
+            <p className="text-sm text-gray-500">Global Config</p>
+          </div>
+          <div className="flex w-full flex-1 justify-end">
             <CloseButton
               onClick={handleClose}
               variant="minimal"
@@ -137,25 +143,14 @@ const GlobalConfig = memo(function GlobalConfig() {
               className="text-neutral-700 hover:bg-neutral-300"
             />
           </div>
-          <div className="flex w-full flex-row items-start justify-between pl-1">
-            <div>
-              <div className="flex flex-col items-start justify-between pb-1">
-                <h3 className="font-bold">Decomp Midi Arranger</h3>
-              </div>
-            </div>
-          </div>
         </div>
-
-        <div className="h-full overflow-y-auto pb-20">
-          <div className="p-2">
-            <Input
-              label="Username"
-              type="text"
-              placeholder="Enter your username"
-              className="mb-4 w-full"
-            />
-          </div>
-        </div>
+        <button onClick={() => toast.push({ message: "hello" })}>Click</button>
+        {config && (
+          <Directories
+            expansionDir={config.expansionDir}
+            setExpansionDir={handleUpdateConfig}
+          />
+        )}
       </motion.nav>
     </>
   );

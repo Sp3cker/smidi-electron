@@ -28,7 +28,7 @@ const configStore = create<ConfigStore>((set, get) => ({
 }));
 
 // Set up IPC listener to receive config updates from main process
-window.electron.ipcRenderer.on(IPC_CHANNELS.CONFIG_LOAD, (event, config) => {
+window.electron.ipcRenderer.on(IPC_CHANNELS.NEW_CONFIG, (_, config) => {
   console.log("config loaded", config);
   configStore.setState({ config, isLoading: false });
 });

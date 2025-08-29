@@ -10,12 +10,13 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import MidiMan from "./MidiMan/MidiMan";
 import { setMainWindow, setMidiManIpc, setConfigIpc } from "./ipc";
-// import { wrapper } from "./lib/db";
 import makeMenu from "./lib/Menu";
 import Config from "./Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
-
+/** Renderer config is sent upon request 
+ * check `ipc/configIpc.ts`
+ */
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({

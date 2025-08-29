@@ -92,6 +92,7 @@ const ContextMenuExample: React.FC = () => {
       icon: "📄",
       shortcut: "Ctrl+V",
     },
+    //@ts-ignore
     { type: "separator" as const },
     {
       label: "Select All",
@@ -99,6 +100,7 @@ const ContextMenuExample: React.FC = () => {
       icon: "📝",
       shortcut: "Ctrl+A",
     },
+        //@ts-ignore
     { type: "separator" },
     {
       label: "Clear",

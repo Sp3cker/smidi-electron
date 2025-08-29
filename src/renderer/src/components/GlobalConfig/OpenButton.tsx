@@ -1,42 +1,10 @@
-import { memo, useEffect, useRef } from "react";
+import { memo,  useRef } from "react";
 import { useConfigStoreWithSelectors } from "@renderer/store/useConfigStore";
 
 interface OpenButtonProps {
   className?: string;
 }
-let currentAnimation: Animation | null = null;
 
-const moveAnimation = (ref: HTMLButtonElement, dir: string) => {
-  if (currentAnimation) {
-    currentAnimation.cancel();
-    currentAnimation = null;
-  }
-
-  const animation = [
-    { transform: "translateX(0%)" },
-    { transform: "translateX(-89%)" },
-  ];
-
-  if (dir === "back") {
-    animation.reverse();
-  }
-
-  currentAnimation = ref.animate(animation, {
-    duration: 200,
-    easing: "ease-out",
-    fill: "forwards",
-  });
-
-  currentAnimation.addEventListener("finish", () => {
-    currentAnimation = null;
-  });
-
-  currentAnimation.addEventListener("cancel", () => {
-    currentAnimation = null;
-  });
-
-  return currentAnimation;
-};
 const OpenButton = memo(function OpenButton({ className }: OpenButtonProps) {
   const setConfigDrawerOpen = useConfigStoreWithSelectors(
     (state) => state.setConfigDrawerOpen
