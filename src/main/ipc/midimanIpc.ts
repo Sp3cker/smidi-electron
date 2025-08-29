@@ -1,6 +1,6 @@
 import { ipcMain, dialog, BrowserWindow } from "electron";
-import { IPC_CHANNELS } from "../shared/ipc";
-import MidiMan from "./MidiMan/MidiMan";
+import { IPC_CHANNELS } from "../../shared/ipc";
+import type MidiMan from "../MidiMan/MidiMan";
 
 // Get the main window reference and MidiMan instance
 let mainWindow: BrowserWindow;
@@ -11,7 +11,7 @@ export const setMainWindow = (window: BrowserWindow) => {
 const emitWatchStartResult = (fileNames: string[]) => {
   mainWindow.webContents.send(IPC_CHANNELS.MIDI_FILES_LIST, fileNames);
 };
-export const setMidiMan = (midiManInstance: MidiMan) => {
+export const setMidiManIpc = (midiManInstance: MidiMan) => {
   // Handle directory selection dialog
   ipcMain.on(IPC_CHANNELS.OPEN_WATCH_DIRECTORY, async () => {
     const result = await dialog.showOpenDialog(mainWindow, {

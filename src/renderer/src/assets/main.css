@@ -2,14 +2,15 @@
 @import "./font.css";
 body {
   font-family: "Mondwest", sans-serif;
-  color: var(--color-neir-darkest);
+  color: var(--color-neir-dark);
 }
 :root {
+  --color-neir-lightest: oklch(0.952 0.0328 93.54);
   --color-neir-lighter: oklch(0.912 0.0328 93.54);
   --color-neir-light: oklch(0.8456 0.0301 90);
   --color-neir: oklch(0.7131 0.0342 97.45);
-  --color-neir-dark: oklch(41.171% 0.02723 112.74);
-  --color-neir-darkest: oklch(0.4118 0.0148 96.69);
+  --color-neir-dark: oklch(0.3118 0.0328 93.54);
+  --color-neir-darkest: oklch(0.1918 0.0328 93.54);
 }
 @layer components {
   .input {

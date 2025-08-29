@@ -1,12 +1,22 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import {
+  app,
+  shell,
+  BrowserWindow,
+  Menu,
+  type MenuItemConstructorOptions,
+} from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import MidiMan from "./MidiMan/MidiMan";
-import { setMainWindow, setMidiMan } from "./ipc";
-import { wrapper } from "./lib/db";
+import { setMainWindow, setMidiManIpc, setConfigIpc } from "./ipc";
+// import { wrapper } from "./lib/db";
+import makeMenu from "./lib/Menu";
+import Config from "./Config/Config";
+import ConfigRepository from "./repos/Config/ConfigRepository";
+import { db } from "./lib/db";
+
 function createWindow(): void {
-  console.log(wrapper.db.name)
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -19,6 +29,13 @@ function createWindow(): void {
       sandbox: false,
     },
   });
+
+  // Create and set the application menu
+  const menuTemplate = makeMenu(app);
+  const menu = Menu.buildFromTemplate(
+    menuTemplate as unknown as MenuItemConstructorOptions[]
+  );
+  Menu.setApplicationMenu(menu);
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
@@ -55,9 +72,10 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
+  const config = new Config(new ConfigRepository(db));
   const midiMan = new MidiMan();
-  setMidiMan(midiMan);
-
+  setMidiManIpc(midiMan);
+  setConfigIpc(config);
   createWindow();
 
   app.on("activate", function () {

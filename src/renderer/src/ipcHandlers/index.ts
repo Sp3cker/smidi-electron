@@ -43,3 +43,14 @@ export const onFileChanged = (callback: (filePath: string) => void) => {
     callback(filePath);
   });
 };
+
+export const onConfigLoaded = (
+  callback: (config: Record<string, string>) => void
+) => {
+  return createIPCListener(
+    IPC_CHANNELS.CONFIG_LOADED,
+    (_, config: Record<string, string>) => {
+      callback(config);
+    }
+  );
+};
