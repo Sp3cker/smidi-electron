@@ -79,13 +79,20 @@ const GlobalConfig = memo(function GlobalConfig() {
   const configDrawerOpen = useConfigStoreWithSelectors.use.configDrawerOpen();
   const config = useConfigStoreWithSelectors.use.config();
   const updateConfig = useConfigStoreWithSelectors.use.updateConfig();
+  const updateExpansionDir =
+    useConfigStoreWithSelectors.use.updateExpansionDir();
   const setConfigDrawerOpen =
     useConfigStoreWithSelectors.use.setConfigDrawerOpen();
   const toast = useToastStore();
   // Spring animations for sliding in from the left
   const translateX = useSpring("-100%", { stiffness: 300, damping: 30 });
   const backdropRef = useRef<HTMLDivElement>(null);
-
+  const handleExpansionDirUpdate = useCallback(
+    (value: string) => {
+      updateExpansionDir(value);
+    },
+    [updateExpansionDir]
+  );
   const handleUpdateConfig = useCallback(
     (key: string, value: any) => {
       updateConfig(key, value);
@@ -147,8 +154,8 @@ const GlobalConfig = memo(function GlobalConfig() {
         <button onClick={() => toast.push({ message: "hello" })}>Click</button>
         {config && (
           <Directories
-            expansionDir={config.expansionDir}
-            setExpansionDir={handleUpdateConfig}
+            configExpansionDir={config.expansionDir}
+            handleSubmit={handleExpansionDirUpdate}
           />
         )}
       </motion.nav>

@@ -1,11 +1,21 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
-const Directories = ({ expansionDir, setExpansionDir }) => {
-  const handleSubmit = useCallback((e) => {
-    e.preventDefault();
-    setExpansionDir(e.target.value);
-    // Handle form submission logic here
-  }, []);
+type DirectoriesProps = {
+  configExpansionDir: string;
+  handleSubmit: (value: string) => void;
+};
+
+const Directories = ({
+  configExpansionDir,
+  handleSubmit,
+}: DirectoriesProps) => {
+  const [expansionDir, setExpansionDir] = useState(configExpansionDir);
+  const handleBlur = useCallback(() => {
+    if (expansionDir === configExpansionDir) {
+      return;
+    }
+    handleSubmit(expansionDir);
+  }, [expansionDir, configExpansionDir, handleSubmit]);
   return (
     <div className="h-full overflow-y-auto pb-20">
       <div className="p-2">
@@ -14,7 +24,8 @@ const Directories = ({ expansionDir, setExpansionDir }) => {
           className="input w-full"
           type="text"
           value={expansionDir}
-          onBlur={handleSubmit}
+          onChange={(e) => setExpansionDir(e.currentTarget.value)}
+          onBlur={handleBlur}
         />
         <p></p>
       </div>
