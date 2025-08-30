@@ -5,8 +5,7 @@ import CloseButton from "@renderer/ui/CloseButton";
 import { useConfigStoreWithSelectors } from "@renderer/store/useConfigStore";
 import OpenButton from "./OpenButton";
 import Directories from "./Directories";
-import { useToastStore } from "@renderer/ui/Toast/ToastStore";
-
+import ConfigReset from "./ConfigReset";
 let currentBackdropAnimation: Animation | null = null;
 
 const animateBackdrop = (
@@ -83,7 +82,8 @@ const GlobalConfig = memo(function GlobalConfig() {
     useConfigStoreWithSelectors.use.updateExpansionDir();
   const setConfigDrawerOpen =
     useConfigStoreWithSelectors.use.setConfigDrawerOpen();
-  const toast = useToastStore();
+  const resetConfig = useConfigStoreWithSelectors.use.resetConfig();
+
   // Spring animations for sliding in from the left
   const translateX = useSpring("-100%", { stiffness: 300, damping: 30 });
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -151,13 +151,16 @@ const GlobalConfig = memo(function GlobalConfig() {
             />
           </div>
         </div>
-        <button onClick={() => toast.push({ message: "hello" })}>Click</button>
+
         {config && (
           <Directories
             configExpansionDir={config.expansionDir}
             handleSubmit={handleExpansionDirUpdate}
           />
         )}
+        <div className="fixed bottom-0 p-2 flex-1 justify-end">
+          <ConfigReset onReset={resetConfig} />
+        </div>
       </motion.nav>
     </>
   );

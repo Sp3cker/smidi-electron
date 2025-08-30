@@ -1,9 +1,20 @@
-import { ipcMain } from "electron";
+import { dialog, ipcMain, IpcMainInvokeEvent } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
 import type Config from "../Config/Config";
-import type { ConfigResponse, ConfigRow } from "../../shared/dto";
 import type { DomainError } from "../../shared/dto";
 
+/**Caller needs to catch error */
+const sendConfigToRenderer = (event: IpcMainInvokeEvent, config: Config) => {
+  const currConfig = config.getConfig();
+  if (!currConfig) {
+    throw new Error("No configuration found in the system");
+  }
+  console.debug("Main: sending config to renderer", currConfig);
+  event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, {
+    success: true,
+    data: currConfig,
+  });
+};
 /**Sets up listeners for app asking for config, sending config to app */
 export const setConfigIpc = (config: Config) => {
   ipcMain.on(
@@ -12,7 +23,7 @@ export const setConfigIpc = (config: Config) => {
       try {
         console.debug("Main: 1. updated expansion dir from renderer", value);
         // Domain validation
-        if (!isValidExpansionDirectory(value)) {
+        if (config.isValidExpansionDirectory(value) === false) {
           const domainError: DomainError = {
             message: "Invalid configuration key provided",
             code: "INVALID_CONFIG_KEY",
@@ -25,20 +36,12 @@ export const setConfigIpc = (config: Config) => {
           });
           return;
         }
-
+        console.debug("Main: 2. dir from render is valid path, executing");
         // Execute domain command
         config.updateExpansionDir(value);
 
-        const configRow = config.getConfig();
-
-        const response: ConfigResponse = {
-          success: true,
-          //@ts-ignore
-          data: configRow,
-        };
-
         console.debug("Main: config updated successfully");
-        event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, response);
+        sendConfigToRenderer(event, config);
       } catch (error) {
         console.debug(error);
 
@@ -60,33 +63,9 @@ export const setConfigIpc = (config: Config) => {
   );
   ipcMain.on(IPC_CHANNELS.CONFIG.GET_CONFIG, (event) => {
     try {
-      const savedConfig = config.getConfig();
-      console.log("Main: sending config to renderer", savedConfig);
+      console.debug("Main: received config request from renderer");
 
-      if (!savedConfig) {
-        const domainError: DomainError = {
-          message: "No configuration found in the system",
-          code: "CONFIG_NOT_FOUND",
-        };
-
-        const response: ConfigResponse = {
-          success: false,
-          error: domainError,
-        };
-        event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, response);
-        return;
-      }
-
-      const configRow = savedConfig as ConfigRow;
-      console.log("Main: config sent to renderer on init", configRow);
-
-      const response: ConfigResponse = {
-        success: true,
-        //@ts-ignore
-        data: configRow,
-      };
-
-      event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, response);
+      sendConfigToRenderer(event, config);
     } catch (error) {
       console.debug(error);
 
@@ -104,11 +83,53 @@ export const setConfigIpc = (config: Config) => {
       });
     }
   });
+  ipcMain.on(IPC_CHANNELS.CONFIG.RESET_CONFIG, (event) => {
+    console.debug("Main: reset config command received");
+    try {
+      config.resetConfig();
+      event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_WAS_RESET);
+      // CONFIG IS SENT AFTER TRY/CATCH! LOOK DOWN!
+    } catch (error) {
+      console.debug(error);
+      const domainError: DomainError = {
+        message: "Failed to reset configuration",
+        code: "RESET_FAILED",
+        details: {
+          originalError: error instanceof Error ? error.message : String(error),
+        },
+      };
+      event.sender.send(IPC_CHANNELS.APP_ERROR, {
+        success: false,
+        error: domainError,
+      });
+      return;
+    }
+    // Either way, we send the new config to the renderer
+    sendConfigToRenderer(event, config);
+  }); // Reset config
+  ipcMain.on(IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY, (event) => {
+    console.debug("Main: open expansion directory command received");
+    try {
+      const dir = dialog.showOpenDialogSync({
+        properties: ["openDirectory"],
+      });
+      if (dir) {
+        config.updateExpansionDir(dir[0]);
+        sendConfigToRenderer(event, config);
+      }
+    } catch (error) {
+      console.debug(error);
+      const domainError: DomainError = {
+        message: "Failed to open expansion directory",
+        code: "OPEN_FAILED",
+        details: {
+          originalError: error instanceof Error ? error.message : String(error),
+        },
+      };
+      event.sender.send(IPC_CHANNELS.APP_ERROR, {
+        success: false,
+        error: domainError,
+      });
+    }
+  });
 };
-
-//
-
-function isValidExpansionDirectory(path: string): boolean {
-  // Business rule: must be a valid Unix-style absolute path
-  return /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path);
-}

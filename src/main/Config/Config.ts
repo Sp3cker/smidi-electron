@@ -6,6 +6,9 @@ class Config {
       this.configRepository.writeConfig(["expansionDirectory", ""]);
     }
   }
+  isValidExpansionDirectory(path: string): boolean {
+    return /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path);
+  }
 
   getConfig() {
     const storedConfig = this.configRepository.getConfig();
@@ -25,6 +28,9 @@ class Config {
   }
   updateExpansionDir(value: string) {
     this.configRepository.updateExpansionDir(value);
+  }
+  resetConfig() {
+    this.configRepository.resetConfig();
   }
 }
 

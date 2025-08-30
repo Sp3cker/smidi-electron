@@ -14,17 +14,19 @@ class ConfigRepository {
     return config;
   }
 
-  getConfigByKey(key: string): ConfigRow | undefined {
-    const config = this.db
-      .prepare("SELECT * FROM config WHERE key = ?")
-      .get(key) as ConfigRow | undefined;
-    return config;
-  }
-
   updateExpansionDir(value: string): void {
     this.db
-      .prepare("UPDATE config SET value = ? WHERE key = 'expansionDir'")
+      .prepare(
+        `
+        INSERT INTO config (key, value) VALUES ('expansionDir', ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      `
+      )
       .run(value);
+  }
+
+  resetConfig(): void {
+    this.db.prepare("UPDATE config SET value = ''").run();
   }
 
   writeConfig(config: [string, string]): void {

@@ -18,4 +18,12 @@ CREATE TABLE if not EXISTS config (
 );
 `);
 
+// Make expansionDir always exist with default  string
+db.prepare(
+  `
+  INSERT OR IGNORE INTO config (key, value)
+  VALUES ('expansionDir', '')
+`
+).run();
+
 export { db };

@@ -29,8 +29,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={`
             button
             focus:ring-0
+            hover-active-button
           ${variantClasses[variant]}
-
           ${className}
         `}
         disabled={disabled}

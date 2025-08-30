@@ -9,6 +9,7 @@ type ConfigStore = {
   updateConfig: (key: string, value: string | number) => void;
   setConfigDrawerOpen: (open: boolean) => void;
   updateExpansionDir: (value: string) => void;
+  resetConfig: () => void;
 };
 
 const configStore = create<ConfigStore>((set, get) => ({
@@ -35,6 +36,9 @@ const configStore = create<ConfigStore>((set, get) => ({
     );
   },
   setConfigDrawerOpen: (open: boolean) => set({ configDrawerOpen: open }),
+  resetConfig: () => {
+    window.electron.ipcRenderer.send(IPC_CHANNELS.CONFIG.RESET_CONFIG);
+  },
 }));
 
 // Set up IPC listener to receive config updates from main process
@@ -49,5 +53,7 @@ window.electron.ipcRenderer.on(
     });
   }
 );
-
+window.electron.ipcRenderer.on(IPC_CHANNELS.CONFIG.CONFIG_WAS_RESET, () => {
+  toast.info("Config reset successfully");
+});
 export default configStore;
