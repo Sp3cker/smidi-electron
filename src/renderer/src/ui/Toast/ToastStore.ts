@@ -25,24 +25,46 @@ export const useToastStore = create<ToastState>((set, get) => ({
     const id = toast.id ?? uid();
     const entry: Toast = { variant: "info", ...toast, id };
     set((s) => ({ toasts: [...s.toasts, entry] }));
-    if (entry.timeoutMs && entry.timeoutMs > 0) {
-      setTimeout(() => get().dismiss(id), entry.timeoutMs);
-    }
+    const timeout = !entry.timeoutMs ? 3000 : entry.timeoutMs;
+
+    setTimeout(() => get().dismiss(id), timeout);
+
     return id;
   },
-  dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+  dismiss: (id) =>
+    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
   clear: () => set({ toasts: [] }),
 }));
 
 export const toast = {
-  info: (message: string, opts: Partial<Omit<Toast, "message" | "variant">> = {}) =>
-    useToastStore.getState().push({ message, variant: "info", timeoutMs: 4000, ...opts }),
-  success: (message: string, opts: Partial<Omit<Toast, "message" | "variant">> = {}) =>
-    useToastStore.getState().push({ message, variant: "success", timeoutMs: 3000, ...opts }),
-  warning: (message: string, opts: Partial<Omit<Toast, "message" | "variant">> = {}) =>
-    useToastStore.getState().push({ message, variant: "warning", timeoutMs: 5000, ...opts }),
-  error: (message: string, opts: Partial<Omit<Toast, "message" | "variant">> = {}) =>
-    useToastStore.getState().push({ message, variant: "error", timeoutMs: 6000, ...opts }),
+  info: (
+    message: string,
+    opts: Partial<Omit<Toast, "message" | "variant">> = {}
+  ) =>
+    useToastStore
+      .getState()
+      .push({ message, variant: "info", timeoutMs: 4000, ...opts }),
+  success: (
+    message: string,
+    opts: Partial<Omit<Toast, "message" | "variant">> = {}
+  ) =>
+    useToastStore
+      .getState()
+      .push({ message, variant: "success", timeoutMs: 3000, ...opts }),
+  warning: (
+    message: string,
+    opts: Partial<Omit<Toast, "message" | "variant">> = {}
+  ) =>
+    useToastStore
+      .getState()
+      .push({ message, variant: "warning", timeoutMs: 5000, ...opts }),
+  error: (
+    message: string,
+    opts: Partial<Omit<Toast, "message" | "variant">> = {}
+  ) =>
+    useToastStore
+      .getState()
+      .push({ message, variant: "error", timeoutMs: 6000, ...opts }),
   dismiss: (id: string) => useToastStore.getState().dismiss(id),
   clear: () => useToastStore.getState().clear(),
 };

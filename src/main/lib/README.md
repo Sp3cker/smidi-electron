@@ -118,3 +118,4 @@ All standard keyboard shortcuts are supported:
 
 The menu system includes error handling that falls back to a basic menu if template creation fails.
 
+
