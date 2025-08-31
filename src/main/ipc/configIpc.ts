@@ -14,6 +14,7 @@ const sendConfigToRenderer = (event: IpcMainInvokeEvent, config: Config) => {
     success: true,
     data: currConfig,
   });
+  // ipcMain.emit(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, currConfig);
 };
 /**Sets up listeners for app asking for config, sending config to app */
 export const setConfigIpc = (config: Config) => {

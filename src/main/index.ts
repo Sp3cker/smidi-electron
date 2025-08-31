@@ -8,20 +8,22 @@ import {
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import MidiMan from "./MidiMan/MidiMan";
 import { setMainWindow, setMidiManIpc, setConfigIpc } from "./ipc";
 import makeMenu from "./lib/Menu";
+import MidiMan from "./MidiMan/MidiMan";
+import ExpansionManager from "./ExpansionMan/ExpansionManager";
 import Config from "./Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
+import { setExpansionManIpc } from "./ipc/expansionmanIpc";
 /** Renderer config is sent upon request 
  * check `ipc/configIpc.ts`
  */
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1000,
+    height: 625,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === "linux" ? { icon } : {}),
@@ -75,8 +77,10 @@ app.whenReady().then(() => {
 
   const config = new Config(new ConfigRepository(db));
   const midiMan = new MidiMan();
+  const expansionMan = new ExpansionManager(config);
   setMidiManIpc(midiMan);
   setConfigIpc(config);
+  setExpansionManIpc(expansionMan);
   createWindow();
 
   app.on("activate", function () {

@@ -12,6 +12,9 @@ export const IPC_CHANNELS = {
     UPDATE_EXPANSION_DIR: "update-expansion-dir",
     CONFIG_WAS_RESET: "config-was-reset",
   },
+  VOICEGROUPS: {
+    GET_VOICEGROUPS: "get-voicegroups",
+  },
   // From renderer to main
   OPEN_WATCH_DIRECTORY: "open-watch-directory",
   START_WATCHING: "start-watching",

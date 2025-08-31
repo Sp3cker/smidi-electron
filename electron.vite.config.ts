@@ -9,6 +9,7 @@ export default defineConfig({
     build: {
       minify: "esbuild",
       target: "node24",
+      sourcemap: true, 
     },
   },
   preload: {
@@ -23,6 +24,7 @@ export default defineConfig({
     build: {
       minify: "esbuild",
       target: "node22",
+      sourcemap: true, // Optional: also add for renderer
     },
     plugins: [react(), tailwindcss()],
   },

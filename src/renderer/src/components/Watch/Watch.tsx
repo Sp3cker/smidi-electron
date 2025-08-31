@@ -19,25 +19,27 @@ const Watch: React.FC = () => {
   }, [directory]);
   return (
     <section>
-      <div className="flex flex-row gap-2 items-start justify-start">
+      <div className="flex flex-col gap-2">
         <Input
           label="Directory to watch"
           value={directory ?? ""}
           onChange={(e) => setInputDirectory(e.target.value)}
         />
-        <Button
-          className="hover-active-button rounded-sm"
-          onMouseDown={promptDirectory}
-        >
-          Browse
-        </Button>
-        <Button
-          className="hover-active-button rounded-sm"
-          variant={isWatching ? "secondary" : "primary"}
-          onClick={handleClick}
-        >
-          {isWatching ? "Stop" : "Watch"}
-        </Button>
+        <div className="flex flex-row gap-2">
+          <Button
+            className="hover-active-button rounded-sm"
+            onMouseDown={promptDirectory}
+          >
+            Browse
+          </Button>
+          <Button
+            className="hover-active-button rounded-sm"
+            variant={isWatching ? "secondary" : "primary"}
+            onClick={handleClick}
+          >
+            {isWatching ? "Stop" : "Watch"}
+          </Button>
+        </div>
       </div>
     </section>
   );
