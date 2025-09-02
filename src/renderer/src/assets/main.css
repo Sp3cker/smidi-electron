@@ -12,15 +12,17 @@ body {
   --color-neir-dark: oklch(0.3118 0.0328 93.54);
   --color-neir-darkest: oklch(0.1918 0.0328 93.54);
   --yatsugi-green: oklch(0.6196 0.1412 199.11);
+  --yatsugi-green-1: oklch(0.6208 0.1412 160.09);
+  --yatsugi-green-2: oklch(0.5208 0.2097 160.09);
   --yatsugi-white-1: oklch(0.9691 0.0169 245.824);
   --yatsugi-white-2: oklch(0.8691 0 245.824);
   --yatsugi-grey-1: oklch(0.7131 0.0328 245.824);
   --yatsugi-grey-2: oklch(0.5993 0.0169 245.824);
   --yatsugi-grey-3: oklch(0.3782 0.0169 245.824);
   --yatsugi-orange: oklch(0.7641 0.163 39.01);
+  --yatsugi-red-1: oklch(0.6064 0.2097 26.01);
+  --yatsugi-red-2: oklch(0.5064 0.2097 26.01);
   --yatsugi-blue: oklch(44.602% 0.0328 233);
-  --yatsugi-red: oklch(0.65309 0.020971 26.013);
-  /* --yatsugi-red: oklch(65.309% 0.20971 26.013); */
   --yatsugi-blue-50: oklch(98.36% 0.01866 204.07);
   --yatsugi-blue-600: oklch(80.601% 0.06866 204.44);
   --yatsugi-blue-700: oklch(51.652% 0.11176 231.85);

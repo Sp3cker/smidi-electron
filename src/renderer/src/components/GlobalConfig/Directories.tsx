@@ -1,6 +1,7 @@
 import { Button } from "@renderer/ui";
 import { useCallback, useEffect, useState } from "react";
 import { IPC_CHANNELS } from "../../../../shared/ipc";
+import { StatusCircle } from "@renderer/ui/StatusCircle/StatusCircle";
 
 type DirectoriesProps = {
   configExpansionDir: string;
@@ -33,9 +34,9 @@ const Directories = ({
   return (
     <div className="h-full overflow-y-auto pb-20">
       <div className="p-2">
-        <h3 className="text-lg/4 font-bold">Expansion Directory</h3>
-        <p className="text-xl/6 font-pkmnem">
-          The path to the root of your Expansion repo.{" "}
+        <h3 className="text-xl/6 pb-1 font-bold">Expansion Directory</h3>
+        <p className="text-xl/4 pb-1 font-pkmnem">
+          Your voicegroups and <code className="text-sm">midi2agb</code> executable will be derived from this.
         </p>
         <input
           className="input w-full"
@@ -46,6 +47,11 @@ const Directories = ({
         />
         <Button onClick={handleBrowse}>Browse</Button>
       </div>
+      <StatusCircle
+        label="Voicegroups Loaded"
+        beGray={false}
+        indicateSuccess={false}
+      />
     </div>
   );
 };
