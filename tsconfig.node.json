@@ -4,6 +4,8 @@
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {

@@ -8,15 +8,15 @@ import {
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { setMainWindow, setMidiManIpc, setConfigIpc } from "./ipc";
+import hookUpIpc from "./ipc";
 import makeMenu from "./lib/Menu";
 import MidiMan from "./MidiMan/MidiMan";
 import ExpansionManager from "./ExpansionMan/ExpansionManager";
 import Config from "./Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
-import { setExpansionManIpc } from "./ipc/expansionmanIpc";
-/** Renderer config is sent upon request 
+
+/** Renderer config is sent upon request
  * check `ipc/configIpc.ts`
  */
 function createWindow(): void {
@@ -58,7 +58,7 @@ function createWindow(): void {
   }
 
   // Set up IPC with main window reference
-  setMainWindow(mainWindow);
+  // setMainWindow(mainWindow);
 }
 
 // This method will be called when Electron has finished
@@ -78,9 +78,7 @@ app.whenReady().then(() => {
   const config = new Config(new ConfigRepository(db));
   const midiMan = new MidiMan();
   const expansionMan = new ExpansionManager(config);
-  setMidiManIpc(midiMan);
-  setConfigIpc(config);
-  setExpansionManIpc(expansionMan);
+  hookUpIpc(config, midiMan, expansionMan);
   createWindow();
 
   app.on("activate", function () {
