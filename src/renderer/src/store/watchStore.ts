@@ -1,22 +1,24 @@
 import { create } from "zustand";
 import { IPC_CHANNELS } from "../../../shared/ipc";
 import {
-  onMidiFilesList,
+  onMidiFiles,
   onWatchDirectorySet,
   onWatchStatusChanged,
 } from "../ipcHandlers";
+import { toast } from "@renderer/ui/Toast/ToastStore";
+import type { MidiFile } from "@shared/MidiFile";
 
 type WatchStore = {
   directory: string;
   watching: boolean;
-  midiFileNames: string[];
+  midiFiles: MidiFile[];
   isWatching: boolean;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
   promptDirectory: () => void;
   startWatch: () => void;
   stopWatch: () => void;
-  setMidiFileNames: (midiFileNames: string[]) => void;
+  setMidiFiles: (midiFiles: MidiFile[]) => void;
 };
 
 const watchStore = create<WatchStore>((set, get) => ({
@@ -24,8 +26,8 @@ const watchStore = create<WatchStore>((set, get) => ({
   watching: false,
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
-  midiFileNames: [],
-  setMidiFileNames: (midiFileNames) => set(() => ({ midiFileNames })),
+  midiFiles: [],
+  setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
   // Alias for watching state (for component convenience)
   get isWatching() {
     return get().watching;
@@ -36,10 +38,12 @@ const watchStore = create<WatchStore>((set, get) => ({
   },
 
   startWatch: () => {
-    window.electron.ipcRenderer.send(
-      IPC_CHANNELS.START_WATCHING,
-      get().directory
-    );
+    const directory = get().directory;
+    if (directory === "") {
+      toast.error("No directory set");
+      return;
+    }
+    window.electron.ipcRenderer.send(IPC_CHANNELS.START_WATCHING, directory);
   },
 
   stopWatch: () => {
@@ -56,8 +60,8 @@ onWatchDirectorySet((directory) => {
 onWatchStatusChanged((isWatching) => {
   watchStore.getState().setWatching(isWatching);
 });
-onMidiFilesList((midiFileNames) => {
-  console.log("midiFileNames", midiFileNames);
-  watchStore.getState().setMidiFileNames(midiFileNames);
+onMidiFiles((midiFiles) => {
+  console.log("midiFiles", midiFiles);
+  watchStore.getState().setMidiFiles(midiFiles);
 });
 export default watchStore;

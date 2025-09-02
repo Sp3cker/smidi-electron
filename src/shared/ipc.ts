@@ -15,6 +15,9 @@ export const IPC_CHANNELS = {
   VOICEGROUPS: {
     GET_VOICEGROUPS: "get-voicegroups",
   },
+  MIDI_MAN: {
+    MIDI_FILES: "midi-files",
+  },
   // From renderer to main
   OPEN_WATCH_DIRECTORY: "open-watch-directory",
   START_WATCHING: "start-watching",
@@ -24,7 +27,6 @@ export const IPC_CHANNELS = {
   SET_WATCH_DIRECTORY: "set-watch-directory",
   WATCH_STATUS_CHANGED: "watch-status-changed",
   FILE_CHANGED: "file-changed",
-  MIDI_FILES_LIST: "midi-files-list",
   /** Broadcast application errors to the renderer */
   APP_ERROR: "app-error",
 } as const;

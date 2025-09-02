@@ -6,19 +6,30 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        "@shared": resolve("src/shared"),
+      },
+    },
     build: {
       minify: "esbuild",
       target: "node24",
-      sourcemap: true, 
+      sourcemap: true,
     },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        "@shared": resolve("src/shared"),
+      },
+    },
   },
   renderer: {
     resolve: {
       alias: {
         "@renderer": resolve("src/renderer/src"),
+        "@shared": resolve("src/shared"),
       },
     },
     build: {

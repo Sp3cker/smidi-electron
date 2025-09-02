@@ -12,7 +12,8 @@ body {
   --color-neir-dark: oklch(0.3118 0.0328 93.54);
   --color-neir-darkest: oklch(0.1918 0.0328 93.54);
   --yatsugi-green: oklch(0.6196 0.1412 199.11);
-  --yatsugi-white: oklch(0.9691 0.0169 245.824);
+  --yatsugi-white-1: oklch(0.9691 0.0169 245.824);
+  --yatsugi-white-2: oklch(0.8691 0 245.824);
   --yatsugi-grey-1: oklch(0.7131 0.0328 245.824);
   --yatsugi-grey-2: oklch(0.5993 0.0169 245.824);
   --yatsugi-grey-3: oklch(0.3782 0.0169 245.824);
@@ -21,10 +22,9 @@ body {
   --yatsugi-red: oklch(0.65309 0.020971 26.013);
   /* --yatsugi-red: oklch(65.309% 0.20971 26.013); */
   --yatsugi-blue-50: oklch(98.36% 0.01866 204.07);
- --yatsugi-blue-600: oklch(60.601% 0.13179 230.44);
+  --yatsugi-blue-600: oklch(80.601% 0.06866 204.44);
   --yatsugi-blue-700: oklch(51.652% 0.11176 231.85);
   --yatsugi-blue-900: oklch(39.601% 0.07386 236.11);
-
 }
 @layer components {
   .input {
@@ -37,7 +37,7 @@ body {
       0.75px 0.75px rgba(106, 90, 90, 0.5);
   }
   .button {
-    @apply font-pkmnem px-2 font-bold text-stone-100 border-2 border-zinc-600 focus:outline-none  transition-all duration-200 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)] active:shadow-[1px_1px_0px_rgba(0,0,0,0.8)] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[2px_2px_0px_rgba(0,0,0,0.8)];
+    @apply font-pkmnem px-2 font-bold text-stone-100 border-2 border-zinc-600 focus:outline-none duration-200 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)] active:shadow-[1px_1px_0px_rgba(0,0,0,0.8)] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[2px_2px_0px_rgba(0,0,0,0.8)];
     text-shadow:
       -0.3px 0px rgba(195, 191, 190, 0.25),
       -0.3px -0.3px rgba(195, 191, 190, 0.25),
