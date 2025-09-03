@@ -1,20 +1,18 @@
 import useWatchStore from "../../store/watchStore";
 import type { Stage as KonvaStage } from "konva/lib/Stage";
-import type { MidiFile } from "@shared/MidiFile";
-import MidiClipKonva from "../Konva/MidiClipKonva";
-import { Group, Layer, Line, Rect, Stage } from "react-konva";
+import { Text, Group, Layer, Line, Rect, Stage } from "react-konva";
 import { useEffect, useRef, useState } from "react";
 import { MeasureGrid } from "../Konva/Grid";
 import { NoteSegment, ParsedMidiMeasures } from "@shared/dto";
-
+import { grey1 } from "@renderer/ui";
 import {
   useMeasureCalculation,
   useParentWidth,
 } from "../../hooks/useMeasureCalculation";
+
 const getRootFontSize = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
-// Option A: Quarter-note scale
 export const ticksToRem_Q = (ticks: number, ppq: number, remPerQuarter = 1) =>
   (ticks / ppq) * remPerQuarter;
 
@@ -33,10 +31,24 @@ const pxToRem = (pixels: number): number => {
   return pixels / rootFontSize;
 };
 
-const MidiNote = ({ note, height }: { note: NoteSegment; height: number }) => {
+const MidiNote = ({
+  note,
+  height,
+  noteToY,
+  ticksPerBar,
+  pixelsPerMeasure,
+}: {
+  note: NoteSegment;
+  height: number;
+  noteToY: (midi: number) => number;
+  ticksPerBar: number;
+  pixelsPerMeasure: number;
+}) => {
+  const xPosStart = (note.startTick / ticksPerBar) * pixelsPerMeasure;
+  const xPosEnd = (note.endTick / ticksPerBar) * pixelsPerMeasure;
   return (
     <Line
-      points={[note.startTick, note.midi, note.endTick, note.midi]}
+      points={[xPosStart, noteToY(note.midi), xPosEnd, noteToY(note.midi)]}
       stroke="black"
       strokeWidth={height}
     />
@@ -46,21 +58,27 @@ const MidiMeasure = ({
   measure,
   order,
   noteHeight,
+  noteToY,
+  ticksPerBar,
+  pixelsPerMeasure,
 }: {
-  measure: NoteSegment[] | undefined;
+  measure: NoteSegment[];
   order: number;
   noteHeight: number;
+  noteToY: (midi: number) => number;
+  ticksPerBar: number;
+  pixelsPerMeasure: number;
 }) => {
-  if (!measure) {
-  }
+  const measureXPosition = order * pixelsPerMeasure;
   // Need to set X and Y of Group so Midi note knows correct vertical and horizontal position
   return (
     <Group>
       <Rect
-        width={ticksToPx_Q(96, 96)}
+        width={pixelsPerMeasure}
         height={96}
-        x={order * ticksToPx_Q(96, 96)}
-        stroke="red"
+        borderRadius={4}
+        x={measureXPosition}
+        stroke={grey1}
         strokeWidth={1}
       ></Rect>
       <Group>
@@ -69,8 +87,11 @@ const MidiMeasure = ({
             return (
               <MidiNote
                 note={qtrNote}
-                key={qtrNote.midi + i}
+                key={qtrNote.name + i}
                 height={noteHeight}
+                noteToY={noteToY}
+                ticksPerBar={ticksPerBar}
+                pixelsPerMeasure={pixelsPerMeasure}
               />
             );
           }
@@ -80,22 +101,33 @@ const MidiMeasure = ({
     </Group>
   );
 };
-const MidiTrack = ({ midiFile }: { midiFile: ParsedMidiMeasures }) => {
+const MidiTrack = ({
+  midiFile,
+  pixelsPerMeasure,
+}: {
+  midiFile: ParsedMidiMeasures;
+  pixelsPerMeasure: number;
+}) => {
   // Height of a track is actually static.
   // However, this is the best place to determine the vertical scale of the notes
   // from the delta between the highest and lowest note in the list of measures
   const { highestNoteInMidi, lowestNoteInMidi } = midiFile;
-  const minVerticalNotes = 12;
+  const minVerticalNotes = 8;
   const verticalRange = Math.max(
     minVerticalNotes,
     highestNoteInMidi - lowestNoteInMidi
   );
-  const noteHeightAtMinVerticalNotes = 4;
+  const noteHeightAtMinVerticalNotes = 64;
   const scaledHeight = noteHeightAtMinVerticalNotes / verticalRange;
+
+  // Map MIDI pitch to Y so that lower pitches appear lower on screen
+  // (Konva Y grows downward). Highest pitch -> y = 0, lowest -> max.
+  const noteToY = (midi: number) => (highestNoteInMidi - midi) * scaledHeight;
 
   // For every octave between the highest and lowest note, we make midi notes 1/2 as big.
   return (
     <Group>
+      <Text text={midiFile.fileName} />
       {midiFile.measures.map((measure, i) => {
         if (measure !== undefined) {
           return (
@@ -103,16 +135,19 @@ const MidiTrack = ({ midiFile }: { midiFile: ParsedMidiMeasures }) => {
               measure={measure}
               order={i}
               key={i}
+              ticksPerBar={midiFile.ticksPerBar}
+              pixelsPerMeasure={pixelsPerMeasure}
               noteHeight={scaledHeight}
+              noteToY={noteToY}
             />
           );
         } else {
           return (
             <Rect
-              width={ticksToPx_Q(96, 96)}
+              width={pixelsPerMeasure}
               height={96}
-              x={i * ticksToPx_Q(96, 96)}
-              stroke="red"
+              x={i * pixelsPerMeasure}
+              stroke={grey1}
               strokeWidth={1}
               key={i}
             />
@@ -138,9 +173,11 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
 
   // Calculate measures that fit on screen
   const measureCalculation = useMeasureCalculation(parentWidth, totalMeasures, {
-    minPixelsPerBeat: 8,
+    minPixelsPerBeat: 1,
     maxPixelsPerBeat: 32,
+    pixelsPerMeasure: 1000,
   });
+  const pixelsPerMeasure = measureCalculation.pixelsPerBeat * 4;
 
   const rowTop = (rowIndex: number) => rowIndex * (rowHeight + rowGap);
 
@@ -175,7 +212,6 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
         ref={stageRef}
       >
         <Layer>
-          {/* Measure-based grid */}
           <MeasureGrid
             totalMeasures={totalMeasures}
             pixelsPerBeat={measureCalculation.pixelsPerBeat}
@@ -183,25 +219,9 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
             showMeasureLabels={true}
           />
 
-          {/* Optional: Beat grid for finer granularity */}
-          {/* <BeatGrid
-            totalBeats={totalBeats}
-            pixelsPerBeat={measureCalculation.pixelsPerBeat}
-            stageRef={stageRef}
-            showBeatLabels={false}
-          /> */}
-
           {midiFiles.map((midi, index) => (
             <Group key={midi.fileName} y={rowTop(index) + 20}>
-              <MidiTrack midiFile={midi} />
-              {/* <MidiClipKonva
-                height={rowHeight}
-                fileName={midi.fileName}
-                notes={midi.tracks[0].notes}
-                bpm={bpm}
-                x={beatsToX(midi.tracks[0].notes[0]?.time || 0)}
-                y={rowTop(index)}
-              /> */}
+              <MidiTrack midiFile={midi} pixelsPerMeasure={pixelsPerMeasure} />
             </Group>
           ))}
         </Layer>
@@ -214,16 +234,16 @@ const List = () => {
   const { midiFiles } = useWatchStore();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[var(--white-rock)] p-6">
       <div className="max-w-6xl mx-auto">
         {midiFiles.length > 0 ? (
           <MidiList midiFiles={midiFiles} />
         ) : (
-          <div className="text-center py-12 px-4 bg-gray-50 border-2 border-gray-200 border-dashed rounded-lg">
-            <div className="text-gray-400 text-lg font-medium">
+          <div className="text-center text-[var(--tallow)] py-12 px-4 bg-gray-50 border-2 border-gray-200 border-dashed rounded-lg">
+            <div className=" text-lg font-medium">
               No MIDI files loaded
             </div>
-            <div className="text-gray-300 text-sm mt-2">
+            <div className=" text-sm mt-2">
               Load some MIDI files to see the piano roll visualization
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { IPC_CHANNELS } from "../../../shared/ipc";
-import { MidiFile, type MidiFileData } from "@shared/MidiFile";
+import type { ParsedMidiMeasures } from "@shared/dto";
 /** Mostly for *listening* for events from the server. */
 const createIPCListener = <T>(
   channel: string,
@@ -30,13 +30,15 @@ export const onWatchStatusChanged = (
   );
 };
 
-export const onMidiFiles = (callback: (midiFiles: MidiFile[]) => void) => {
+export const onMidiFiles = (
+  callback: (midiFiles: ParsedMidiMeasures[]) => void
+) => {
   return createIPCListener(
     IPC_CHANNELS.MIDI_MAN.MIDI_FILES,
     (_, midiFileData: any[]) => {
       // Convert serialized data back to MidiFile objects
 
-      callback(midiFileData);
+      callback(midiFileData as ParsedMidiMeasures[]);
     }
   );
 };

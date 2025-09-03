@@ -6,19 +6,19 @@ import {
   onWatchStatusChanged,
 } from "../ipcHandlers";
 import { toast } from "@renderer/ui/Toast/ToastStore";
-import type { MidiFile } from "@shared/MidiFile";
+import type { ParsedMidiMeasures } from "@shared/dto";
 
 type WatchStore = {
   directory: string;
   watching: boolean;
-  midiFiles: MidiFile[];
+  midiFiles: ParsedMidiMeasures[];
   isWatching: boolean;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
   promptDirectory: () => void;
   startWatch: () => void;
   stopWatch: () => void;
-  setMidiFiles: (midiFiles: MidiFile[]) => void;
+  setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
 };
 
 const watchStore = create<WatchStore>((set, get) => ({

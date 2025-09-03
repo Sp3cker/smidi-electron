@@ -1,0 +1,30 @@
+/*
+ * Untitled Palette
+ * Created with ColorSlurp
+ */
+:root,
+.untitled-palette {
+  --spring-wood: oklch(0.9583 0.0111 89.72);
+  --white-rock: oklch(90.128% 0.02517 89.22);
+  --sapling: oklch(87.4% 0.05905 95.679);
+  --indian-khaki: oklch(0.7721 0.0433 88.81);
+  --mongoose: oklch(0.7172 0.0517 61.84);
+  --tallow: oklch(0.6846 0.0329 88.41);
+  --cement: oklch(0.584 0.0367 83.61);
+  --ironside-gray: oklch(50.606% 0.01257 95.337);
+
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  :root,
+  .untitled-palette {
+    --spring-wood: color(display-p3 0.957 0.945 0.914 / 1);
+    --white-rock: color(display-p3 0.898 0.878 0.8 / 1);
+    --sapling: color(display-p3 0.882 0.847 0.667 / 1);
+    --indian-khaki: color(display-p3 0.753 0.706 0.588 / 1);
+    --mongoose: color(display-p3 0.737 0.616 0.514 / 1);
+    --tallow: color(display-p3 0.635 0.6 0.514 / 1);
+    --cement: color(display-p3 0.525 0.478 0.388 / 1);
+    --ironside-gray: color(display-p3 0.404 0.4 0.365 / 1);
+  }
+}
