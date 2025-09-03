@@ -3,64 +3,67 @@ import { readdir } from "fs/promises";
 import FileWatcher from "../lib/FileWatcher";
 import { MidiFile } from "@shared/MidiFile";
 
-export function parseMidiToResolution(
-  midi: MidiFile,
-  fallbackBpm: number = 120
-) {
+export function parseMidiToResolution(midi: MidiFile) {
   const ppq = midi.header.ppq;
-  const bpm = midi.header.tempos[0]?.bpm || fallbackBpm;
+
   const timeSig = midi.header.timeSignatures[0]?.timeSignature || [4, 4];
-  const beatsPerBar = timeSig[0];
-  const beatNoteValue = timeSig[1];
-  const ticksPerBar = beatsPerBar * ppq * (4 / beatNoteValue);
-  const ticksPer128 = ticksPerBar / 128;
-  const ticksPerSecond = (bpm / 60) * ppq;
 
-  const measures = {}; // { bar: NoteSegment[] }
+  const ticksPerBar = timeSig[0] * ppq * (4 / timeSig[1]); // So 4/4 time 96 PPQ = 96 ticks per 4 quarter notes
+
+  const measures: any[][] = []; // { bar: NoteSegment[] }
   const track = midi.tracks[0];
-
+  const highestNoteInMidi = Math.max(...track.notes.map((note) => note.midi));
+  const lowestNoteInMidi = Math.min(...track.notes.map((note) => note.midi));
   track.notes.forEach((note) => {
-    const bar = Math.floor(note.ticks / ticksPerBar);
-    const fractionInBar = (note.ticks % ticksPerBar) / ticksPerBar;
-    const offset128 = Math.floor(fractionInBar * 128);
-    const durationTicks = note.duration * ticksPerSecond;
-    let remaining128 = Math.round(durationTicks / ticksPer128);
+    const durationTicksTotal = note.durationTicks;
+    let remainingTicks = durationTicksTotal;
+    let currentBar = Math.floor(note.ticks / ticksPerBar);
+    let offsetTicksInBar = note.ticks % ticksPerBar;
 
-    let currentBar = bar;
-    let currentOffset = offset128;
-
-    while (remaining128 > 0) {
+    while (remainingTicks > 0) {
       if (!measures[currentBar]) measures[currentBar] = [];
 
-      const slotsInBar = 128 - currentOffset;
-      const durationInBar = Math.min(remaining128, slotsInBar);
+      const ticksLeftInBar = ticksPerBar - offsetTicksInBar;
+      const chunkTicks = Math.min(remainingTicks, ticksLeftInBar);
 
       measures[currentBar].push({
         midi: note.midi,
         name: note.name,
         velocity: note.velocity,
-        offset128: currentOffset, // Start offset in this bar (0-127)
-        duration128: durationInBar,
-        originalNote: note, // Optional: Ref to original for editing
+        offsetTicksInBar,
+        durationTicksInBar: chunkTicks,
+        startTick: note.ticks + (durationTicksTotal - remainingTicks),
+        endTick:
+          note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
+        originalNote: note,
       });
 
-      remaining128 -= durationInBar;
+      remainingTicks -= chunkTicks;
       currentBar++;
-      currentOffset = 0;
+      offsetTicksInBar = 0;
     }
   });
-
-  // Sort notes per measure by offset and pitch
-  Object.keys(measures).forEach((bar) => {
-    measures[bar].sort((a, b) => a.offset128 - b.offset128 || b.midi - a.midi); // Descending pitch like Ableton
+  measures.forEach((quarterNote) => {
+    quarterNote.sort(
+      (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
+    ); // Descending pitch like Ableton
   });
+  // Sort notes per measure by offset and pitch
 
-  const bars = Object.keys(measures)
-    .map(Number)
-    .sort((a, b) => a - b);
-  const totalBars = bars.length ? bars[bars.length - 1] + 1 : 1; // Min 1 bar
+  const bars = measures.map(Number).sort((a, b) => a - b);
+  const totalBars = bars.length ? bars.length : 0;
 
-  return { bars, measures, totalBars, ticksPerBar, timeSig }; // Add metadata for grid calc
+  return {
+    highestNoteInMidi,
+    lowestNoteInMidi,
+    fileName: midi.fileName,
+    filePath: midi.filePath,
+    bars,
+    measures,
+    totalBars,
+    ticksPerBar,
+    timeSig,
+  }; // Add metadata for grid calc
 }
 
 // Usage:

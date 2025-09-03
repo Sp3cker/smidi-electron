@@ -19,24 +19,21 @@ export const setMidiManIpc = (midiManInstance: MidiMan) => {
       midiManInstance
         .parseMidiDirectory()
         .then((midiObjects) => {
-          console.log(
-            "Midiman: Parsed midi directory",
-            parseMidiToResolution(midiObjects[0], 120).measures[23]
-          );
+          // console.log(
+          //   "Midiman: Parsed midi directory",
+          //   parseMidiToResolution(midiObjects[0], 120).measures[23]
+          // );
           // Convert MidiFile objects to serializable format for IPC
 
           const serializableData = midiObjects.map((midiFile: MidiFile) =>
-            midiFile.toSerializable()
+            parseMidiToResolution(midiFile, 129)
           );
 
-          event.sender.send(
-            IPC_CHANNELS.MIDI_MAN.MIDI_FILES,
-            serializableData
-          );
+          event.sender.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, serializableData);
         })
         .catch((error) => {
           console.error("Midiman: Error parsing midi directory", error);
-          mainWindow.webContents.send(IPC_CHANNELS.APP_ERROR, {
+          event.sender.send(IPC_CHANNELS.APP_ERROR, {
             success: false,
             error: error as AppErrorPayload,
           });

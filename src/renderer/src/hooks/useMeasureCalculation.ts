@@ -32,7 +32,7 @@ export const useMeasureCalculation = (
   options: MeasureCalculationOptions = {}
 ) => {
   const {
-    pixelsPerMeasure = 64, // Default: 64px per measure (16px per beat * 4 beats)
+    pixelsPerMeasure = 64, 
     beatsPerMeasure = 4,
     minPixelsPerBeat = 8,
     maxPixelsPerBeat = 32,

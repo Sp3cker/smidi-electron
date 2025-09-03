@@ -44,7 +44,6 @@ const MidiClipKonva: React.FC<MidiClipKonvaProps> = ({
   height,
   fileName,
   notes,
-  bpm,
   pixelsPerBeat = 40,
   headerHeight = 16,
   padding = 6,
@@ -54,7 +53,6 @@ const MidiClipKonva: React.FC<MidiClipKonvaProps> = ({
   noteColor = "#2563eb",
 }) => {
   // Derive beats-based horizontal domain
-  const toBeats = (seconds: number) => (seconds * bpm) / 60;
 
   const lastEndBeats = notes.length
     ? Math.max(...notes.map((n) => toBeats(n.time + n.duration)))
