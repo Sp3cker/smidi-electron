@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 export interface MeasureCalculationOptions {
   /** Width of each measure in pixels */
@@ -32,7 +32,7 @@ export const useMeasureCalculation = (
   options: MeasureCalculationOptions = {}
 ) => {
   const {
-    pixelsPerMeasure = 64, 
+    pixelsPerMeasure = 64,
     beatsPerMeasure = 4,
     minPixelsPerBeat = 8,
     maxPixelsPerBeat = 32,
@@ -58,18 +58,21 @@ export const useMeasureCalculation = (
 
     // Calculate ideal pixels per beat to fit all measures
     const idealPixelsPerBeat = parentWidth / (totalMeasures * beatsPerMeasure);
-    
+
     // Apply constraints
     const constrainedPixelsPerBeat = Math.max(
       minPixelsPerBeat,
       Math.min(maxPixelsPerBeat, idealPixelsPerBeat)
     );
-    
+
     const isConstrained = constrainedPixelsPerBeat !== idealPixelsPerBeat;
-    
+
     // Calculate how many measures can actually fit
-    const measuresOnScreen = Math.floor(parentWidth / (constrainedPixelsPerBeat * beatsPerMeasure));
-    const totalWidth = totalMeasures * constrainedPixelsPerBeat * beatsPerMeasure;
+    const measuresOnScreen = Math.floor(
+      parentWidth / (constrainedPixelsPerBeat * beatsPerMeasure)
+    );
+    const totalWidth =
+      totalMeasures * constrainedPixelsPerBeat * beatsPerMeasure;
 
     setResult({
       measuresOnScreen,
@@ -77,7 +80,14 @@ export const useMeasureCalculation = (
       totalWidth,
       isConstrained,
     });
-  }, [parentWidth, totalMeasures, pixelsPerMeasure, beatsPerMeasure, minPixelsPerBeat, maxPixelsPerBeat]);
+  }, [
+    parentWidth,
+    totalMeasures,
+    pixelsPerMeasure,
+    beatsPerMeasure,
+    minPixelsPerBeat,
+    maxPixelsPerBeat,
+  ]);
 
   useEffect(() => {
     calculateMeasures();

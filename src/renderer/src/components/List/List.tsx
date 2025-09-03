@@ -2,7 +2,7 @@ import useWatchStore from "../../store/watchStore";
 import type { Stage as KonvaStage } from "konva/lib/Stage";
 import type { MidiFile } from "@shared/MidiFile";
 import MidiClipKonva from "../Konva/MidiClipKonva";
-import { Group, Layer, Line, Stage } from "react-konva";
+import { Group, Layer, Line, Rect, Stage } from "react-konva";
 import { useEffect, useRef, useState } from "react";
 import { MeasureGrid } from "../Konva/Grid";
 import { NoteSegment, ParsedMidiMeasures } from "@shared/dto";
@@ -52,21 +52,31 @@ const MidiMeasure = ({
   noteHeight: number;
 }) => {
   if (!measure) {
-    return (
-      <Group width={ticksToPx_Q(96, 96)} x={order * ticksToPx_Q(96, 96)} />
-    );
   }
   // Need to set X and Y of Group so Midi note knows correct vertical and horizontal position
   return (
-    <Group width={ticksToPx_Q(96, 96)} x={order * ticksToPx_Q(96, 96)}>
-      {measure.map((qtrNote) => {
-        if (qtrNote) {
-          return (
-            <MidiNote note={qtrNote} key={qtrNote.midi} height={noteHeight} />
-          );
-        }
-        return null;
-      })}
+    <Group>
+      <Rect
+        width={ticksToPx_Q(96, 96)}
+        height={96}
+        x={order * ticksToPx_Q(96, 96)}
+        stroke="red"
+        strokeWidth={1}
+      ></Rect>
+      <Group>
+        {measure.map((qtrNote, i) => {
+          if (qtrNote) {
+            return (
+              <MidiNote
+                note={qtrNote}
+                key={qtrNote.midi + i}
+                height={noteHeight}
+              />
+            );
+          }
+          return <Line key={i} points={[0, 0, 0, 96]} />;
+        })}
+      </Group>
     </Group>
   );
 };
@@ -82,24 +92,40 @@ const MidiTrack = ({ midiFile }: { midiFile: ParsedMidiMeasures }) => {
   );
   const noteHeightAtMinVerticalNotes = 4;
   const scaledHeight = noteHeightAtMinVerticalNotes / verticalRange;
+
   // For every octave between the highest and lowest note, we make midi notes 1/2 as big.
   return (
     <Group>
-      {midiFile.measures.map((measure, i) => (
-        <MidiMeasure
-          measure={measure}
-          order={i}
-          key={i}
-          noteHeight={scaledHeight}
-        />
-      ))}
+      {midiFile.measures.map((measure, i) => {
+        if (measure !== undefined) {
+          return (
+            <MidiMeasure
+              measure={measure}
+              order={i}
+              key={i}
+              noteHeight={scaledHeight}
+            />
+          );
+        } else {
+          return (
+            <Rect
+              width={ticksToPx_Q(96, 96)}
+              height={96}
+              x={i * ticksToPx_Q(96, 96)}
+              stroke="red"
+              strokeWidth={1}
+              key={i}
+            />
+          );
+        }
+      })}
     </Group>
   );
 };
 const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
   const [totalMeasures, setTotalMeasures] = useState(0);
 
-  const rowHeight = pxToRem(300); // visual row height for the list in rem
+  const rowHeight = 96; // visual row height for the list in rem
   const rowGap = pxToRem(30);
 
   const stageRef = useRef<KonvaStage>(null);
