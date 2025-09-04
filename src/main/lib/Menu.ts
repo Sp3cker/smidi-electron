@@ -1,6 +1,21 @@
 import type { App } from "electron";
 
-export default (app: App) => {
+// TypeScript interfaces for menu objects
+interface MenuItem {
+  label?: string;
+  role?: string;
+  type?: "separator" | "normal";
+  accelerator?: string;
+  click?: () => void;
+  submenu?: MenuItem[];
+  enabled?: boolean;
+  visible?: boolean;
+  checked?: boolean;
+}
+
+type MenuTemplate = MenuItem[];
+
+export default (app: App): MenuTemplate => {
   const isMac = process.platform === "darwin";
 
   return [
@@ -126,5 +141,5 @@ export default (app: App) => {
         },
       ],
     },
-  ] as const;
+  ] as MenuTemplate;
 };
