@@ -3,20 +3,8 @@ import { createInterface } from "node:readline";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, readFileSync } from "node:fs";
-
-// Workspace root (assume dev_scripts/voicegroup-resolver within repo)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const repoRoot = resolve(__dirname, "../../..");
-
-// Paths of interest
-const soundDir = resolve(repoRoot, "sound");
-const voicegroupsDir = resolve(soundDir, "voicegroups");
-const directSoundDataPath = resolve(soundDir, "direct_sound_data.inc");
-const programmableWaveDataPath = resolve(
-  soundDir,
-  "programmable_wave_data.inc"
-);
+import { serialize } from "v8";
+import { inspect } from "util";
 
 type NodeKind =
   | "group"
@@ -38,6 +26,20 @@ type VoiceNode = {
   assetPath?: string; // resolved .bin or .pcm path
   params?: string[]; // other params parsed
 };
+
+// Workspace root (assume dev_scripts/voicegroup-resolver within repo)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const repoRoot = resolve(__dirname, "../../..");
+
+// Paths of interest
+const soundDir = resolve(repoRoot, "sound");
+const voicegroupsDir = resolve(soundDir, "voicegroups");
+const directSoundDataPath = resolve(soundDir, "direct_sound_data.inc");
+const programmableWaveDataPath = resolve(
+  soundDir,
+  "programmable_wave_data.inc"
+);
 
 // Preload symbol -> asset path maps for quick resolution
 function loadSymbolMap(filePath: string): Record<string, string> {
@@ -257,6 +259,34 @@ async function main() {
     };
     console.log(JSON.stringify(json, null, 2));
   }
+}
+
+// Memory logging utilities
+function logObjectMemory(obj: any, label: string = "Object") {
+  const serialized = serialize(obj);
+  const sizeBytes = serialized.length;
+  const sizeKB = (sizeBytes / 1024).toFixed(2);
+  const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(2);
+
+  console.log(`${label} memory usage:`);
+  console.log(`  Bytes: ${sizeBytes.toLocaleString()}`);
+  console.log(`  KB: ${sizeKB} KB`);
+  console.log(`  MB: ${sizeMB} MB`);
+}
+
+function logProcessMemory(label: string = "Process") {
+  const memUsage = process.memoryUsage();
+  console.log(`${label} memory usage:`);
+  console.log(`  RSS: ${(memUsage.rss / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`  Heap Used: ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`  Heap Total: ${(memUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`  External: ${(memUsage.external / 1024 / 1024).toFixed(2)} MB`);
+}
+
+function logObjectDetails(obj: any, label: string = "Object", depth: number = 2) {
+  console.log(`${label} structure:`);
+  console.log(inspect(obj, { depth, colors: true, maxArrayLength: 10 }));
+  logObjectMemory(obj, label);
 }
 
 main().catch((err) => {
