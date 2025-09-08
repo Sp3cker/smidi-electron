@@ -4,6 +4,8 @@ import {
   onMidiFiles,
   onWatchDirectorySet,
   onWatchStatusChanged,
+  onVoicegroupDetails,
+  getVoicegroupDetails,
 } from "../ipcHandlers";
 import { toast } from "@renderer/ui/Toast/ToastStore";
 import type { ParsedMidiMeasures } from "@shared/dto";
@@ -13,17 +15,30 @@ type WatchStore = {
   watching: boolean;
   midiFiles: ParsedMidiMeasures[];
   isWatching: boolean;
+  selectedVoicegroup: string | null;
+  selectedVoicegroupDetails: any | null;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
   promptDirectory: () => void;
   startWatch: () => void;
   stopWatch: () => void;
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
+  setSelectedVoicegroupDetails: (voicegroup: string | null) => void;
 };
 
 const watchStore = create<WatchStore>((set, get) => ({
   directory: "",
   watching: false,
+  selectedVoicegroup: null,
+  selectedVoicegroupDetails: null,
+  setSelectedVoicegroupDetails: (voicegroup) => {
+    if (!voicegroup) {
+      return set({ selectedVoicegroupDetails: null });
+    }
+    set({ selectedVoicegroup: voicegroup });
+    getVoicegroupDetails(voicegroup, set);
+  },
+
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
   midiFiles: [],
@@ -64,4 +79,5 @@ onMidiFiles((midiFiles) => {
   console.log("midiFiles", midiFiles);
   watchStore.getState().setMidiFiles(midiFiles);
 });
+
 export default watchStore;

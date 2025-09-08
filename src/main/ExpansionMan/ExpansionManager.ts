@@ -1,14 +1,10 @@
-import path from "path";
 import type Config from "../Config/Config";
-import { readdir } from "fs/promises";
+import ExpansionRepository from "../repos/Expansion/ExpansionRepository";
+import VoicegroupRepository from "../repos/Expansion/VoicegroupRepository";
 
 class ExpansionManager {
-  // string of voicegroup file name
-  voiceGroups: string[] = [];
-  // path to directory of game midi files.
-  expansionMidiDirectory: string = "";
-  expansionVoiceGroupsDirectory: string = "";
-  mid2agbPath: string = "";
+  expansionRepository: ExpansionRepository = new ExpansionRepository();
+  voicegroupRepository: VoicegroupRepository = new VoicegroupRepository();
   constructor(private readonly config: Config) {
     const globalConfig = this.config.getConfig();
     if (!globalConfig) {
@@ -22,26 +18,34 @@ class ExpansionManager {
   // pass this the expansion directory from config.
   setExpansionPathsfromRoot(root: string) {
     console.debug("ExpansionManager: setting expansion paths from root", root);
-    this.expansionMidiDirectory = path.join(root, "expansion", "midi");
-    this.expansionVoiceGroupsDirectory = path.join(
-      root,
-      "sound",
-      "voicegroups"
-    );
-    this.mid2agbPath = path.join(root, "expansion", "mid2agb");
+    this.expansionRepository.setRepoRoot(root);
+    this.voicegroupRepository.init(root);
   }
-  async loadVoiceGroups() {
-    const voiceGroups = await readdir(this.expansionVoiceGroupsDirectory);
 
-    return voiceGroups.filter((file) => file.endsWith(".inc"));
-  }
   async getVoiceGroups() {
-    if (this.voiceGroups.length === 0) {
-      const loadedVoiceGroups = await this.loadVoiceGroups();
-      this.voiceGroups = loadedVoiceGroups;
-      return loadedVoiceGroups;
+    try {
+      console.debug("ExpansionManager: getting voice groups");
+      return this.voicegroupRepository.loadVoiceGroups();
+    } catch (error) {
+      console.error("ExpansionManager: error getting voice groups", error);
+      return [];
     }
-    return this.voiceGroups;
+  }
+  async getVoicegroupDetails(voicegroupName: string) {
+    try {
+      console.debug(
+        "ExpansionManager: getting voicegroup details",
+        voicegroupName
+      );
+      return this.voicegroupRepository.readVoicegroupFile(voicegroupName);
+    } catch (error) {
+      console.error(
+        "ExpansionManager: error getting voicegroup details",
+        error
+      );
+      throw new Error("ExpansionManager: error getting voicegroup details");
+    }
+    return this.voicegroupRepository.readVoicegroupFile(voicegroupName);
   }
 }
 

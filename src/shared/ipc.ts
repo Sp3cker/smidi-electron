@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
   },
   VOICEGROUPS: {
     GET_VOICEGROUPS: "get-voicegroups",
+    GET_VOICEGROUP_DETAILS: "get-voicegroup-details",
   },
   MIDI_MAN: {
     MIDI_FILES: "midi-files",
