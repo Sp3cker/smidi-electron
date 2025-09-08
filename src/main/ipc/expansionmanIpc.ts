@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
-import type ExpansionManager from "../ExpansionMan/ExpansionManager";
+import type ExpansionManager from "../services/ExpansionMan/ExpansionManager";
 
 export const setExpansionManIpc = (expansionManager: ExpansionManager) => {
   ipcMain.handle(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUPS, async (event) => {
@@ -9,10 +9,11 @@ export const setExpansionManIpc = (expansionManager: ExpansionManager) => {
 
       return voiceGroups;
     } catch (error) {
-      event.sender.send(IPC_CHANNELS.APP_ERROR, {
-        success: false,
-        detail: (error as Error).message,
-      });
+      return error;
+      // event.sender.send(IPC_CHANNELS.APP_ERROR, {
+      //   success: false,
+      //   detail: (error as Error).message,
+      // });
       return [];
     }
   });

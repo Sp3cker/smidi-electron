@@ -4,7 +4,6 @@ import {
   onMidiFiles,
   onWatchDirectorySet,
   onWatchStatusChanged,
-  onVoicegroupDetails,
   getVoicegroupDetails,
 } from "../ipcHandlers";
 import { toast } from "@renderer/ui/Toast/ToastStore";
@@ -14,7 +13,7 @@ type WatchStore = {
   directory: string;
   watching: boolean;
   midiFiles: ParsedMidiMeasures[];
-  isWatching: boolean;
+  voiceGroups: string[];
   selectedVoicegroup: string | null;
   selectedVoicegroupDetails: any | null;
   setDirectory: (directory: string) => void;
@@ -23,6 +22,7 @@ type WatchStore = {
   startWatch: () => void;
   stopWatch: () => void;
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
+  getVoicegroups: () => void;
   setSelectedVoicegroupDetails: (voicegroup: string | null) => void;
 };
 
@@ -31,6 +31,8 @@ const watchStore = create<WatchStore>((set, get) => ({
   watching: false,
   selectedVoicegroup: null,
   selectedVoicegroupDetails: null,
+  midiFiles: [],
+  voiceGroups: [],
   setSelectedVoicegroupDetails: (voicegroup) => {
     if (!voicegroup) {
       return set({ selectedVoicegroupDetails: null });
@@ -41,12 +43,8 @@ const watchStore = create<WatchStore>((set, get) => ({
 
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
-  midiFiles: [],
   setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
   // Alias for watching state (for component convenience)
-  get isWatching() {
-    return get().watching;
-  },
   // Selected dir is handled by `onWatchDirectorySet` below.
   promptDirectory: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.OPEN_WATCH_DIRECTORY);
@@ -63,6 +61,14 @@ const watchStore = create<WatchStore>((set, get) => ({
 
   stopWatch: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.STOP_WATCHING);
+  },
+  getVoicegroups: () => {
+    window.api
+      .getVoiceGroups()
+      .then((voiceGroups) => set({ voiceGroups }))
+      .catch((err) => {
+        toast.error("Error getting voicegroups: " + err.message);
+      });
   },
 }));
 

@@ -1,11 +1,7 @@
 import { useWatchStore } from "@renderer/store";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import VoicegroupDetails from "./VoicegroupDetails";
 
-const getVoiceGroups = async () => {
-  const voiceGroups = await window.api.getVoiceGroups();
-  return voiceGroups;
-};
 const VoiceGroupItem = ({
   voiceGroup,
   selected,
@@ -33,18 +29,17 @@ const VoiceGroupItem = ({
   );
 };
 const VoiceGroups = () => {
-  const [voiceGroups, setVoiceGroups] = useState<string[]>([]);
-  const { selectedVoicegroup, setSelectedVoicegroupDetails } = useWatchStore();
+  const {
+    selectedVoicegroup,
+    voiceGroups,
+    getVoicegroups,
+    setSelectedVoicegroupDetails,
+  } = useWatchStore();
   const handleSelectVoiceGroup = (voiceGroup: string) => {
     setSelectedVoicegroupDetails(voiceGroup);
   };
   useEffect(() => {
-    const fetchVoiceGroups = async () => {
-      const voiceGroups = await getVoiceGroups();
-      console.log("voiceGroups", voiceGroups);
-      setVoiceGroups(voiceGroups);
-    };
-    fetchVoiceGroups();
+    getVoicegroups();
   }, []);
   if (voiceGroups.length === 0) {
     return <div>Loading...</div>;

@@ -67,4 +67,6 @@ export const getVoicegroupDetails = (
   window.electron.ipcRenderer
     .invoke(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUP_DETAILS, voicegroupName)
     .then((vg) => set({ selectedVoicegroupDetails: vg }))
-    .catch((err) => toast.error(err));
+    .catch((err) =>
+      toast.error("Error getting voicegroup details: " + err.message)
+    );

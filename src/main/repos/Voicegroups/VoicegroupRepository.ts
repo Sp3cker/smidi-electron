@@ -38,9 +38,7 @@ class VoicegroupRepository {
   mid2agbPath: string = "";
 
   voiceGroups: string[] = [];
-  constructor() {
-    // Remove circular reference - this class doesn't need to instantiate itself
-  }
+  constructor() {}
   async init(repoRoot: string) {
     this.repoRoot = repoRoot;
     const soundDir = resolve(this.repoRoot, "sound");

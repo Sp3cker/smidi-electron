@@ -10,9 +10,9 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import hookUpIpc from "./ipc";
 import makeMenu from "./lib/Menu";
-import MidiMan from "./MidiMan/MidiMan";
-import ExpansionManager from "./ExpansionMan/ExpansionManager";
-import Config from "./Config/Config";
+import MidiManService from "./services/MidiMan/MidiMan";
+import ExpansionManager from "./services/ExpansionMan/ExpansionManager";
+import Config from "./services/Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
 
@@ -76,7 +76,7 @@ app.whenReady().then(() => {
   });
 
   const config = new Config(new ConfigRepository(db));
-  const midiMan = new MidiMan();
+  const midiMan = new MidiManService();
   const expansionMan = new ExpansionManager(config);
   hookUpIpc(config, midiMan, expansionMan);
   createWindow();

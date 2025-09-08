@@ -1,4 +1,5 @@
 import type { Database } from "better-sqlite3";
+import { access, accessSync, constants } from "fs";
 
 interface ConfigRow {
   id: number;
@@ -13,7 +14,9 @@ class ConfigRepository {
     const config = this.db.prepare("SELECT * FROM config").all() as ConfigRow[];
     return config;
   }
-
+  rootPathExists(path: string) {
+    return accessSync(path, constants.F_OK);
+  }
   updateExpansionDir(value: string): void {
     this.db
       .prepare(

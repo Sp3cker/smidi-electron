@@ -1,20 +1,21 @@
 import { dialog, ipcMain, IpcMainInvokeEvent } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
-import type Config from "../Config/Config";
+import type Config from "../services/Config/Config";
 import type { DomainError } from "../../shared/dto";
 
-/**Caller needs to catch error */
+/** Generic handler for passing config to renderer
+ * Caller needs to catch error */
 const sendConfigToRenderer = (event: IpcMainInvokeEvent, config: Config) => {
   const currConfig = config.getConfig();
   if (!currConfig) {
     throw new Error("No configuration found in the system");
   }
+
   console.debug("Main: sending config to renderer", currConfig);
   event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, {
     success: true,
     data: currConfig,
   });
-  // ipcMain.emit(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, currConfig);
 };
 /**Sets up listeners for app asking for config, sending config to app */
 export const setConfigIpc = (config: Config) => {

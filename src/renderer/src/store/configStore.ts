@@ -1,10 +1,12 @@
 import { IPC_CHANNELS } from "../../../shared/ipc";
+import { ConfigData, ConfigResponse } from "../../../shared/dto";
 import { create } from "zustand";
 import { toast } from "@renderer/ui/Toast/ToastStore";
 type ConfigStore = {
   config: Record<string, string> | null;
   configDrawerOpen: boolean;
   isLoading: boolean; // Set by listener. No reason to have setter
+  validConfig: boolean;
   getConfig: () => void;
   updateConfig: (key: string, value: string | number) => void;
   setConfigDrawerOpen: (open: boolean) => void;
@@ -14,6 +16,7 @@ type ConfigStore = {
 
 const configStore = create<ConfigStore>((set, get) => ({
   config: null,
+  validConfig: false,
   isLoading: true,
   configDrawerOpen: false,
   getConfig: () => {
@@ -44,11 +47,19 @@ const configStore = create<ConfigStore>((set, get) => ({
 // Set up IPC listener to receive config updates from main process
 window.electron.ipcRenderer.on(
   IPC_CHANNELS.CONFIG.CONFIG_UPDATED,
-  (_, newConfig) => {
+  (_, newConfig: ConfigResponse) => {
+    if (!newConfig.success) {
+      toast.error(
+        `Error loading config: ${newConfig.error.message} (code: ${newConfig.error.code})`
+      );
+      configStore.setState({ isLoading: false });
+      return;
+    }
     console.log("config loaded", newConfig);
     toast.info("Config updated successfully");
     configStore.setState({
-      config: newConfig.data,
+      config: { expansionDirectory: newConfig.data.expansionDirectory },
+      validConfig: newConfig.data.isValid,
       isLoading: false,
     });
   }

@@ -125,7 +125,7 @@ export function parseMidiToResolution(midi: MidiFile) {
 
 //   return measure
 
-class MidiMan {
+class MidiManService {
   fileWatcher: FileWatcher | null = null;
   watchDirectory: string | null = null;
 
@@ -185,4 +185,4 @@ class MidiMan {
   }
 }
 
-export default MidiMan;
+export default MidiManService;

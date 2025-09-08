@@ -1,12 +1,12 @@
 import { ipcMain, dialog } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
-import type MidiMan from "../MidiMan/MidiMan";
+import type MidiManService from "../services/MidiMan/MidiMan";
 import { MidiFile } from "@shared/MidiFile";
 import { AppErrorPayload } from "@shared/error";
-import { parseMidiToResolution } from "../MidiMan/MidiMan";
+import { parseMidiToResolution } from "../services/MidiMan/MidiMan";
 // Get the main window reference and MidiMan instance
 
-export const setMidiManIpc = (midiManInstance: MidiMan) => {
+export const setMidiManIpc = (midiManInstance: MidiManService) => {
   // Handle directory selection dialog
   ipcMain.on(IPC_CHANNELS.OPEN_WATCH_DIRECTORY, async (event) => {
     const result = await dialog.showOpenDialog({

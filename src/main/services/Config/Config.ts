@@ -1,4 +1,4 @@
-import type ConfigRepository from "../repos/Config/ConfigRepository";
+import type ConfigRepository from "../../repos/Config/ConfigRepository";
 class Config {
   constructor(private readonly configRepository: ConfigRepository) {}
   isValidExpansionDirectory(path: string): boolean {
@@ -26,6 +26,9 @@ class Config {
   }
   resetConfig() {
     this.configRepository.resetConfig();
+  }
+  validConfig() {
+    return this.configRepository.rootPathExists()
   }
 }
 

@@ -1,6 +1,6 @@
 import type Config from "../Config/Config";
-import ExpansionRepository from "../repos/Expansion/ExpansionRepository";
-import VoicegroupRepository from "../repos/Expansion/VoicegroupRepository";
+import ExpansionRepository from "../../repos/Expansion/ExpansionRepository";
+import VoicegroupRepository from "../../repos/Voicegroups/VoicegroupRepository";
 
 class ExpansionManager {
   expansionRepository: ExpansionRepository = new ExpansionRepository();
@@ -16,21 +16,16 @@ class ExpansionManager {
     return;
   }
   // pass this the expansion directory from config.
-  setExpansionPathsfromRoot(root: string) {
+  private setExpansionPathsfromRoot(root: string) {
     console.debug("ExpansionManager: setting expansion paths from root", root);
+    if (this.expansionRepository.isValidRoot(root) === false) {
+      throw new Error("ExpansionManager: Invalid expansion root path");
+    }
     this.expansionRepository.setRepoRoot(root);
     this.voicegroupRepository.init(root);
   }
 
-  async getVoiceGroups() {
-    try {
-      console.debug("ExpansionManager: getting voice groups");
-      return this.voicegroupRepository.loadVoiceGroups();
-    } catch (error) {
-      console.error("ExpansionManager: error getting voice groups", error);
-      return [];
-    }
-  }
+
   async getVoicegroupDetails(voicegroupName: string) {
     try {
       console.debug(
