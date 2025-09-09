@@ -113,7 +113,7 @@ export const setConfigIpc = (config: Config) => {
     // Either way, we send the new config to the renderer
     sendConfigToRenderer(event, config);
   }); // Reset config
-  ipcMain.on(IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY, (event) => {
+  ipcMain.handle(IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY, (event) => {
     console.debug("Main: open expansion directory command received");
     try {
       const dir = dialog.showOpenDialogSync({

@@ -61,11 +61,14 @@ class Config {
   }
   updateExpansionDir(value: string) {
     try {
+      console.debug("ConfigService: updating expansion dir", value);
+      if (!this.isValidExpansionDirectory(value)) {
+        throw new Error("Invalid expansion directory provided");
+      }
       this.configRepository.updateExpansionDir(value);
     } catch (error) {
-      console.error("Error updating expansion directory", error);
       this.configIsValid = false;
-      return;
+      throw new Error("ConfigService: error updating expansion dir" + error);
     }
     this.rootDir = value;
     this.configIsValid = true;

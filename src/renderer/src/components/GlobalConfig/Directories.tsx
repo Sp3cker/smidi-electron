@@ -46,7 +46,7 @@ const Directories = ({
           onChange={(e) => setExpansionDir(e.currentTarget.value)}
           onBlur={handleBlur}
         />
-        <Button onClick={handleBrowse}>Browse</Button>
+        <Button onMouseDown={handleBrowse}>Browse</Button>
       </div>
       <StatusCircle
         label="Voicegroups Loaded"
