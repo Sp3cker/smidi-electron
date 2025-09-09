@@ -8,8 +8,12 @@ class Config {
     this.validateConfig();
   }
   isValidExpansionDirectory(path: string): boolean {
-    return /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path);
+    return (
+      /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path) &&
+      this.configRepository.rootPathExists(path)
+    );
   }
+
   validateConfig() {
     const config = this.getConfig();
     if (!config) {
@@ -21,6 +25,7 @@ class Config {
       return;
     }
     if (!this.isValidExpansionDirectory(config.expansionDir)) {
+      this.rootDir = "";
       this.configIsValid = false;
       return;
     }
@@ -29,8 +34,8 @@ class Config {
   }
   getConfig() {
     const storedConfig = this.configRepository.getConfig();
-    // { id: 1, key: 'expansionDirectory', value: '' },
     //{ id: 2, key: 'expansionDir', value: '/asdf' }
+    // { id: 1, key: 'expansionDirectory', value: '' },
     const config = storedConfig.reduce(
       (acc, row) => {
         acc[row.key] = row.value;
@@ -38,7 +43,17 @@ class Config {
       },
       {} as Record<string, string>
     );
-
+    const expansionDirExists = this.isValidExpansionDirectory(
+      config.expansionDir
+    );
+    if (!expansionDirExists) {
+      config.expansionDir = "";
+      this.rootDir = "";
+      this.configIsValid = false;
+    } else {
+      this.rootDir = config.expansionDir;
+      this.configIsValid = true;
+    }
     return config;
   }
   writeConfig(config: [string, string]) {

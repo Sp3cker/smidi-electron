@@ -15,7 +15,12 @@ class ConfigRepository {
     return config;
   }
   rootPathExists(path: string) {
-    return accessSync(path, constants.F_OK);
+    try {
+      accessSync(path, constants.F_OK);
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
   updateExpansionDir(value: string): void {
     this.db
