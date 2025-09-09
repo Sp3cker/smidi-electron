@@ -1,4 +1,5 @@
 export * from "./config.dto";
+export * from "./voicegroup.dto";
 // Minimal shape of a note from @tonejs/midi that we rely on
 export type OriginalMidiNote = {
   midi: number;

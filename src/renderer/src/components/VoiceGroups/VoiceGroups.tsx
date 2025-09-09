@@ -1,6 +1,7 @@
 import { useWatchStore } from "@renderer/store";
 import { useEffect } from "react";
 import VoicegroupDetails from "./VoicegroupDetails";
+import { useVoicegroups } from "@renderer/hooks/useVoicegroups";
 
 const VoiceGroupItem = ({
   voiceGroup,
@@ -32,17 +33,23 @@ const VoiceGroups = () => {
   const {
     selectedVoicegroup,
     voiceGroups,
-    getVoicegroups,
-    setSelectedVoicegroupDetails,
-  } = useWatchStore();
+    error,
+    isLoading,
+    setSelectedVoicegroup,
+  } = useVoicegroups();
   const handleSelectVoiceGroup = (voiceGroup: string) => {
-    setSelectedVoicegroupDetails(voiceGroup);
+    setSelectedVoicegroup(voiceGroup);
   };
-  useEffect(() => {
-    getVoicegroups();
-  }, []);
-  if (voiceGroups.length === 0) {
+
+  if (isLoading) {
     return <div>Loading...</div>;
+  }
+  if (error || !voiceGroups) {
+    return (
+      <div className="text-[var(--yatsugi-red-1)]">
+        Error loading voice groups
+      </div>
+    );
   }
   return (
     <>

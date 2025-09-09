@@ -13,7 +13,7 @@ type WatchStore = {
   directory: string;
   watching: boolean;
   midiFiles: ParsedMidiMeasures[];
-  voiceGroups: string[];
+
   selectedVoicegroup: string | null;
   selectedVoicegroupDetails: any | null;
   setDirectory: (directory: string) => void;
@@ -22,7 +22,8 @@ type WatchStore = {
   startWatch: () => void;
   stopWatch: () => void;
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
-  getVoicegroups: () => void;
+
+  setSelectedVoicegroup: (voicegroup: string | null) => void;
   setSelectedVoicegroupDetails: (voicegroup: string | null) => void;
 };
 
@@ -32,14 +33,6 @@ const watchStore = create<WatchStore>((set, get) => ({
   selectedVoicegroup: null,
   selectedVoicegroupDetails: null,
   midiFiles: [],
-  voiceGroups: [],
-  setSelectedVoicegroupDetails: (voicegroup) => {
-    if (!voicegroup) {
-      return set({ selectedVoicegroupDetails: null });
-    }
-    set({ selectedVoicegroup: voicegroup });
-    getVoicegroupDetails(voicegroup, set);
-  },
 
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
@@ -62,13 +55,16 @@ const watchStore = create<WatchStore>((set, get) => ({
   stopWatch: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.STOP_WATCHING);
   },
-  getVoicegroups: () => {
-    window.api
-      .getVoiceGroups()
-      .then((voiceGroups) => set({ voiceGroups }))
-      .catch((err) => {
-        toast.error("Error getting voicegroups: " + err.message);
-      });
+
+  setSelectedVoicegroup: (voicegroup) => {
+    set({ selectedVoicegroup: voicegroup });
+  },
+  setSelectedVoicegroupDetails: (voicegroup) => {
+    if (!voicegroup) {
+      return set({ selectedVoicegroupDetails: null });
+    }
+    set({ selectedVoicegroup: voicegroup });
+    getVoicegroupDetails(voicegroup, set);
   },
 }));
 

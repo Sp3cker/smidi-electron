@@ -77,7 +77,7 @@ const animateBackdrop = (
 const GlobalConfig = memo(function GlobalConfig() {
   const configDrawerOpen = useConfigStoreWithSelectors.use.configDrawerOpen();
   const config = useConfigStoreWithSelectors.use.config();
-  const updateConfig = useConfigStoreWithSelectors.use.updateConfig();
+
   const updateExpansionDir =
     useConfigStoreWithSelectors.use.updateExpansionDir();
   const setConfigDrawerOpen =
@@ -92,12 +92,6 @@ const GlobalConfig = memo(function GlobalConfig() {
       updateExpansionDir(value);
     },
     [updateExpansionDir]
-  );
-  const handleUpdateConfig = useCallback(
-    (key: string, value: any) => {
-      updateConfig(key, value);
-    },
-    [config, updateConfig]
   );
 
   useEffect(() => {
@@ -127,7 +121,7 @@ const GlobalConfig = memo(function GlobalConfig() {
     <>
       <div
         ref={backdropRef}
-        style={{ display: "none" }}
+        // style={{ display: "none" }}
         className="hidden fixed inset-0 bg-black bg-opacity-50"
         onClick={handleClose}
       />

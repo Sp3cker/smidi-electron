@@ -7,6 +7,9 @@ const api = {
   getVoiceGroups: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUPS);
   },
+  browseExpansionDirectory: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY);
+  },
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

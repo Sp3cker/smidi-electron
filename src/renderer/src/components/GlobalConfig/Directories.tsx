@@ -22,9 +22,9 @@ const Directories = ({
   }, [expansionDir, configExpansionDir, handleSubmit]);
 
   const handleBrowse = useCallback(() => {
-    window.electron.ipcRenderer.send(
-      IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY
-    );
+    window.api.browseExpansionDirectory().then((directory) => {
+      setExpansionDir(directory);
+    });
   }, []);
 
   useEffect(() => {
@@ -36,7 +36,8 @@ const Directories = ({
       <div className="p-2">
         <h3 className="text-xl/6 pb-1 font-bold">Expansion Directory</h3>
         <p className="text-xl/4 pb-1 font-pkmnem">
-          Your voicegroups and <code className="text-sm">midi2agb</code> executable will be derived from this.
+          Your voicegroups and <code className="text-sm">midi2agb</code>{" "}
+          executable will be derived from this.
         </p>
         <input
           className="input w-full"

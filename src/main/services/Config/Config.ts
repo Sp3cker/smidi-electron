@@ -1,10 +1,32 @@
 import type ConfigRepository from "../../repos/Config/ConfigRepository";
+// * Plan is for this to be ran before app initialization
+// * So we know if the config is valid before we start the app.
 class Config {
-  constructor(private readonly configRepository: ConfigRepository) {}
+  configIsValid: boolean = false;
+  public rootDir: string = "";
+  constructor(private readonly configRepository: ConfigRepository) {
+    this.validateConfig();
+  }
   isValidExpansionDirectory(path: string): boolean {
     return /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path);
   }
-
+  validateConfig() {
+    const config = this.getConfig();
+    if (!config) {
+      this.configIsValid = false;
+      return;
+    }
+    if (!config.expansionDir) {
+      this.configIsValid = false;
+      return;
+    }
+    if (!this.isValidExpansionDirectory(config.expansionDir)) {
+      this.configIsValid = false;
+      return;
+    }
+    this.configIsValid = true;
+    this.rootDir = config.expansionDir;
+  }
   getConfig() {
     const storedConfig = this.configRepository.getConfig();
     // { id: 1, key: 'expansionDirectory', value: '' },
@@ -16,19 +38,25 @@ class Config {
       },
       {} as Record<string, string>
     );
+
     return config;
   }
   writeConfig(config: [string, string]) {
     this.configRepository.writeConfig(config);
   }
   updateExpansionDir(value: string) {
-    this.configRepository.updateExpansionDir(value);
+    try {
+      this.configRepository.updateExpansionDir(value);
+    } catch (error) {
+      console.error("Error updating expansion directory", error);
+      this.configIsValid = false;
+      return;
+    }
+    this.rootDir = value;
+    this.configIsValid = true;
   }
   resetConfig() {
     this.configRepository.resetConfig();
-  }
-  validConfig() {
-    return this.configRepository.rootPathExists()
   }
 }
 

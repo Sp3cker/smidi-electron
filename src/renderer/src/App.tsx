@@ -18,6 +18,7 @@ function App() {
   const hasRequestedConfig = useRef(false);
 
   useLayoutEffect(() => {
+
     if (!config && isLoading && !hasRequestedConfig.current) {
       hasRequestedConfig.current = true;
       getConfig();

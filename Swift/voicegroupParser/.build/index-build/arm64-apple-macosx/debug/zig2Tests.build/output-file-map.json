@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2Tests.build/master.swiftdeps"
+  },
+  "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/Tests/zig2Tests/zig2Tests.swift": {
+    "dependencies": "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2Tests.build/zig2Tests.d",
+    "object": "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2Tests.build/zig2Tests.swift.o",
+    "swiftmodule": "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2Tests.build/zig2Tests~partial.swiftmodule",
+    "swift-dependencies": "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2Tests.build/zig2Tests.swiftdeps"
+  }
+}

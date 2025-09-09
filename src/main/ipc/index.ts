@@ -1,19 +1,19 @@
 import { setConfigIpc } from "./configIpc";
 import { setMidiManIpc } from "./midimanIpc";
-import { setExpansionManIpc } from "./expansionmanIpc";
+import { setVoicegroupsIpc } from "./voicegroupsIpc";
 import type MidiManService from "../services/MidiMan/MidiMan";
-import type ExpansionMan from "../services/ExpansionMan/ExpansionManager";
+import type VoicegroupsService from "../services/Voicegroups/VoicegroupsService";
 import type Config from "../services/Config/Config";
 
 const assignIPCtoServices = (
 
   configInstance: Config,
   midiManInstance: MidiManService,
-  expansionInstance: ExpansionMan
+  voicegroupsInstance: VoicegroupsService
 ) => {
   setConfigIpc(configInstance);
   setMidiManIpc(midiManInstance);
-  setExpansionManIpc(expansionInstance);
+  setVoicegroupsIpc(voicegroupsInstance);
 };
 
 export default assignIPCtoServices;

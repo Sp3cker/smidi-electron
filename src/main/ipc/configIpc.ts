@@ -12,9 +12,13 @@ const sendConfigToRenderer = (event: IpcMainInvokeEvent, config: Config) => {
   }
 
   console.debug("Main: sending config to renderer", currConfig);
+
   event.sender.send(IPC_CHANNELS.CONFIG.CONFIG_UPDATED, {
     success: true,
-    data: currConfig,
+    data: {
+      expansionDir: currConfig.expansionDir,
+      isValid: config.configIsValid,
+    },
   });
 };
 /**Sets up listeners for app asking for config, sending config to app */

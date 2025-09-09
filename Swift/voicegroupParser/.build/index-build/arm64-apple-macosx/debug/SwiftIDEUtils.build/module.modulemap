@@ -1,0 +1,4 @@
+module SwiftIDEUtils {
+    header "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/SwiftIDEUtils.build/SwiftIDEUtils-Swift.h"
+    requires objc
+}

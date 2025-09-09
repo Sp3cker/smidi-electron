@@ -1,20 +1,36 @@
-import VoicegroupRepository from "src/main/repos/Voicegroups/VoicegroupRepository";
-import Config from "../Config/Config";
+import VoicegroupRepository from "../../repos/Voicegroups/VoicegroupRepository";
+import type Config from "../Config/Config";
 
 class VoicegroupsService {
-  repository: VoicegroupRepository = new VoicegroupRepository();
-  private config: Config;
-  //
+  repository: VoicegroupRepository;
+
   constructor(config: Config) {
-    this.config = config;
+    this.repository = new VoicegroupRepository(config);
   }
+
   async getVoiceGroups() {
     try {
-      console.debug("ExpansionManager: getting voice groups");
-      return this.voicegroupRepository.loadVoiceGroups();
+      console.debug("VoicegroupsService: getting voice groups");
+      return this.repository.getVoiceGroups();
     } catch (error) {
-      console.error("ExpansionManager: error getting voice groups", error);
-      return [];
+      throw new Error("VoicegroupsService: error getting voice groups" + error);
+    }
+  }
+  async getVoicegroupDetails(voicegroupName: string) {
+    try {
+      console.debug(
+        "VoicegroupsService: getting voicegroup details",
+        voicegroupName
+      );
+      return this.repository.readVoicegroupFile(voicegroupName);
+    } catch (error) {
+      console.error(
+        "VoicegroupsService: error getting voicegroup details",
+        error as Error
+      );
+      throw new Error("VoicegroupsService: error getting voicegroup details");
     }
   }
 }
+
+export default VoicegroupsService;

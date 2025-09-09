@@ -11,7 +11,7 @@ import icon from "../../resources/icon.png?asset";
 import hookUpIpc from "./ipc";
 import makeMenu from "./lib/Menu";
 import MidiManService from "./services/MidiMan/MidiMan";
-import ExpansionManager from "./services/ExpansionMan/ExpansionManager";
+import VoicegroupsService from "./services/Voicegroups/VoicegroupsService";
 import Config from "./services/Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
@@ -77,8 +77,8 @@ app.whenReady().then(() => {
 
   const config = new Config(new ConfigRepository(db));
   const midiMan = new MidiManService();
-  const expansionMan = new ExpansionManager(config);
-  hookUpIpc(config, midiMan, expansionMan);
+  const voicegroupsService = new VoicegroupsService(config);
+  hookUpIpc(config, midiMan, voicegroupsService);
   createWindow();
 
   app.on("activate", function () {

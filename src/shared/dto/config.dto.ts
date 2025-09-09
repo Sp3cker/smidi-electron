@@ -20,7 +20,7 @@ export type ConfigResponse =
 
 export type ConfigData = {
   isValid: boolean;
-  expansionDirectory: string;
+  expansionDir: string;
   // Add other config properties as needed
 };
 

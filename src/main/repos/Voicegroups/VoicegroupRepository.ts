@@ -2,6 +2,7 @@ import { readFile, access, constants, readdir } from "fs/promises";
 import { createInterface } from "node:readline";
 import { resolve } from "node:path";
 import { createReadStream } from "node:fs";
+import type Config from "src/main/services/Config/Config";
 
 type NodeKind =
   | "group"
@@ -25,6 +26,7 @@ export type VoiceNode = {
 };
 
 class VoicegroupRepository {
+  config: Config;
   repoRoot: string = "";
   soundDir: string = "";
   voicegroupsDir: string = "";
@@ -38,9 +40,12 @@ class VoicegroupRepository {
   mid2agbPath: string = "";
 
   voiceGroups: string[] = [];
-  constructor() {}
-  async init(repoRoot: string) {
-    this.repoRoot = repoRoot;
+  constructor(config: Config) {
+    this.config = config;
+  }
+
+  async init() {
+    this.repoRoot = this.config.rootDir;
     const soundDir = resolve(this.repoRoot, "sound");
     this.voicegroupsDir = resolve(soundDir, "voicegroups");
     const directSoundDataPath = resolve(soundDir, "direct_sound_data.inc");
@@ -55,9 +60,15 @@ class VoicegroupRepository {
     );
   }
   public async getVoiceGroups() {
+    if (this.voicegroupsDir === "") {
+      await this.init();
+    }
+    if (this.voiceGroups.length === 0) {
+      await this.loadVoiceGroups();
+    }
     return this.voiceGroups;
   }
-  public async loadVoiceGroups() {
+  private async loadVoiceGroups() {
     if (this.voiceGroups.length === 0) {
       await access(this.voicegroupsDir, constants.R_OK);
 
@@ -67,10 +78,7 @@ class VoicegroupRepository {
       if (this.voiceGroups.length === 0) {
         throw new Error("VoicegroupRepository: voicegroup directory is empty");
       }
-
-      return this.voiceGroups;
     }
-    return this.voiceGroups;
   }
   public async readVoicegroupFile(voicegroupName: string): Promise<VoiceNode> {
     if (this.repoRoot === "") {

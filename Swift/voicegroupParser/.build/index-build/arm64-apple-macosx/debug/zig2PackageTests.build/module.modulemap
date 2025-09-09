@@ -1,0 +1,4 @@
+module zig2PackageTests {
+    header "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/zig2PackageTests.build/zig2PackageTests-Swift.h"
+    requires objc
+}

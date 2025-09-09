@@ -1,0 +1,20 @@
+---
+path:            '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/prebuilt-modules/15.5/RegexBuilder.swiftmodule/arm64e-apple-macos.swiftmodule'
+dependencies:
+  - mtime:           1746401335000000000
+    path:            '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/prebuilt-modules/15.5/RegexBuilder.swiftmodule/arm64e-apple-macos.swiftmodule'
+    size:            1142656
+  - mtime:           1745034242000000000
+    path:            'usr/lib/swift/Swift.swiftmodule/arm64e-apple-macos.swiftinterface'
+    size:            1929969
+    sdk_relative:    true
+  - mtime:           1745035971000000000
+    path:            'usr/lib/swift/_StringProcessing.swiftmodule/arm64e-apple-macos.swiftinterface'
+    size:            22908
+    sdk_relative:    true
+  - mtime:           1745036010000000000
+    path:            'usr/lib/swift/RegexBuilder.swiftmodule/arm64e-apple-macos.swiftinterface'
+    size:            204416
+    sdk_relative:    true
+version:         1
+...

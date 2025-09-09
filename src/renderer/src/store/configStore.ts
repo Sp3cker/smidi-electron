@@ -1,9 +1,12 @@
 import { IPC_CHANNELS } from "../../../shared/ipc";
-import { ConfigData, ConfigResponse } from "../../../shared/dto";
+import { ConfigResponse } from "../../../shared/dto";
 import { create } from "zustand";
 import { toast } from "@renderer/ui/Toast/ToastStore";
+type AppConfig = {
+  expansionDir: string;
+};
 type ConfigStore = {
-  config: Record<string, string> | null;
+  config: AppConfig | null;
   configDrawerOpen: boolean;
   isLoading: boolean; // Set by listener. No reason to have setter
   validConfig: boolean;
@@ -57,8 +60,9 @@ window.electron.ipcRenderer.on(
     }
     console.log("config loaded", newConfig);
     toast.info("Config updated successfully");
+
     configStore.setState({
-      config: { expansionDirectory: newConfig.data.expansionDirectory },
+      config: { expansionDir: newConfig.data.expansionDir },
       validConfig: newConfig.data.isValid,
       isLoading: false,
     });
