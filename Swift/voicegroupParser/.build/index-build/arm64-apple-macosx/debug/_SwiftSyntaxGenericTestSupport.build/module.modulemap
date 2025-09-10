@@ -1,4 +1,0 @@
-module _SwiftSyntaxGenericTestSupport {
-    header "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/_SwiftSyntaxGenericTestSupport.build/_SwiftSyntaxGenericTestSupport-Swift.h"
-    requires objc
-}

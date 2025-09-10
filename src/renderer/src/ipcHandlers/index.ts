@@ -63,10 +63,16 @@ export const onConfigLoaded = (
 export const getVoicegroupDetails = (
   voicegroupName: string,
   set: (state: any) => void
-): Promise<any> =>
+): Promise<any> => {
+  console.time("getVoicegroupDetails");
   window.electron.ipcRenderer
     .invoke(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUP_DETAILS, voicegroupName)
-    .then((vg) => set({ selectedVoicegroupDetails: vg }))
+    .then((vg) => {
+      console.table(vg);
+      set({ selectedVoicegroupDetails: vg });
+      console.timeEnd("getVoicegroupDetails");
+    })
     .catch((err) =>
       toast.error("Error getting voicegroup details: " + err.message)
     );
+};

@@ -1,4 +1,0 @@
-module SwiftSyntax509 {
-    header "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/SwiftSyntax509-tool.build/SwiftSyntax509-Swift.h"
-    requires objc
-}

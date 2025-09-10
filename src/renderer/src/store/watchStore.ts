@@ -24,7 +24,6 @@ type WatchStore = {
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
 
   setSelectedVoicegroup: (voicegroup: string | null) => void;
-  setSelectedVoicegroupDetails: (voicegroup: string | null) => void;
 };
 
 const watchStore = create<WatchStore>((set, get) => ({
@@ -37,8 +36,6 @@ const watchStore = create<WatchStore>((set, get) => ({
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
   setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
-  // Alias for watching state (for component convenience)
-  // Selected dir is handled by `onWatchDirectorySet` below.
   promptDirectory: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.OPEN_WATCH_DIRECTORY);
   },
@@ -57,9 +54,6 @@ const watchStore = create<WatchStore>((set, get) => ({
   },
 
   setSelectedVoicegroup: (voicegroup) => {
-    set({ selectedVoicegroup: voicegroup });
-  },
-  setSelectedVoicegroupDetails: (voicegroup) => {
     if (!voicegroup) {
       return set({ selectedVoicegroupDetails: null });
     }

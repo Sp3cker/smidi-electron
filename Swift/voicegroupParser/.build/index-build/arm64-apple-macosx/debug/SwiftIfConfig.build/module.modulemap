@@ -1,4 +1,0 @@
-module SwiftIfConfig {
-    header "/Users/spencer/dev/reactProjects/smidi-electron/Swift/voicegroupParser/.build/index-build/arm64-apple-macosx/debug/SwiftIfConfig.build/SwiftIfConfig-Swift.h"
-    requires objc
-}
