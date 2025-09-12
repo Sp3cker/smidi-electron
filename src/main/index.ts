@@ -16,6 +16,7 @@ import Config from "./services/Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
 import { db } from "./lib/db";
 
+import { initMessageChannels } from "./lib/messageChannels";
 /** Renderer config is sent upon request
  * check `ipc/configIpc.ts`
  */
@@ -42,6 +43,8 @@ function createWindow(): void {
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
+  // Initialize high-throughput bootstrap message channel
+  initMessageChannels(mainWindow);
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

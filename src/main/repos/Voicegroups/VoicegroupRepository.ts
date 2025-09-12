@@ -27,7 +27,9 @@ export type VoiceNode = {
 
 class VoicegroupRepository {
   config: Config;
-  repoRoot: string = "";
+  get repoRoot() {
+    return this.config.rootDir;
+  }
   soundDir: string = "";
   voicegroupsDir: string = "";
   directSoundDataPath: string = "";
@@ -45,7 +47,6 @@ class VoicegroupRepository {
   }
 
   async init() {
-    this.repoRoot = this.config.rootDir;
     const soundDir = resolve(this.repoRoot, "sound");
     this.voicegroupsDir = resolve(soundDir, "voicegroups");
     const directSoundDataPath = resolve(soundDir, "direct_sound_data.inc");
