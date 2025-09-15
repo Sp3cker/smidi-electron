@@ -1,5 +1,5 @@
 import type { Database } from "better-sqlite3";
-import { access, accessSync, constants } from "fs";
+import { accessSync, constants } from "fs";
 
 interface ConfigRow {
   id: number;

@@ -1,0 +1,50 @@
+import Foundation
+
+actor ConcurrencyLimiter {
+  private let limit: Int
+  private var inFlight: Int = 0
+  private var waiters: [CheckedContinuation<Void, Never>] = []
+
+  init(limit: Int) { self.limit = limit }
+
+  func acquire() async {
+    if inFlight < limit {
+      inFlight += 1
+      return
+    }
+    await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+      waiters.append(cont)
+    }
+    inFlight += 1
+  }
+
+  func release() {
+    inFlight -= 1
+    if !waiters.isEmpty {
+      let cont = waiters.removeFirst()
+      cont.resume()
+    }
+  }
+}
+
+public actor FilePrefetcher {
+
+  private var tasks: [URL: Task<String, Error>] = [:]
+  private let limiter = ConcurrencyLimiter(limit: 6)
+
+  public init(){}
+
+  public func prefetch(from url: URL) -> Task<String, Error> {
+    // if let existing = tasks[url] {return existing}
+    // Capture the limiter outside the detached task to avoid extra hops
+    // let limiter = self.limiter
+    let task = Task.detached(priority: .utility) {() async throws -> String in
+      await self.limiter.acquire()
+      defer { Task { await self.limiter.release() } }
+// memory-map for speed and memory efficiency
+      return try String(contentsOf: url, encoding: .utf8)
+    }
+    tasks[url] = task
+    return task
+  }
+}

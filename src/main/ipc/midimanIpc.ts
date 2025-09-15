@@ -26,7 +26,7 @@ export const setMidiManIpc = (midiManInstance: MidiManService) => {
           // Convert MidiFile objects to serializable format for IPC
 
           const serializableData = midiObjects.map((midiFile: MidiFile) =>
-            parseMidiToResolution(midiFile, 129)
+            parseMidiToResolution(midiFile)
           );
 
           event.sender.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, serializableData);
@@ -52,7 +52,7 @@ export const setMidiManIpc = (midiManInstance: MidiManService) => {
       event.sender.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, true);
     } else {
       console.error("MidiMan instance not set or directory is empty");
-      mainWindow.webContents.send(IPC_CHANNELS.APP_ERROR, {
+      event.sender.send(IPC_CHANNELS.APP_ERROR, {
         success: false,
         error: "MidiMan instance not set or directory is empty",
       });

@@ -7,4 +7,5 @@ out
 .cursor/*
 Swift/.build/*
 .gitignore
-Swift/voicegroupParser/.build/*
+.build/*
+src/main/voicegroupParser/build/*

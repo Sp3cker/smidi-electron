@@ -45,6 +45,60 @@
       "name": "Release zig2 (Swift/voicegroupParser)",
       "program": "${workspaceFolder:smidi-electron}/Swift/voicegroupParser/.build/release/zig2",
       "preLaunchTask": "swift: Build Release zig2 (Swift/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Debug voicegroupParser (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/debug/voicegroupParser",
+      "preLaunchTask": "swift: Build Debug voicegroupParser (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Release voicegroupParser (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/release/voicegroupParser",
+      "preLaunchTask": "swift: Build Release voicegroupParser (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Debug nodeSwiftTest (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/debug/nodeSwiftTest",
+      "preLaunchTask": "swift: Build Debug nodeSwiftTest (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Release nodeSwiftTest (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/release/nodeSwiftTest",
+      "preLaunchTask": "swift: Build Release nodeSwiftTest (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Debug VoicegroupNode (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/debug/VoicegroupNode",
+      "preLaunchTask": "swift: Build Debug VoicegroupNode (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser",
+      "name": "Release VoicegroupNode (src/main/voicegroupParser)",
+      "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/release/VoicegroupNode",
+      "preLaunchTask": "swift: Build Release VoicegroupNode (src/main/voicegroupParser)"
     }
   ],
   "compounds": [

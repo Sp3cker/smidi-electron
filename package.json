@@ -5,6 +5,10 @@
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
+  "swift": {
+    "buildPath": "src/main/voicegroupParser/build"
+  },
+  "exports": "./voicegroupParser/build/arm64-apple-macosx/release/Module.node",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -19,7 +23,8 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "build:swift-node": "node-swift build"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -33,6 +38,7 @@
     "konva": "^9.3.22",
     "midi-file": "^1.2.4",
     "motion": "^12.23.12",
+    "node-swift": "^1.4.0",
     "react-konva": "^19.0.7",
     "react-spring": "^10.0.1",
     "streamx": "^2.22.1",
@@ -63,6 +69,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "typescript": "^5.8.3",
-    "vite": "^7.0.5"
+    "vite": "^7.0.5",
+    "vite-plugin-static-copy": "^3.1.2"
   }
 }

@@ -137,7 +137,7 @@ class MidiMan {
     if (this.fileWatcher) {
       await this.fileWatcher.stop();
     }
-    return new Promise((res, rej) => {
+    return new Promise((res, _) => {
       this.fileWatcher = new FileWatcher(directory);
       this.fileWatcher.emitter.on(
         "change",
