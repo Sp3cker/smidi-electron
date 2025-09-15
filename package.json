@@ -6,7 +6,8 @@
   "author": "example.com",
   "homepage": "https://electron-vite.org",
   "swift": {
-    "buildPath": "src/main/voicegroupParser/build"
+    "buildPath": "src/main/voicegroupParser/build",
+    "static": true
   },
   "exports": "./voicegroupParser/build/arm64-apple-macosx/release/Module.node",
   "scripts": {

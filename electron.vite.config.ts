@@ -8,16 +8,16 @@ export default defineConfig({
   main: {
     plugins: [
       externalizeDepsPlugin(),
-      viteStaticCopy({
-        targets: [
-          {
-            src: "src/main/voicegroupParser/build/arm64-apple-macosx/release/libNodeAPI.dylib",
-            dest: "chunks",
-          },
-          // add this too if you end up producing it:
-          // { src: 'src/main/voicegroupParser/build/arm64-apple-macosx/release/libModule.dylib', dest: 'chunks' },
-        ],
-      }),
+      // viteStaticCopy({
+      //   targets: [
+      //     {
+      //       src: "src/main/voicegroupParser/build/arm64-apple-macosx/release/libNodeAPI.dylib",
+      //       dest: "chunks",
+      //     },
+      //     // add this too if you end up producing it:
+      //     // { src: 'src/main/voicegroupParser/build/arm64-apple-macosx/release/libModule.dylib', dest: 'chunks' },
+      //   ],
+      // }),
     ],
     resolve: {
       alias: {

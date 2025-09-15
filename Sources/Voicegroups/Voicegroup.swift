@@ -1,7 +1,7 @@
 import Common
 import Foundation
 
-public struct Voicegroup: Sendable, Encodable {
+public struct Voicegroup: Sendable {
 
   public enum VoicegroupRef: Sendable, Encodable {
     case pending(Task<[Node], Error>)
@@ -23,10 +23,10 @@ public struct Voicegroup: Sendable, Encodable {
     do {
       let parser = Parser(rootDir: rootDir)
       let symbols = parser.preloadSymbols()
-      var cache: [String: Node] = [:]
+      // var cache: [String: Node] = [:]
       var stack: Set<String> = []
       let root = try await parser.resolveGroup(
-        label: voicegroup, symbols: symbols, cache: &cache, stack: &stack)
+        label: voicegroup, symbols: symbols, stack: &stack)
       let data = try JSONEncoder().encode(root)
       return .success(String(data: data, encoding: .utf8)!)
     } catch {
@@ -136,7 +136,7 @@ public struct Voicegroup: Sendable, Encodable {
       var i = line.startIndex
       while i < line.endIndex, line[i].isWhitespace { i = line.index(after: i) }
       guard i < line.endIndex else { return nil }
-      guard line[i...].hasPrefix("voice_") else { return nil }
+      // guard line[i...].hasPrefix("voice_") else { return nil }
       guard let space = line[i...].firstIndex(of: " ") else { return nil }
       let voiceType = line[i..<space]
       let argsStr = line[line.index(after: space)...].trimmingCharacters(in: .whitespaces)
@@ -235,13 +235,8 @@ public struct Voicegroup: Sendable, Encodable {
     }
 
     func resolveGroup(
-      label: String, symbols: SymbolMaps, cache: inout [String: Node], stack: inout Set<String>
+      label: String, symbols: SymbolMaps, stack: inout Set<String>
     ) async throws -> Node {
-      // if let cached = cache[label] { return cached }
-      // if stack.contains(label) {
-      //   return Node(type: .group, voicegroup: label, voiceType: nil, params: nil, sampleSymbol: nil, assetPath: nil, samples: [Node(type: .unknown, voicegroup: nil, voiceType: nil, params: ["cycle detected"], sampleSymbol: nil, assetPath: nil, samples: nil)])
-      // }
-      // stack.insert(label)
       let path = voicegroupPath(label: label)
       let fileData = try readVoicegroupFile(path: path)
       let entries = try await parseVoicegroupFile(fileData: fileData, symbols: symbols)
@@ -260,12 +255,10 @@ public struct Voicegroup: Sendable, Encodable {
         children.append(node)
         // }
       }
-      let group = Node(
+      return Node(
         type: .group, voicegroup: label, voiceType: nil, params: nil, sampleSymbol: nil,
         assetPath: nil, samples: nil, subGroups: .ready(children))
-      cache[label] = group
-      stack.remove(label)
-      return group
+
     }
   }
 }

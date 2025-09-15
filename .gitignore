@@ -8,4 +8,4 @@ out
 Swift/.build/*
 .gitignore
 .build/*
-src/main/voicegroupParser/build/*
+src/main/voicegroupParser/*

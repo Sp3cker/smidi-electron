@@ -32,10 +32,10 @@ class VoicegroupsService {
   async getVoicegroupDetails(voicegroupName: string) {
     try {
       console.time(`vg:fetch:${voicegroupName}`);
-      // const keysplitResult = await fetchVGDetails(
-      //   this.repository.repoRoot,
-      //   voicegroupName,
-      // );
+      const keysplitResult = await fetchVGDetails(
+        this.repository.repoRoot,
+        voicegroupName,
+      );
       console.timeEnd(`vg:fetch:${voicegroupName}`);
       // console.debug("VoicegroupsService: keysplitResult", keysplitResult);
       console.debug(
@@ -43,9 +43,9 @@ class VoicegroupsService {
         voicegroupName,
       );
       console.time(`vg:read:${voicegroupName}`);
-      const vg = await this.repository.readVoicegroupFile(voicegroupName);
+      // const vg = await this.repository.readVoicegroupFile(voicegroupName);
       console.timeEnd(`vg:read:${voicegroupName}`);
-      return vg;
+      return keysplitResult;
     } catch (error) {
       console.error(
         "VoicegroupsService: error getting voicegroup details",
