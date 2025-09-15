@@ -147,7 +147,7 @@ public struct Voicegroup: Sendable {
       if voiceType == "voice_keysplit" || voiceType == "voice_keysplit_all" {
         var first: String = rawArgs.first ?? ""
         if let at = first.lastIndex(of: "@") { first = String(first[..<at]) }
-        let dataTask: Task<[Node], Error> = Task.detached(priority: .utility) {
+        let dataTask: Task<[Node], Error> = Task.detached() {
           () async throws -> [Node] in
           let fetchTask = await prefetcher.prefetch(
             from: URL(fileURLWithPath: voicegroupPath(label: first)))
