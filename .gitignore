@@ -9,3 +9,4 @@ Swift/.build/*
 .gitignore
 .build/*
 src/main/voicegroupParser/*
+.swiftpm/*

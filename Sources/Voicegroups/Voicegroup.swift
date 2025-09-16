@@ -1,9 +1,9 @@
 import Common
 import Foundation
 
-public struct Voicegroup: Sendable {
+public struct Voicegroup: Sendable, Encodable {
 
-  public enum VoicegroupRef: Sendable, Encodable {
+  fileprivate enum VoicegroupRef: Sendable, Encodable {
     case pending(Task<[Node], Error>)
     case ready([Node])
     public func encode(to encoder: Encoder) throws {
@@ -34,49 +34,106 @@ public struct Voicegroup: Sendable {
     }
   }
 
+  fileprivate struct ADSREnvelope: Sendable, Encodable {
+    let attack: UInt8
+    let decay: UInt8
+    let sustain: UInt8
+    let release: UInt8
+    init(args: [String]) {
+      let lastFour = Array(args.suffix(4))
+      self.attack = UInt8(lastFour[0]) ?? 0
+      self.decay = UInt8(lastFour[1]) ?? 0
+      self.sustain = UInt8(lastFour[2]) ?? 0
+      self.release = UInt8(lastFour[3]) ?? 0
+    }
+  }
+
+  fileprivate struct SquareVoice: Sendable, Encodable {
+    let type: NodeKind = .square
+    let envelope: ADSREnvelope
+    let baseKey: UInt8
+    let pan: UInt8
+    let sweep: UInt8
+  }
+  fileprivate struct NoiseVoice: Sendable, Encodable {
+    let type: NodeKind = .noise
+    let envelope: ADSREnvelope
+    let baseKey: UInt8
+    let pan: UInt8
+    let period: UInt8
+  }
+  fileprivate struct PGMWaveVoice: Sendable, Encodable {
+    let type: NodeKind = .programmable
+    let envelope: ADSREnvelope
+    let baseKey: UInt8
+    let sample: String
+    let pan: UInt8
+  }
   // MARK: - Models
+  fileprivate struct DirectSoundVoice: Sendable, Encodable {
+    let type: NodeKind = .directsound
+    let envelope: ADSREnvelope
+    let baseKey: UInt8
+    let sample: String
+    let pan: UInt8
+
+  }
+  fileprivate struct KeysplitVoice: Sendable, Encodable {
+    let type: NodeKind = .keysplit
+    let voicegroup: String
+    let keysplit: String?
+    let voices: VoicegroupRef?
+  }
 
   public enum NodeKind: String, Sendable, Encodable {
     case group, keysplit, directsound, programmable, square, noise, unknown
   }
 
-  public struct Node: Sendable, Encodable {
-    public let type: NodeKind
-    public let voicegroup: String?
-    public let voiceType: String?
-    public let params: [String]?
-    public let sampleSymbol: String?
-    public let assetPath: String?
-    public let samples: [Node]?
-    public let subGroups: VoicegroupRef?
+  fileprivate struct GroupVoice: Sendable, Encodable {
+    let voicegroup: String
+    let voices: VoicegroupRef
+  }
 
-    public init(
-      type: NodeKind,
-      voicegroup: String?,
-      voiceType: String?,
-      params: [String]?,
-      sampleSymbol: String?,
-      assetPath: String?,
-      samples: [Node]?,
-      subGroups: VoicegroupRef?
-    ) {
-      self.type = type
-      self.voicegroup = voicegroup
-      self.voiceType = voiceType
-      self.params = params
-      self.sampleSymbol = sampleSymbol
-      self.assetPath = assetPath
-      self.samples = samples
-      self.subGroups = subGroups
+  fileprivate enum Node: Sendable, Encodable {
+
+    case keysplit(KeysplitVoice)
+    case directsound(DirectSoundVoice)
+    case programmable(PGMWaveVoice)
+    case square(SquareVoice)
+    case noise(NoiseVoice)
+    case group(GroupVoice)
+    private enum CodingKeys: String, CodingKey { case type, value }
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      switch self {
+      case .keysplit(let v):
+        try container.encode(NodeKind.keysplit, forKey: .type)
+        try container.encode(v, forKey: .value)
+      case .directsound(let v):
+        try container.encode(NodeKind.directsound, forKey: .type)
+        try container.encode(v, forKey: .value)
+      case .programmable(let v):
+        try container.encode(NodeKind.programmable, forKey: .type)
+        try container.encode(v, forKey: .value)
+      case .square(let v):
+        try container.encode(NodeKind.square, forKey: .type)
+        try container.encode(v, forKey: .value)
+      case .noise(let v):
+        try container.encode(NodeKind.noise, forKey: .type)
+        try container.encode(v, forKey: .value)
+      case .group(let v):
+        try container.encode(NodeKind.group, forKey: .type)
+        try container.encode(v, forKey: .value)
+      }
     }
   }
 
-  struct SymbolMaps {
+  fileprivate struct SymbolMaps {
     let directSound: [String: String]
     let programmable: [String: String]
   }
 
-  struct Parser {
+  fileprivate struct Parser {
     // Why is a struct in an enum? Why GPT?
     let rootDir: String
     let soundDir: String
@@ -93,7 +150,7 @@ public struct Voicegroup: Sendable {
       self.programmableWaveDataPath = soundDir + "/programmable_wave_data.inc"
     }
 
-    func loadSymbolMap(_ filePath: String) -> [String: String] {
+    fileprivate func loadSymbolMap(_ filePath: String) -> [String: String] {
       guard FileManager.default.fileExists(atPath: filePath) else { return [:] }
       guard let text = try? String(contentsOfFile: filePath, encoding: .utf8) else { return [:] }
       var map: [String: String] = [:]
@@ -120,7 +177,7 @@ public struct Voicegroup: Sendable {
       return map
     }
 
-    func preloadSymbols() -> SymbolMaps {
+    fileprivate func preloadSymbols() -> SymbolMaps {
       let ds = loadSymbolMap(directSoundDataPath)
       let pw = loadSymbolMap(programmableWaveDataPath)
       return SymbolMaps(directSound: ds, programmable: pw)
@@ -132,7 +189,7 @@ public struct Voicegroup: Sendable {
       return voicegroupsDir + "/voicegroup" + String(num) + ".inc"
     }
 
-    func parseLine(_ line: Substring, symbols: SymbolMaps) -> Node? {
+    fileprivate func parseLine(line: String, symbols: SymbolMaps) -> Node? {
       var i = line.startIndex
       while i < line.endIndex, line[i].isWhitespace { i = line.index(after: i) }
       guard i < line.endIndex else { return nil }
@@ -147,7 +204,7 @@ public struct Voicegroup: Sendable {
       if voiceType == "voice_keysplit" || voiceType == "voice_keysplit_all" {
         var first: String = rawArgs.first ?? ""
         if let at = first.lastIndex(of: "@") { first = String(first[..<at]) }
-        let dataTask: Task<[Node], Error> = Task.detached() {
+        let dataTask: Task<[Node], Error> = Task.detached {
           () async throws -> [Node] in
           let fetchTask = await prefetcher.prefetch(
             from: URL(fileURLWithPath: voicegroupPath(label: first)))
@@ -156,39 +213,56 @@ public struct Voicegroup: Sendable {
             fileData: String(fetchTask.value), symbols: symbols)
           return nodes
         }
-        return Node(
-          type: .keysplit, voicegroup: first, voiceType: String(voiceType), params: rawArgs,
-          sampleSymbol: nil, assetPath: nil, samples: nil, subGroups: .pending(dataTask))
+        return .keysplit(
+          KeysplitVoice(
+            voicegroup: first, keysplit: nil, voices: .pending(dataTask)))
       }
+      let envelope = ADSREnvelope(args: rawArgs)
       if voiceType.hasPrefix("voice_directsound") {
         let sample: String = rawArgs.count > 2 ? rawArgs[2] : ""
         let asset = symbols.directSound[sample]
-        return Node(
-          type: .directsound, voicegroup: nil, voiceType: String(voiceType), params: rawArgs,
-          sampleSymbol: sample, assetPath: asset, samples: nil, subGroups: nil)
+        return .directsound(
+          DirectSoundVoice(
+            envelope: envelope,
+            baseKey: UInt8(rawArgs[0]) ?? 0,
+            sample: asset ?? "",
+            pan: UInt8(rawArgs[1]) ?? 0,
+          ))
       }
       if voiceType.hasPrefix("voice_programmable_wave") {
         let sample: String = rawArgs.count > 2 ? rawArgs[2] : ""
         let asset = symbols.programmable[sample]
-        return Node(
-          type: .programmable, voicegroup: nil, voiceType: String(voiceType), params: rawArgs,
-          sampleSymbol: sample, assetPath: asset, samples: nil, subGroups: nil)
+        return .programmable(
+          PGMWaveVoice(
+            envelope: envelope,
+            baseKey: UInt8(rawArgs[0]) ?? 0,
+            sample: asset ?? "",
+            pan: UInt8(rawArgs[1]) ?? 0,
+          ))
+
       }
       if voiceType.hasPrefix("voice_square") {
-        return Node(
-          type: .square, voicegroup: nil, voiceType: String(voiceType), params: rawArgs,
-          sampleSymbol: nil, assetPath: nil, samples: nil, subGroups: nil)
+        return .square(
+          SquareVoice(
+            envelope: envelope,
+            baseKey: UInt8(rawArgs[0]) ?? 0,
+            pan: UInt8(rawArgs[1]) ?? 0,
+            sweep: UInt8(rawArgs[2]) ?? 0,
+          ))
+
       }
       if voiceType.hasPrefix("voice_noise") {
-        return Node(
-          type: .noise, voicegroup: nil, voiceType: String(voiceType), params: rawArgs,
-          sampleSymbol: nil, assetPath: nil, samples: nil, subGroups: nil)
+        return .noise(
+          NoiseVoice(
+            envelope: envelope,
+            baseKey: UInt8(rawArgs[0]) ?? 0,
+            pan: UInt8(rawArgs[1]) ?? 0,
+            period: UInt8(rawArgs[2]) ?? 0,
+          ))
       }
-      return Node(
-        type: .unknown, voicegroup: nil, voiceType: String(voiceType), params: rawArgs,
-        sampleSymbol: nil, assetPath: nil, samples: nil, subGroups: nil)
+      return nil
     }
-    func readVoicegroupFile(path: String) throws -> String {
+    fileprivate func readVoicegroupFile(path: String) throws -> String {
       do {
         return try String(contentsOfFile: path, encoding: .utf8)
       } catch {
@@ -196,19 +270,23 @@ public struct Voicegroup: Sendable {
       }
 
     }
-    func parseVoicegroupFile(fileData: String, symbols: SymbolMaps) async throws -> [Node] {
+    fileprivate func parseVoicegroupFile(fileData: String, symbols: SymbolMaps) async throws
+      -> [Node]
+    {
 
       var nodes: [Node] = []
       nodes.reserveCapacity(128)
       var pendingVgs: [(index: Int, task: Task<[Node], Error>)] = []
       for raw in fileData.split(separator: "\n", omittingEmptySubsequences: true) {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty { continue }
-        if !trimmed.hasPrefix("voice_") { continue }
-        if let node = parseLine(trimmed[...], symbols: symbols) {
-          if case .pending(let task) = node.subGroups {
+        guard !trimmed.isEmpty else { continue }
+        guard trimmed.hasPrefix("voice_") else { continue }
+        if let node = parseLine(line: String(trimmed[...]), symbols: symbols) {
+          if case .keysplit(let ks) = node, let voices = ks.voices, case .pending(let task) = voices
+          {
             pendingVgs.append((index: nodes.count, task: task))
           }
+
           nodes.append(node)
         }
       }
@@ -217,24 +295,22 @@ public struct Voicegroup: Sendable {
           group.addTask { (index, try await task.value) }
         }
         while let (i, sub) = try await group.next() {
-          let n = nodes[i]
-          nodes[i] = Voicegroup.Node(
-            type: n.type,
-            voicegroup: n.voicegroup,
-            voiceType: n.voiceType,
-            params: n.params,
-            sampleSymbol: n.sampleSymbol,
-            assetPath: n.assetPath,
-            samples: n.samples,
-            subGroups: .ready(sub)
-          )
+          if case .keysplit(let ks) = nodes[i] {
+            nodes[i] = .keysplit(
+              KeysplitVoice(
+                voicegroup: ks.voicegroup,
+                keysplit: ks.keysplit,
+                voices: .ready(sub)
+              )
+            )
+          }
         }
       }
 
       return nodes
     }
 
-    func resolveGroup(
+    fileprivate func resolveGroup(
       label: String, symbols: SymbolMaps, stack: inout Set<String>
     ) async throws -> Node {
       let path = voicegroupPath(label: label)
@@ -255,9 +331,12 @@ public struct Voicegroup: Sendable {
         children.append(node)
         // }
       }
-      return Node(
-        type: .group, voicegroup: label, voiceType: nil, params: nil, sampleSymbol: nil,
-        assetPath: nil, samples: nil, subGroups: .ready(children))
+      return .group(
+        GroupVoice(
+          voicegroup: label,
+          voices: .ready(children)
+        )
+      )
 
     }
   }

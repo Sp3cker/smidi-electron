@@ -7,7 +7,7 @@ let package = Package(
   name: "VoicegroupParser",
   platforms: [.macOS(.v15)],
   products: [
-    // .executable(name: "swift_regex_test", targets: ["swift_regex_test"]),
+    //    .executable(name: "swift_regex_test", targets: ["swift_regex_test"]),
     .library(name: "Module", type: .dynamic, targets: ["module"]),
     .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
@@ -18,7 +18,7 @@ let package = Package(
   // TARGET NAMES (not "name", but target: thisString) ARE FOLDER NAMES
   targets: [
     .testTarget(
-      name: "swift_regex_test",
+      name: "VoicegroupParserTests",
       dependencies: ["Keysplits", "Voicegroups"]
     ),
     .target(name: "Common", path: "Sources/Common"),

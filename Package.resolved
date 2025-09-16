@@ -1,10 +1,10 @@
 {
-  "originHash" : "514d7920c8a9717ceb8eb1fc1d7f47fe2b8fca5caeec57ec8b9b454bd7c61f65",
+  "originHash" : "7ac14b5884e311d46cf708c8441d72cff54a6e1ef4efcacbc3ae1e5e7bb5049d",
   "pins" : [
     {
       "identity" : "node-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kabiroberai/node-swift.git",
+      "location" : "https://github.com/kabiroberai/node-swift",
       "state" : {
         "branch" : "main",
         "revision" : "314becf1c88b3c638ee96340c1458ac7c18d3838"

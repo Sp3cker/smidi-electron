@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "B4E02127-6471-45ED-A9CC-90C661CDAF69",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "VoicegroupParserTests",
+        "name" : "VoicegroupParserTests"
+      }
+    }
+  ],
+  "version" : 1
+}
