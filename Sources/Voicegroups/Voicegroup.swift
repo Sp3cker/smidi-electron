@@ -23,14 +23,9 @@ public struct Voicegroup: Sendable, Encodable {
     >
   {
     do {
-      let parser = Parser(rootDir: rootDir)
-      let symbols = parser.preloadSymbols()
-      // var cache: [String: Node] = [:]
-      var stack: Set<String> = []
+      let parser = await Parser(rootDir: rootDir)
       let root = try await parser.resolveGroup(
         label: voicegroup,
-        symbols: symbols,
-        stack: &stack
       )
       let data = try JSONEncoder().encode(root)
       return .success(String(data: data, encoding: .utf8)!)
@@ -157,16 +152,19 @@ public struct Voicegroup: Sendable, Encodable {
     let programmableWaveDataPath: String
     let prefetcher = FilePrefetcher()
 
-    init(rootDir: String) {
+    private var symbols: SymbolMaps = SymbolMaps(directSound: [:], programmable: [:])
+    init(rootDir: String) async {
       self.rootDir = rootDir
       self.soundDir = rootDir + "/sound"
       self.voicegroupsDir = soundDir + "/voicegroups"
       self.directSoundDataPath = soundDir + "/direct_sound_data.inc"
       self.programmableWaveDataPath =
         soundDir + "/programmable_wave_data.inc"
+      self.symbols = await preloadSymbols()
     }
 
     fileprivate func loadSymbolMap(_ filePath: String) -> [String: String] {
+
       guard FileManager.default.fileExists(atPath: filePath) else {
         return [:]
       }
@@ -209,10 +207,11 @@ public struct Voicegroup: Sendable, Encodable {
       return map
     }
 
-    fileprivate func preloadSymbols() -> SymbolMaps {
-      let ds = loadSymbolMap(directSoundDataPath)
-      let pw = loadSymbolMap(programmableWaveDataPath)
-      return SymbolMaps(directSound: ds, programmable: pw)
+    fileprivate func preloadSymbols() async -> SymbolMaps {
+      async let ds = Task.detached(operation: { loadSymbolMap(directSoundDataPath) }).value
+      async let pw = Task.detached(operation: { loadSymbolMap(programmableWaveDataPath) }).value
+
+      return SymbolMaps(directSound: await ds, programmable: await pw)
     }
 
     func voicegroupPath(label: String) -> String {
@@ -351,7 +350,7 @@ public struct Voicegroup: Sendable, Encodable {
         // let trimmed = raw.trimmingCharacters(in: .whitespaces)
         if let node = try await parseLine(
           line: raw,
-          symbols: symbols
+          symbols: self.symbols
         ) {
           //                    if case .keysplit(let ks) = node, let voices = ks.voices,
           //                        case .pending(let task) = voices
@@ -383,15 +382,13 @@ public struct Voicegroup: Sendable, Encodable {
     }
 
     fileprivate func resolveGroup(
-      label: String,
-      symbols: SymbolMaps,
-      stack: inout Set<String>
+      label: String
     ) async throws -> Node {
       let path = voicegroupPath(label: label)
       let fileData = try readVoicegroupFile(path: path)
       let entries = try await parseVoicegroupFile(
         fileData: fileData,
-        symbols: symbols
+        symbols: self.symbols
       )
       var children: [Node] = []
       children.reserveCapacity(entries.count)
