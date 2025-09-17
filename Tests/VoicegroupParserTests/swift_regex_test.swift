@@ -50,6 +50,7 @@ struct SwiftRegexTest {
             print("  Min: \(String(format: "%.1f", sortedTimes.first ?? 0))ms")
             print("  Max: \(String(format: "%.1f", sortedTimes.last ?? 0))ms")
             print("example: \(String(describing: results.randomElement()!.prefix(150)))")
+            print("size: \(String(describing: results.randomElement()!.lengthOfBytes(using: .utf8)))")
         }
         let url =
             "/Users/spencer/dev/swiftProjects/voicegroupParser/keysplit_tables.inc"
@@ -66,7 +67,7 @@ struct SwiftRegexTest {
             let result = await parseBoth(
                 kpath: url,
                 root: "/Users/sallegrezza/dev/pokeemerald-expansion",
-                vg: "voicegroup191"
+                vg: "voicegroup229"
             )
             results.append(String(describing: result.voicegroup))
             //                print(result.voicegroup)

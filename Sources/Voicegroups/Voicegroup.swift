@@ -3,20 +3,6 @@ import Foundation
 
 public struct Voicegroup: Sendable, Encodable {
 
-  //  fileprivate enum VoicegroupRef: Sendable, Encodable {
-  //    case pending(Task<[Node], Error>)
-  //    case ready([Node])
-  //    public func encode(to encoder: Encoder) throws {
-  //      switch self {
-  //      case .pending:
-  //        // Skip encoding pending tasks
-  //        break
-  //      case .ready(let nodes):
-  //        try nodes.encode(to: encoder)
-  //      }
-  //    }
-  //  }
-
   public static func parseVoicegroupFile(rootDir: String, voicegroup: String)
     async -> Result<
       String, Error
@@ -35,28 +21,15 @@ public struct Voicegroup: Sendable, Encodable {
   }
 
   fileprivate struct ADSREnvelope: Sendable, Encodable {
-    let envelope: (UInt8, UInt8, UInt8, UInt8)
-    private enum CodingKeys: String, CodingKey { case envelope }
-    @inlinable
+    let envelope: [UInt8]
     init(args: [String]) {
       let lastFour = Array(args.suffix(4))
-      self.envelope = (
-        UInt8(lastFour[0]) ?? 0, UInt8(lastFour[1]) ?? 0, UInt8(lastFour[2]) ?? 0,
-        UInt8(lastFour[3]) ?? 0
-      )
-    }
-    @inlinable
-    func encode(to encoder: Encoder) throws {
-      var container = encoder.container(keyedBy: CodingKeys.self)
-
-      var unkeyedContainer = container.nestedUnkeyedContainer(forKey: .envelope)
-      // var  = container.unkeyedContainer()
-      try unkeyedContainer.encode(envelope.0)
-      try unkeyedContainer.encode(envelope.1)
-      try unkeyedContainer.encode(envelope.2)
-      try unkeyedContainer.encode(envelope.3)
-
-      // Array([envelope.0, envelope.1, envelope.2, envelope.3]), forKey: .envelope)
+      self.envelope = [
+        UInt8(lastFour[0]) ?? 0,
+        UInt8(lastFour[1]) ?? 0,
+        UInt8(lastFour[2]) ?? 0,
+        UInt8(lastFour[3]) ?? 0,
+      ]
     }
   }
 
@@ -145,33 +118,33 @@ public struct Voicegroup: Sendable, Encodable {
   }
 
   fileprivate struct Parser {
-    let rootDir: String
-    let soundDir: String
-    let voicegroupsDir: String
-    let directSoundDataPath: String
-    let programmableWaveDataPath: String
+    let rootDir: URL
+    let soundDir: URL
+    let voicegroupsDir: URL
+    let directSoundDataPath: URL
+    let programmableWaveDataPath: URL
     let prefetcher = FilePrefetcher()
 
     private var symbols: SymbolMaps = SymbolMaps(directSound: [:], programmable: [:])
     init(rootDir: String) async {
-      self.rootDir = rootDir
-      self.soundDir = rootDir + "/sound"
-      self.voicegroupsDir = soundDir + "/voicegroups"
-      self.directSoundDataPath = soundDir + "/direct_sound_data.inc"
+      self.rootDir = URL(fileURLWithPath: rootDir)
+      self.soundDir = self.rootDir.appendingPathComponent("sound", isDirectory: true)
+      self.voicegroupsDir = self.soundDir.appendingPathComponent("voicegroups", isDirectory: true)
+      self.directSoundDataPath = self.soundDir.appendingPathComponent("/direct_sound_data.inc")
       self.programmableWaveDataPath =
-        soundDir + "/programmable_wave_data.inc"
+        self.rootDir.appendingPathComponent("/programmable_wave_data.inc")
       self.symbols = await preloadSymbols()
 
     }
 
-    fileprivate func loadSymbolMap(_ filePath: String) -> [String: String] {
+    fileprivate func loadSymbolMap(_ filePath: URL) -> [String: String] {
 
-      guard FileManager.default.fileExists(atPath: filePath) else {
+      guard FileManager.default.fileExists(atPath: filePath.absoluteString) else {
         return [:]
       }
       guard
         let text = try? String(
-          contentsOfFile: filePath,
+          contentsOfFile: filePath.absoluteString,
           encoding: .utf8
         )
       else { return [:] }
@@ -198,7 +171,7 @@ public struct Voicegroup: Sendable, Encodable {
             ) {
               let path = rawLine[afterStart..<endQuote]
               if let lbl = lastLabel {
-                map[lbl] = rootDir + "/" + String(path)
+                map[lbl] = self.rootDir.appendingPathComponent(String(path)).absoluteString
               }
               lastLabel = nil
             }
@@ -207,18 +180,16 @@ public struct Voicegroup: Sendable, Encodable {
       }
       return map
     }
-    @inline(__always)
     fileprivate func preloadSymbols() async -> SymbolMaps {
-      async let ds = Task.detached(operation: { loadSymbolMap(directSoundDataPath) }).value
-      async let pw = Task.detached(operation: { loadSymbolMap(programmableWaveDataPath) }).value
+      async let ds = Task { loadSymbolMap(directSoundDataPath) }.value
+      async let pw = Task { loadSymbolMap(programmableWaveDataPath) }.value
 
       return SymbolMaps(directSound: await ds, programmable: await pw)
     }
 
-    @inline(__always)
-    func voicegroupPath(label: String) -> String {
+    func voicegroupPath(label: String) -> URL {
       let digits = label.drop(while: { !$0.isNumber }).prefix(while: { $0.isNumber })
-      return voicegroupsDir + "/voicegroup" + String(digits) + ".inc"
+      return self.voicegroupsDir.appendingPathComponent("/voicegroup" + String(digits) + ".inc")
     }
 
     fileprivate func parseLine(line: Substring)
@@ -250,7 +221,7 @@ public struct Voicegroup: Sendable, Encodable {
           }
 
           let fetchTask = await prefetcher.prefetch(
-            from: URL(fileURLWithPath: voicegroupPath(label: first))
+            from: voicegroupPath(label: first)
           )
           let text = try await fetchTask.value
           let nodes = try await parseVoicegroupFile(
@@ -320,15 +291,15 @@ public struct Voicegroup: Sendable, Encodable {
       }
       return nil
     }
-    fileprivate func readVoicegroupFile(path: String) async throws -> String {
+    fileprivate func readVoicegroupFile(path: URL) async throws -> String {
       do {
-        async let data = Task.detached(operation: {
-          try String(contentsOfFile: path, encoding: .utf8)
+        async let data = Task(operation: {
+          try String(contentsOf: path.absoluteURL, encoding: .utf8)
         }).value
         return try await data
 
       } catch {
-        throw ParseError.io(file: path, underlying: error)
+        throw ParseError.io(file: path.absoluteString, underlying: error)
       }
 
     }
@@ -341,18 +312,9 @@ public struct Voicegroup: Sendable, Encodable {
 
       var nodes: [Node] = []
       nodes.reserveCapacity(128)
-      // var pendingVgs: [(index: Int, task: Task<[Node], Error>)] = []
-      for raw in fileData.split(
-        separator: "\n",
-        omittingEmptySubsequences: true,
-      ) {
-        // let trimmed = raw.drop(while: \.isWhitespace).drop(while: { $0.isWhitespace })
-        // guard !raw.isEmpty else { continue }
+      for raw in fileData.split(separator: "\n") {
         guard raw.hasPrefix("\tvoice_") else { continue }
-        // let trimmed = raw.trimmingCharacters(in: .whitespaces)
-        if let node = try await parseLine(
-          line: raw,
-        ) {
+        if let node = try await parseLine(line: raw) {
           nodes.append(node)
         }
       }
@@ -367,28 +329,12 @@ public struct Voicegroup: Sendable, Encodable {
       let entries = try await parseVoicegroupFile(
         fileData: fileData,
       )
-      var children: [Node] = []
-      children.reserveCapacity(entries.count)
-      for node in entries {
-        // if node.type == .keysplit, let sub = node.voicegroup {
-        //   var localStack = stack
-        //   let subnode = try resolveGroup(
-        //     label: sub, symbols: symbols, cache: &cache, stack: &localStack)
-        //   let merged = Node(
-        //     type: .keysplit, voicegroup: node.voicegroup, voiceType: node.voiceType,
-        //     params: node.params, sampleSymbol: nil, assetPath: nil, samples: subnode.samples)
-        //   children.append(merged)
-        // } else {
-        children.append(node)
-        // }
-      }
       return .group(
         GroupVoice(
           voicegroup: label,
-          voices: children
+          voices: entries
         )
       )
-
     }
   }
 }

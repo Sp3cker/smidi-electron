@@ -30,7 +30,7 @@ import Foundation
 public actor FilePrefetcher {
   public init() {}
   public func prefetch(from url: URL) -> Task<String, Error> {
-    return Task.detached() { () async throws -> String in
+    return Task { () async throws -> String in
       return try String(contentsOf: url, encoding: .utf8)
 
     }
