@@ -161,6 +161,7 @@ public struct Voicegroup: Sendable, Encodable {
       self.programmableWaveDataPath =
         soundDir + "/programmable_wave_data.inc"
       self.symbols = await preloadSymbols()
+
     }
 
     fileprivate func loadSymbolMap(_ filePath: String) -> [String: String] {
@@ -220,7 +221,7 @@ public struct Voicegroup: Sendable, Encodable {
       return voicegroupsDir + "/voicegroup" + String(num) + ".inc"
     }
     // @concurrent
-    fileprivate func parseLine(line: Substring, symbols: SymbolMaps)
+    fileprivate func parseLine(line: Substring)
       async throws
       -> Node?
     {
@@ -254,8 +255,7 @@ public struct Voicegroup: Sendable, Encodable {
           )
 
           let nodes = try await parseVoicegroupFile(
-            fileData: String(fetchTask.value),
-            symbols: symbols
+            fileData: String(fetchTask.value)
           )
           //                    return nodes
 
@@ -322,9 +322,13 @@ public struct Voicegroup: Sendable, Encodable {
       }
       return nil
     }
-    fileprivate func readVoicegroupFile(path: String) throws -> String {
+    fileprivate func readVoicegroupFile(path: String) async throws -> String {
       do {
-        return try String(contentsOfFile: path, encoding: .utf8)
+        async let data = Task.detached(operation: {
+          try String(contentsOfFile: path, encoding: .utf8)
+        }).value
+        return try await data
+
       } catch {
         throw ParseError.io(file: path, underlying: error)
       }
@@ -332,7 +336,7 @@ public struct Voicegroup: Sendable, Encodable {
     }
     fileprivate func parseVoicegroupFile(
       fileData: String,
-      symbols: SymbolMaps
+
     ) async throws
       -> [Node]
     {
@@ -350,34 +354,10 @@ public struct Voicegroup: Sendable, Encodable {
         // let trimmed = raw.trimmingCharacters(in: .whitespaces)
         if let node = try await parseLine(
           line: raw,
-          symbols: self.symbols
         ) {
-          //                    if case .keysplit(let ks) = node, let voices = ks.voices,
-          //                        case .pending(let task) = voices
-          //                    {
-          //                        pendingVgs.append((index: nodes.count, task: task))
-          //                    }
-
           nodes.append(node)
         }
       }
-      //            try await withThrowingTaskGroup(of: (Int, [Node]).self) { group in
-      //                for (index, task) in pendingVgs {
-      //                    group.addTask { (index, try await task.value) }
-      //                }
-      //                while let (i, sub) = try await group.next() {
-      //                    if case .keysplit(let ks) = nodes[i] {
-      //                        nodes[i] = .keysplit(
-      //                            KeysplitVoice(
-      //                                voicegroup: ks.voicegroup,
-      //                                keysplit: ks.keysplit,
-      //                                voices: .ready(sub)
-      //                            )
-      //                        )
-      //                    }
-      //                }
-      //            }
-
       return nodes
     }
 
@@ -385,10 +365,9 @@ public struct Voicegroup: Sendable, Encodable {
       label: String
     ) async throws -> Node {
       let path = voicegroupPath(label: label)
-      let fileData = try readVoicegroupFile(path: path)
+      let fileData = try await readVoicegroupFile(path: path)
       let entries = try await parseVoicegroupFile(
         fileData: fileData,
-        symbols: self.symbols
       )
       var children: [Node] = []
       children.reserveCapacity(entries.count)

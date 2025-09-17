@@ -9,6 +9,8 @@ public struct ParseBothResult {
   public let voicegroup: Result<String, Error>
 }
 func parseBoth(kpath: String, root: String, vg: String) async -> ParseBothResult {
+  // let k: Result<String, Error> = .success("skipped")
+
   async let k: Result<String, Error> = Task.detached {
     KeysplitParser.parseFile(kpath)
   }
@@ -25,9 +27,29 @@ struct SwiftRegexTest {
     times.reserveCapacity(50)
     // var results: [String] = []
     defer {
-      let average = times.reduce(0, +) / Double(times.count)
-      print("Elapsed average: \(String(format: "%.1f", average))ms")
-      // print("Results: \(results)")
+      // Mean
+      let mean = times.reduce(0, +) / Double(times.count)
+
+      // Median
+      let sortedTimes = times.sorted()
+      let median: Double
+      if sortedTimes.count % 2 == 0 {
+        median = (sortedTimes[sortedTimes.count / 2 - 1] + sortedTimes[sortedTimes.count / 2]) / 2
+      } else {
+        median = sortedTimes[sortedTimes.count / 2]
+      }
+
+      // Mode (most frequent value, rounded to nearest millisecond)
+      let roundedTimes = times.map { round($0) }
+      let frequency = Dictionary(grouping: roundedTimes, by: { $0 })
+      let mode = frequency.max(by: { $0.value.count < $1.value.count })?.key ?? 0
+
+      print("📊 Execution Time Stats:")
+      print("  Mean: \(String(format: "%.1f", mean))ms")
+      print("  Median: \(String(format: "%.1f", median))ms")
+      print("  Mode: \(String(format: "%.1f", mode))ms")
+      print("  Min: \(String(format: "%.1f", sortedTimes.first ?? 0))ms")
+      print("  Max: \(String(format: "%.1f", sortedTimes.last ?? 0))ms")
     }
     //    let start = CFAbsoluteTimeGetCurrent()
     //    defer {
