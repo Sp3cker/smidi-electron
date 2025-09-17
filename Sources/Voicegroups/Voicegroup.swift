@@ -3,19 +3,19 @@ import Foundation
 
 public struct Voicegroup: Sendable, Encodable {
 
-  fileprivate enum VoicegroupRef: Sendable, Encodable {
-    case pending(Task<[Node], Error>)
-    case ready([Node])
-    public func encode(to encoder: Encoder) throws {
-      switch self {
-      case .pending:
-        // Skip encoding pending tasks
-        break
-      case .ready(let nodes):
-        try nodes.encode(to: encoder)
-      }
-    }
-  }
+  //  fileprivate enum VoicegroupRef: Sendable, Encodable {
+  //    case pending(Task<[Node], Error>)
+  //    case ready([Node])
+  //    public func encode(to encoder: Encoder) throws {
+  //      switch self {
+  //      case .pending:
+  //        // Skip encoding pending tasks
+  //        break
+  //      case .ready(let nodes):
+  //        try nodes.encode(to: encoder)
+  //      }
+  //    }
+  //  }
 
   public static func parseVoicegroupFile(rootDir: String, voicegroup: String)
     async -> Result<
@@ -102,7 +102,7 @@ public struct Voicegroup: Sendable, Encodable {
 
   fileprivate struct GroupVoice: Sendable, Encodable {
     let voicegroup: String
-    let voices: VoicegroupRef
+    let voices: [Node]
   }
 
   fileprivate enum Node: Sendable, Encodable {
@@ -207,7 +207,7 @@ public struct Voicegroup: Sendable, Encodable {
       }
       return map
     }
-
+    @inline(__always)
     fileprivate func preloadSymbols() async -> SymbolMaps {
       async let ds = Task.detached(operation: { loadSymbolMap(directSoundDataPath) }).value
       async let pw = Task.detached(operation: { loadSymbolMap(programmableWaveDataPath) }).value
@@ -215,12 +215,12 @@ public struct Voicegroup: Sendable, Encodable {
       return SymbolMaps(directSound: await ds, programmable: await pw)
     }
 
+    @inline(__always)
     func voicegroupPath(label: String) -> String {
-      let digits = label.drop(while: { !$0.isNumber })
-      let num = digits.prefix(while: { $0.isNumber })
-      return voicegroupsDir + "/voicegroup" + String(num) + ".inc"
+      let digits = label.drop(while: { !$0.isNumber }).prefix(while: { $0.isNumber })
+      return voicegroupsDir + "/voicegroup" + String(digits) + ".inc"
     }
-    // @concurrent
+
     fileprivate func parseLine(line: Substring)
       async throws
       -> Node?
@@ -249,15 +249,13 @@ public struct Voicegroup: Sendable, Encodable {
             first = String(first[..<cmntChar])
           }
 
-          //          () async throws -> [Node] in
           let fetchTask = await prefetcher.prefetch(
             from: URL(fileURLWithPath: voicegroupPath(label: first))
           )
-
+          let text = try await fetchTask.value
           let nodes = try await parseVoicegroupFile(
-            fileData: String(fetchTask.value)
+            fileData: text
           )
-          //                    return nodes
 
           return .keysplit(
             KeysplitVoice(
@@ -387,7 +385,7 @@ public struct Voicegroup: Sendable, Encodable {
       return .group(
         GroupVoice(
           voicegroup: label,
-          voices: .ready(children)
+          voices: children
         )
       )
 

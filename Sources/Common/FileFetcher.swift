@@ -28,24 +28,11 @@ import Foundation
 // }
 
 public actor FilePrefetcher {
-
-  // private var tasks: [URL: Task<String, Error>] = [:]
-  // private let limiter = ConcurrencyLimiter(limit: 20)
-
   public init() {}
-
   public func prefetch(from url: URL) -> Task<String, Error> {
-    // if let existing = tasks[url] {return existing}
-    // Capture the limiter outside the detached task to avoid extra hops
-    // let limiter = self.limiter
     return Task.detached() { () async throws -> String in
-      // let task = Task.detached(priority: .utility) {() async throws -> String in
       return try String(contentsOf: url, encoding: .utf8)
-      // await self.limiter.acquire()
-      // defer { Task { await self.limiter.release() } }
-      // memory-map for speed and memory efficiency
+
     }
-    // tasks[url] = task
-    // return task
   }
 }
