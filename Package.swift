@@ -7,7 +7,7 @@ let package = Package(
   name: "VoicegroupParser",
   platforms: [.macOS(.v15)],
   products: [
-    //    .executable(name: "swift_regex_test", targets: ["swift_regex_test"]),
+    //  .executable(name: "VoicegroupParserTests", targets: ["VoicegroupParserTests"]),
     .library(name: "Module", type: .dynamic, targets: ["module"]),
     .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
