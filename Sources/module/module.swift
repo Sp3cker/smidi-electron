@@ -5,27 +5,25 @@ import Voicegroups
 
 public struct ParseBothResult {
   public let keysplit: Result<String, Error>
-  public let voicegroup: Result<String, Error>
+  public let voicegroup: Result<Data, Error>
 }
 @inline(__always)
 func parseBoth(root: String, vg: String) async -> (String, String) {
   let keysplitPath = root + "/sound/keysplit_tables.inc"
-  async let k: Result<String, Error> = Task.detached { KeysplitParser.parseFile(keysplitPath) }
-    .value
-  async let v: Result<String, Error> = Task.detached {
-    await Voicegroup.parseVoicegroupFile(rootDir: root, voicegroup: vg)
-  }.value
+  let k: Result<String, Error> = await KeysplitParser.parseFile(keysplitPath)
+  let v: Result<Data, Error> = await Voicegroup.parseVoicegroupFile(rootDir: root, voicegroup: vg)
+
   let vgResult: String
   let ksResult: String
-  switch await k {
+  switch k {
   case .success(let result):
     ksResult = result
   case .failure(let error):
     ksResult = error.localizedDescription
   }
-  switch await v {
+  switch v {
   case .success(let result):
-    vgResult = result
+    vgResult = String(data: result, encoding: .utf8)!
   case .failure(let error):
     vgResult = error.localizedDescription
   }

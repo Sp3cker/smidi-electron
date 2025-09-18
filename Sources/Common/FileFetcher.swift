@@ -27,12 +27,14 @@ import Foundation
 //   }
 // }
 
-public actor FilePrefetcher {
+public final class FilePrefetcher {
   public init() {}
-  public func prefetch(from url: URL) -> Task<String, Error> {
-    return Task { () async throws -> String in
+  public func prefetch(from url: URL) throws -> String {
+    do {
       return try String(contentsOf: url, encoding: .utf8)
-
+    } catch {
+      throw ParseError.io(file: String(describing: url), underlying: error)
     }
+
   }
 }
