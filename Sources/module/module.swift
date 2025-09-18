@@ -33,27 +33,18 @@ func parseBoth(root: String, vg: String) async -> (String, String) {
 #NodeModule(exports: [
 
   "keysplit": try NodeFunction {
-    (root: String, vg: String, callback: NodeFunction) async throws -> Void in
-    do {
+    (root: String, vg: String, callback: NodeFunction) async -> Void in
 
-      // let start = CFAbsoluteTimeGetCurrent()
-      // defer {
-      //   let elapsed = (CFAbsoluteTimeGetCurrent() - start) * 1000
-      //   print("Elapsed: \(String(format: "%.1f", elapsed))ms")
-      // }
-      // Run both in parallel and await both results
-
-      let results = await parseBoth(root: root, vg: vg)
-
+    let results = await parseBoth(root: root, vg: vg)
+    if .success(results) {
       try callback([
         "keysplit": results.1,
         "voicegroup": results.0,
       ])
-
-    } catch {
-
+    } else {
       try callback([String(describing: error)])
     }
+
   }
 ]
 )
