@@ -8,9 +8,10 @@ let package = Package(
   platforms: [.macOS(.v15)],
   products: [
     //  .executable(name: "VoicegroupParserTests", targets: ["VoicegroupParserTests"]),
-    // .library(name: "Module", type: .dynamic, targets: ["module"]),
+    .library(name: "Module", type: .dynamic, targets: ["module"]),
     .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
+    .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
   ],
   dependencies: [
     .package(url: "https://github.com/kabiroberai/node-swift", branch: "main")
@@ -21,17 +22,21 @@ let package = Package(
       name: "VoicegroupParserTests",
       dependencies: ["Keysplits", "Voicegroups"]
     ),
-    .target(name: "Common", path: "Sources/Common"),
-    // .target(
-    //   name: "module",
-    //   dependencies: [
-    //     .product(name: "NodeAPI", package: "node-swift"),
-    //     .product(name: "NodeModuleSupport", package: "node-swift"),
-    //     "Common",
-    //     "Keysplits",
-    //     "Voicegroups",
-    //   ]),
-    .target(name: "Keysplits", dependencies: ["Common"], path: "Sources/Keysplits"),
-    .target(name: "Voicegroups", dependencies: ["Common"], path: "Sources/Voicegroups"),
+
+    .target(
+      name: "module",
+      dependencies: [
+        .product(name: "NodeAPI", package: "node-swift"),
+        .product(name: "NodeModuleSupport", package: "node-swift"),
+        "Keysplits",
+        "Voicegroups",
+      ]),
+    .target(name: "Keysplits", path: "Sources/Keysplits"),
+    .target(name: "Voicegroups", path: "Sources/Voicegroups"),
+    .executableTarget(
+      name: "VoicegroupRunner",
+      dependencies: ["Keysplits", "Voicegroups"],
+      path: "Sources/VoicegroupRunner"
+    ),
   ]
 )

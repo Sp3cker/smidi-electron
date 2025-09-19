@@ -34,17 +34,23 @@ func parseBoth(root: String, vg: String) async -> (String, String) {
 
   "keysplit": try NodeFunction {
     (root: String, vg: String, callback: NodeFunction) async -> Void in
+    do {
 
-    let results = await parseBoth(root: root, vg: vg)
-    if .success(results) {
+      let results = try await parseBoth(root: root, vg: vg)
+
       try callback([
         "keysplit": results.1,
         "voicegroup": results.0,
       ])
-    } else {
-      try callback([String(describing: error)])
-    }
 
+    } catch {
+      do {
+        try callback([String(describing: error)])
+      } catch {
+        return
+      }
+
+    }
   }
 ]
 )

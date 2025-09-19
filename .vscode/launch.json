@@ -99,6 +99,24 @@
       "name": "Release VoicegroupNode (src/main/voicegroupParser)",
       "program": "${workspaceFolder:smidi-electron}/src/main/voicegroupParser/.build/release/VoicegroupNode",
       "preLaunchTask": "swift: Build Release VoicegroupNode (src/main/voicegroupParser)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Debug vgparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/debug/vgparse",
+      "preLaunchTask": "swift: Build Debug vgparse"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Release vgparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/release/vgparse",
+      "preLaunchTask": "swift: Build Release vgparse"
     }
   ],
   "compounds": [

@@ -1,8 +1,16 @@
-import Common
 import Foundation
 
+public enum ParseError: Error {
+  case io(file: String, underlying: Error?)
+  case malformedLine(line: String, reason: String)
+  case noTables
+  case validation(String)
+}
 public struct Voicegroup: Sendable, Encodable {
 
+  init() {
+    print("Voicegroup initialized")
+  }
   public static func parseVoicegroupFile(rootDir: String, voicegroup: String)
     async -> Result<
       Data, Error
@@ -10,8 +18,9 @@ public struct Voicegroup: Sendable, Encodable {
   {
     do {
       let parser = try await Parser(rootDir: rootDir)
+      let vgLabel = Substring(voicegroup)
       let root = try await parser.resolveGroup(
-        label: voicegroup,
+        label: vgLabel,
       )
       let data = try JSONEncoder().encode(root)
       return .success(data)
@@ -40,6 +49,7 @@ public struct Voicegroup: Sendable, Encodable {
     let envelope: ADSREnvelope
     let baseKey: UInt8
     let pan: UInt8
+    // init()
     enum CodingKeys: CodingKey {
       case envelope, baseKey, pan
     }
@@ -109,8 +119,8 @@ public struct Voicegroup: Sendable, Encodable {
   }
   fileprivate struct KeysplitVoice: Sendable, Encodable {
     let type = "keysplit"
-    let voicegroup: String
-    let keysplit: String?
+    let voicegroup: Substring
+    let keysplit: Substring
     let voices: [Node]?
     enum CodingKeys: CodingKey {
       case type, voicegroup, keysplit, voices
@@ -118,14 +128,30 @@ public struct Voicegroup: Sendable, Encodable {
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(type, forKey: .type)
-      try container.encode(voicegroup, forKey: .voicegroup)
-      try container.encode(keysplit, forKey: .keysplit)
+      try container.encode(String(voicegroup.utf8), forKey: .voicegroup)
+      try container.encode(String(keysplit.utf8), forKey: .keysplit)
       try container.encode(voices, forKey: .voices)
     }
   }
-  fileprivate struct UnresolvedKeysplit: Sendable, Encodable {
-    let referencedVoicegroup: String
-    let keysplit: String?
+  fileprivate struct UnresolvedVoicegroup: Sendable {
+    let voicegroupLabel: Substring
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.singleValueContainer()
+      try container.encode(String(voicegroupLabel.utf8))
+    }
+  }
+  fileprivate struct UnresolvedKeysplit: Sendable {
+    let voicegroupLabel: Substring
+    let keysplitLabel: Substring
+    enum CodingKeys: CodingKey {
+      case voicegroup, keysplit
+    }
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(String(voicegroupLabel.utf8), forKey: .voicegroup)
+      try container.encode(String(keysplitLabel.utf8), forKey: .keysplit)
+    }
+
   }
 
   fileprivate enum NodeKind: String, Sendable, Encodable {
@@ -134,44 +160,39 @@ public struct Voicegroup: Sendable, Encodable {
   }
 
   fileprivate struct GroupVoice: Sendable, Encodable {
-    let voicegroup: String
+    let voicegroup: Substring
     let voices: [Node]
+
+    enum CodingKeys: String, CodingKey {
+      case voicegroup
+      case voices
+    }
+
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(String(voicegroup), forKey: .voicegroup)
+      try container.encode(voices, forKey: .voices)
+    }
   }
-
   fileprivate enum Node: Sendable, Encodable {
-
     case keysplit(KeysplitVoice)
     case unresolvedKeysplit(UnresolvedKeysplit)
+    case unresolvedVoicegroup(UnresolvedVoicegroup)
     case directsound(DirectSoundVoice)
     case programmable(PGMWaveVoice)
     case square(SquareVoice)
     case noise(NoiseVoice)
     case group(GroupVoice)
-    // private enum CodingKeys: String, CodingKey { case type, value }
     func encode(to encoder: Encoder) throws {
-      // var container = encoder.container(keyedBy: CodingKeys.self)
       switch self {
       case .unresolvedKeysplit(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.unresolvedKeysplit, forKey: .type)
-      // try container.encode(v, forKey: .value)
       case .keysplit(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.keysplit, forKey: .type)
-      // try container.encode(v, forKey: .value)
+      case .unresolvedVoicegroup(let v): try v.encode(to: encoder)
       case .directsound(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.directsound, forKey: .type)
-      // try container.encode(v, forKey: .value)
       case .programmable(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.programmable, forKey: .type)
-      // try container.encode(v, forKey: .value)
       case .square(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.square, forKey: .type)
-      // try container.encode(v, forKey: .value)
       case .noise(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.noise, forKey: .type)
-      // try container.encode(v, forKey: .value)
       case .group(let v): try v.encode(to: encoder)
-      // try container.encode(NodeKind.group, forKey: .type)
-      // try container.encode(v, forKey: .value)
       }
     }
   }
@@ -187,7 +208,7 @@ public struct Voicegroup: Sendable, Encodable {
     let voicegroupsDir: URL
     let directSoundDataPath: URL
     let programmableWaveDataPath: URL
-    let prefetcher = FilePrefetcher()
+
     let fileManager = FileManager.default
 
     private var symbols: SymbolMaps = SymbolMaps(
@@ -210,7 +231,8 @@ public struct Voicegroup: Sendable, Encodable {
       )
       self.programmableWaveDataPath =
         self.rootDir.appendingPathComponent(
-          "programmable_wave_data.inc", isDirectory: false
+          "programmable_wave_data.inc",
+          isDirectory: false
         )
       // self.symbols = try await preloadSymbols()
       // if self.symbols.directSound.isEmpty {
@@ -279,14 +301,15 @@ public struct Voicegroup: Sendable, Encodable {
     //   }
     // }
 
-    func voicegroupPath(label: String) -> URL {
-      let digits = label.drop(while: { !$0.isNumber }).prefix(while: {
-        $0.isNumber
-      })
-      return self.voicegroupsDir.appendingPathComponent(
-        "voicegroup" + String(digits) + ".inc"
-      )
-    }
+    // func voicegroupPath(label: String) -> URL {
+    //   let digits = label.drop(while: { !$0.isNumber }).prefix(while: {
+    //     $0.isNumber
+    //   })
+    //   return self.voicegroupsDir.appendingPathComponent(
+    //     "voicegroup" + String(digits) + ".inc"
+    //   )
+    // }
+    // voice_directsound 60, 0, DirectSoundWaveData_dp_woodbass_d3_16, 255, 251, 0, 171
 
     fileprivate func parseLine(line: Substring)
       async throws
@@ -298,7 +321,8 @@ public struct Voicegroup: Sendable, Encodable {
       }
       guard i < line.endIndex else { return nil }
 
-      guard let space: Substring.Index = line[i...].firstIndex(of: " ") else { return nil }
+      guard let space: Substring.Index = line[i...].firstIndex(of: " ")
+      else { return nil }
       let voiceType = line[i..<space]
       let argsStr = line[line.index(after: space)...].trimmingCharacters(
         in: .whitespaces
@@ -314,15 +338,22 @@ public struct Voicegroup: Sendable, Encodable {
         if let cmntChar = first.lastIndex(of: "@") {
           first = String(first[..<cmntChar])
         }
-
-        return .unresolvedKeysplit(
-          UnresolvedKeysplit(
-            referencedVoicegroup: first,
-            keysplit: nil,
+        if isKeySplitVoicegroup(in: line) {
+          return .unresolvedKeysplit(
+            UnresolvedKeysplit(
+              voicegroupLabel: line,
+              keysplitLabel: line,
+            )
           )
-        )
-
+        } else {
+          return .unresolvedVoicegroup(
+            UnresolvedVoicegroup(
+              voicegroupLabel: line,
+            )
+          )
+        }
       }
+
       let envelope = ADSREnvelope(args: rawArgs)
       if voiceType.hasPrefix("voice_directsound") {
         let sample: String = rawArgs.count > 2 ? rawArgs[2] : ""
@@ -334,7 +365,7 @@ public struct Voicegroup: Sendable, Encodable {
               baseKey: UInt8(rawArgs[0]) ?? 0,
               pan: UInt8(rawArgs[1]) ?? 0
             ),
-            sample: sample ?? "",
+            sample: sample,
           )
         )
       }
@@ -348,7 +379,7 @@ public struct Voicegroup: Sendable, Encodable {
               baseKey: UInt8(rawArgs[0]) ?? 0,
               pan: UInt8(rawArgs[1]) ?? 0
             ),
-            sample: sample ?? "",
+            sample: sample,
           )
         )
 
@@ -380,30 +411,37 @@ public struct Voicegroup: Sendable, Encodable {
       }
       return nil
     }
-    fileprivate func readVoicegroupFile(path: URL) async throws -> String {
-      do {
-        async let data = Task(operation: {
-          try String(contentsOf: path.absoluteURL, encoding: .utf8)
-        }).value
-        return try await data
 
-      } catch {
-        throw ParseError.io(file: path.path, underlying: error)
-      }
-
+    // fileprivate func readVoicegroupFile(path: URL) throws -> String {
+    //   return try Data(contentsOf: path).withUnsafeBytes {
+    //     String(decoding: $0, as: UTF8.self)
+    //   }
+    // }
+    fileprivate func voicegroupPath(label: Substring) -> URL {
+      let digits = label.drop(while: { !$0.isNumber }).prefix(while: {
+        $0.isNumber
+      })
+      return self.voicegroupsDir.appendingPathComponent(
+        "voicegroup" + String(digits) + ".inc"
+      )
     }
     fileprivate func parseVoicegroupFile(
-      fileData: String,
+      path: URL,
 
     ) async throws
       -> [Node]
     {
 
+      let data = try Data(contentsOf: path).withUnsafeBytes {
+        $0.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true)
+          .map { String(decoding: $0, as: UTF8.self) }
+      }
       var nodes: [Node] = []
       nodes.reserveCapacity(128)
-      for raw in fileData.split(separator: "\n") {
-        guard raw.hasPrefix("\tvoice_") else { continue }
-        if let node = try await parseLine(line: raw) {
+      for raw in data {
+        let line = Substring(raw)
+        guard line.hasPrefix("\tvoice_") else { continue }
+        if let node = try await parseLine(line: line) {
           nodes.append(node)
         }
       }
@@ -411,15 +449,14 @@ public struct Voicegroup: Sendable, Encodable {
     }
 
     fileprivate func resolveGroup(
-      label: String
+      label: Substring
     ) async throws -> Node {
       let path = voicegroupPath(label: label)
-
-      let fileData = try await readVoicegroupFile(path: path)
+      // let fileData = try readVoicegroupFile(path: path)
       var entries = try await parseVoicegroupFile(
-        fileData: fileData,
+        path: path,
       )
-      try await resolveKeysplitReference(from: &entries)
+      try await resolveVoicegroupReference(from: &entries)
 
       return .group(
         GroupVoice(
@@ -429,54 +466,81 @@ public struct Voicegroup: Sendable, Encodable {
       )
     }
 
-    fileprivate func resolveKeysplitReference(from nodes: inout [Node])
+    /**
+     * Check if the voicegroup is a key split voicegroup false otherwise
+     */
+    fileprivate func isKeySplitVoicegroup(in line: Substring) -> Bool {
+      let vgTypeLabel = line.prefix { $0 != " " }
+      var c = 0
+      for b in vgTypeLabel.utf8 {
+        if b == UInt8(ascii: "_") {
+          c += 1
+          if c == 2 {
+            return true
+          }
+        }
+      }
+      return false
+    }
+
+    fileprivate func resolveVoicegroupReference(from nodes: inout [Node])
       async throws
     {
       for i in nodes.indices {
-        if case .unresolvedKeysplit(let v) = nodes[i] {
-          let referenced = try await readVoicegroupFile(
-            path: voicegroupPath(label: v.referencedVoicegroup)
-          )
+        switch nodes[i] {
+
+        case .unresolvedKeysplit(let v):
           let referencedEntries = try await parseVoicegroupFile(
-            fileData: referenced,
+            path: voicegroupPath(label: v.voicegroupLabel),
           )
           nodes[i] = .keysplit(
             KeysplitVoice(
-              voicegroup: v.referencedVoicegroup,
-              keysplit: v.keysplit,
+              voicegroup: v.voicegroupLabel,
+              keysplit: v.keysplitLabel,
               voices: referencedEntries
             )
           )
+        case .unresolvedVoicegroup(let v):
+          let referencedEntries = try await parseVoicegroupFile(
+            path: voicegroupPath(label: v.voicegroupLabel),
+          )
+          nodes[i] = .group(
+            GroupVoice(
+              voicegroup: v.voicegroupLabel,
+              voices: referencedEntries
+            )
+          )
+        default: continue
         }
       }
     }
-    let validKeysplitVoiceTypes: Set<String> = [
-      "voice_keysplit",
-      "voice_keysplit_all",
-    ]
-    fileprivate
-      func findKeysplitReference(in line: Substring) -> UnresolvedKeysplit?
-    {
-      guard let space: Substring.Index = line.firstIndex(of: " ") else { return nil }
-      let voiceType = line[..<space]
-      if validKeysplitVoiceTypes.contains(String(voiceType)) {
-        let argsStr = line[line.index(after: space)...].trimmingCharacters(
-          in: .whitespaces
-        )
-        let rawArgs: [String] = argsStr.split(separator: ",").map {
-          String($0.trimmingCharacters(in: .whitespaces))
-        }
-        var first: String = rawArgs.first ?? ""
-        if let cmntChar = first.lastIndex(of: "@") {
-          first = String(first[..<cmntChar])
-        }
-        return UnresolvedKeysplit(
-          referencedVoicegroup: first,
-          keysplit: nil
-        )
-      }
-      return nil
-    }
+
+    // let validKeysplitVoiceTypes: Set<String> = [
+    //   "voice_keysplit",
+    //   "voice_keysplit_all",
+    // ]
+    // fileprivate
+    //   func findKeysplitReference(in line: Substring) -> UnresolvedKeysplit?
+    // {
+    //   guard let space: Substring.Index = line.firstIndex(of: " ") else { return nil }
+    //   let voiceType = line[..<space]
+    //   if validKeysplitVoiceTypes.contains(String(voiceType)) {
+    //     let argsStr = line[line.index(after: space)...].trimmingCharacters(
+    //       in: .whitespaces
+    //     )
+    //     let rawArgs: [String] = argsStr.split(separator: ",").map {
+    //       String($0.trimmingCharacters(in: .whitespaces))
+    //     }
+    //     var first: String = rawArgs.first ?? ""
+    //     if let cmntChar = first.lastIndex(of: "@") {
+    //       first = String(first[..<cmntChar])
+    //     }
+    //     return UnresolvedKeysplit(
+    //       referencedVoicegroup: first,
+    //       keysplit: nil
+    //     )
+    //   }
+    // }
   }
 
 }

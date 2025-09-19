@@ -49,19 +49,34 @@ struct SwiftRegexTest {
       print("  Mode: \(String(format: "%.1f", mode))ms")
       print("  Min: \(String(format: "%.1f", sortedTimes.first ?? 0))ms")
       print("  Max: \(String(format: "%.1f", sortedTimes.last ?? 0))ms")
+
       if results.isEmpty {
         print("No results to display.")
       } else {
+
+        do {
+
+          let url = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("results.json")
+          try results[0].write(to: url, options: .atomic)
+
+        } catch {
+          print("Error writing results to file: \(error)")
+        }
         print("example: \(String(describing: results))")
-        // print("size: \(String(describing: results.randomElement()!.lengthOfBytes(using: .utf8)))")
       }
+      // print("size: \(String(describing: results.randomElement()!.lengthOfBytes(using: .utf8)))")
+
     }
     let url =
       "/Users/spencer/dev/swiftProjects/voicegroupParser/keysplit_tables.inc"
 
-    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
-    let projectPath = homeDir.appendingPathComponent("dev").appendingPathComponent(
-      "pokeemerald-expansion")
+    let homeDir = FileManager.default.homeDirectoryForCurrentUser
+      .standardizedFileURL
+    let projectPath = homeDir.appendingPathComponent("dev")
+      .appendingPathComponent("nodeProjects").appendingPathComponent(
+        "pokeemerald-expansion"
+      )
 
     for _ in 0..<50 {
       let start = DispatchTime.now()
@@ -79,7 +94,10 @@ struct SwiftRegexTest {
       //   vg: "voicegroup229"
       // )
       let v: Result<Data, Error> =
-        await Voicegroup.parseVoicegroupFile(rootDir: projectPath.path, voicegroup: "voicegroup229")
+        await Voicegroup.parseVoicegroupFile(
+          rootDir: projectPath.path,
+          voicegroup: "voicegroup229"
+        )
       if case .failure(let error) = v {
         throw error
       }
