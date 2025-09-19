@@ -101,7 +101,7 @@
       "preLaunchTask": "swift: Build Release VoicegroupNode (src/main/voicegroupParser)"
     },
     {
-      "type": "lldb",
+      "type": "swift",
       "request": "launch",
       "args": [],
       "cwd": "${workspaceFolder:smidi-electron}",
@@ -110,7 +110,7 @@
       "preLaunchTask": "swift: Build Debug vgparse"
     },
     {
-      "type": "lldb",
+      "type": "swift",
       "request": "launch",
       "args": [],
       "cwd": "${workspaceFolder:smidi-electron}",

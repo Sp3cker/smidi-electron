@@ -1,0 +1,1 @@
+ codesign -s - -f --entitlements Entitlements.plist /Users/YOU/Library/Developer/Xcode/DerivedData/smidi-electron-gljbfbsqbdmagsdhdmtjgcgzmsqy/Build/Products/Debug/vgparse

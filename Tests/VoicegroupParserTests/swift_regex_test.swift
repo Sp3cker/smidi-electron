@@ -74,7 +74,7 @@ struct SwiftRegexTest {
     let homeDir = FileManager.default.homeDirectoryForCurrentUser
       .standardizedFileURL
     let projectPath = homeDir.appendingPathComponent("dev")
-      .appendingPathComponent("nodeProjects").appendingPathComponent(
+.appendingPathComponent(
         "pokeemerald-expansion"
       )
 
