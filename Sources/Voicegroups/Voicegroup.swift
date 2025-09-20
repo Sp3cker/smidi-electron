@@ -28,92 +28,102 @@ public struct Voicegroup: Sendable, Encodable {
       return .failure(error)
     }
   }
-
-  fileprivate struct ADSREnvelope: Sendable, Encodable {
-    let envelope: [UInt8]
-    init(args: [String]) {
-      let lastFour = Array(args.suffix(4))
-      self.envelope = [
-        UInt8(lastFour[0]) ?? 0,
-        UInt8(lastFour[1]) ?? 0,
-        UInt8(lastFour[2]) ?? 0,
-        UInt8(lastFour[3]) ?? 0,
-      ]
-    }
-    func encode(to encoder: Encoder) throws {
-      var container = encoder.singleValueContainer()
-      try container.encode(envelope)
-    }
-  }
-  fileprivate struct CommonVoiceParams: Sendable, Encodable {
-    let envelope: ADSREnvelope
-    let baseKey: UInt8
-    let pan: UInt8
-    // init()
+  //
+  //  fileprivate struct ADSREnvelope: Sendable, Encodable {
+  //    let envelope: [UInt8]
+  //    init(args: [UInt8]) {
+  //      let lastFour = Array(args.suffix(4))
+  //      self.envelope = [
+  //        lastFour[0],
+  //        lastFour[1],
+  //        lastFour[2],
+  //        lastFour[3],
+  //      ]
+  //    }
+  //    func encode(to encoder: Encoder) throws {
+  //      var container = encoder.singleValueContainer()
+  //      try container.encode(envelope)
+  //    }
+  //  }
+  //  fileprivate struct CommonVoiceParams: Sendable, Encodable {
+  //    let envelope: ADSREnvelope
+  //    let baseKey: UInt8
+  //    let pan: UInt8
+  //    // init()
+  //    enum CodingKeys: CodingKey {
+  //      case envelope, baseKey, pan
+  //    }
+  //    func encode(to encoder: Encoder) throws {
+  //      var container = encoder.container(keyedBy: CodingKeys.self)
+  //      try container.encode(envelope, forKey: .envelope)
+  //      try container.encode(baseKey, forKey: .baseKey)
+  //      try container.encode(pan, forKey: .pan)
+  //    }
+  //  }
+  fileprivate struct Square1Voice: Sendable, Encodable {
+    let type = "square1"
+    let voiceParams: Square1VoiceArguements
     enum CodingKeys: CodingKey {
-      case envelope, baseKey, pan
+      case type, voiceParams
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
-      try container.encode(envelope, forKey: .envelope)
-      try container.encode(baseKey, forKey: .baseKey)
-      try container.encode(pan, forKey: .pan)
-    }
-  }
-  fileprivate struct SquareVoice: Sendable, Encodable {
-    let type = "square"
-    let voiceParams: CommonVoiceParams
-    let sweep: UInt8
-    enum CodingKeys: CodingKey {
-      case type, voiceParams, sweep
-    }
-    func encode(to encoder: Encoder) throws {
-      var container = encoder.container(keyedBy: CodingKeys.self)
-      try container.encode(type, forKey: .type)
       try container.encode(voiceParams, forKey: .voiceParams)
-      try container.encode(sweep, forKey: .sweep)
+      try container.encode(type, forKey: .type)
     }
   }
-
+  fileprivate struct Square2Voice: Sendable, Encodable {
+    let type = "square2"
+    let voiceParams: Square2VoiceArguements
+    enum CodingKeys: CodingKey {
+      case type, voiceParams
+    }
+    func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(voiceParams, forKey: .voiceParams)
+      try container.encode(type, forKey: .type)
+    }
+  }
   fileprivate struct NoiseVoice: Sendable, Encodable {
     let type = "noise"
-    let voiceParams: CommonVoiceParams
-    let period: UInt8
+    let voiceParams: NoiseWaveVoiceArguements
+
     enum CodingKeys: CodingKey {
-      case type, voiceParams, period
+      case type, voiceParams
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(type, forKey: .type)
       try container.encode(voiceParams, forKey: .voiceParams)
+
     }
   }
   fileprivate struct PGMWaveVoice: Sendable, Encodable {
-    let type = "programmable"
-    let voiceParams: CommonVoiceParams
-    let sample: String
+    let type = "programwave"
+    let voiceParams: DirectSoundorPGMWaveVoiceArguements
+
     enum CodingKeys: CodingKey {
-      case type, voiceParams, sample
+      case type, voiceParams
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(type, forKey: .type)
       try container.encode(voiceParams, forKey: .voiceParams)
-      try container.encode(sample, forKey: .sample)
+
     }
   }
   fileprivate struct DirectSoundVoice: Sendable, Encodable {
-    let type = "directsound"
-    let voiceParams: CommonVoiceParams
-    let sample: String
+    let type: String // Keep variable because gets set in `parseLine`
+    let voiceParams: DirectSoundorPGMWaveVoiceArguements
+
     enum CodingKeys: CodingKey {
-      case type, voiceParams, sample
+      case type, voiceParams
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(type, forKey: .type)
       try container.encode(voiceParams, forKey: .voiceParams)
-      try container.encode(sample, forKey: .sample)
+
     }
 
   }
@@ -183,7 +193,8 @@ public struct Voicegroup: Sendable, Encodable {
     case unresolvedVoicegroup(UnresolvedVoicegroup)
     case directsound(DirectSoundVoice)
     case programmable(PGMWaveVoice)
-    case square(SquareVoice)
+    case square1(Square1Voice)
+    case square2(Square2Voice)
     case noise(NoiseVoice)
     case group(GroupVoice)
     func encode(to encoder: Encoder) throws {
@@ -193,7 +204,9 @@ public struct Voicegroup: Sendable, Encodable {
       case .unresolvedVoicegroup(let v): try v.encode(to: encoder)
       case .directsound(let v): try v.encode(to: encoder)
       case .programmable(let v): try v.encode(to: encoder)
-      case .square(let v): try v.encode(to: encoder)
+      case .square1(let v): try v.encode(to: encoder)
+      case .square2(let v): try v.encode(to: encoder)
+
       case .noise(let v): try v.encode(to: encoder)
       case .group(let v): try v.encode(to: encoder)
       }
@@ -313,161 +326,118 @@ public struct Voicegroup: Sendable, Encodable {
     //   )
     // }
     // voice_directsound 60, 0, DirectSoundWaveData_dp_woodbass_d3_16, 255, 251, 0, 171
-
+    @inline(__always)
     fileprivate func parseLine(line: Substring)
       throws
-      -> Node?
+      -> Node
     {
-      var i = line.startIndex
-      while i < line.endIndex, line[i].isWhitespace {
-        i = line.index(after: i)
-      }
-      guard i < line.endIndex else { return nil }
+      //      var i = line.startIndex
+      //      while i < line.endIndex, line[i].isWhitespace {
+      //        i = line.index(after: i)
+      //      }
+      //      guard i < line.endIndex else {
+      //        throw ParseError.malformedLine(
+      //          line: String(line),
+      //          reason: String("fuck")
+      //        )
+      //      }
+      do {
+        guard let firstSpace: Substring.Index = line.firstIndex(of: " ")
+        else {
+          throw ParseError.malformedLine(
+            line: String(line),
+            reason: String("fuck")
+          )
+        }
+        guard let firstUnderscore: Substring.Index = line.firstIndex(of: "_")
+        else {
+          throw ParseError.malformedLine(
+            line: String(line),
+            reason: String("fuck")
+          )
+        }
+        let voiceType = line[firstUnderscore..<firstSpace].dropFirst()  // if we don't dropFirst, still has an underscore.
 
-      guard let firstSpace: Substring.Index = line[i...].firstIndex(of: " ")
-      else { return nil }
-      let voiceType = line[i..<firstSpace]
-      var args: [Substring] = []
-      args.reserveCapacity(7)
+        if voiceType == "keysplit"
+          || voiceType == "keysplit_all"
+        {
 
-      var cur = line.index(after: firstSpace)
-      while cur < line.endIndex {
-        while cur < line.endIndex && line[cur].isWhitespace {
-          cur = line.index(after: cur)  // loop through whitespace
+          if isKeySplitVoicegroup(in: line) {
+            return .unresolvedKeysplit(
+              UnresolvedKeysplit(
+                voicegroupLabel: line,
+                keysplitLabel: line,
+              )
+            )
+          } else {
+            return .unresolvedVoicegroup(
+              UnresolvedVoicegroup(
+                voicegroupLabel: line,
+              )
+            )
+          }
         }
-        if cur == line.endIndex { break }
-        let start = cur  // start of argument
-        while cur < line.endIndex && line[cur] != "," {
-          cur = line.index(after: cur)
-        }
-        var end = cur
-        // trim trailing ws
-        while end > start && line[line.index(before: end)].isWhitespace {
-          end = line.index(before: end)
-        }
-        if start < end {
-          args.append(line[start..<end])
-        }
-        if cur < line.endIndex {  // skip comma
-          cur = line.index(after: cur)
-        }
-      }
-      // Helpers
-      @inline(__always)
-      func parseUInt8(_ s: Substring, default def: UInt8 = 0) -> UInt8 {
-        var v: UInt16 = 0
-        var j = s.startIndex
-        if j == s.endIndex { return def }
-        while j < s.endIndex {
-          guard let a = s[j].asciiValue, a >= 48, a <= 57 else { return def }
-          v = v &* 10 &+ UInt16(a - 48)
-          if v > 255 { return def }
-          j = s.index(after: j)
-        }
-        return UInt8(v)
-      }
-      // let argsStr = line[line.index(after: firstSpace)...].trimmingCharacters(
-      //     in: .whitespaces
-      // )
-      // let rawArgs: [String] = argsStr.components(separatedBy: ",").map {
-      //     String($0.trimmingCharacters(in: .whitespaces))
-      // }
-      //
-      if voiceType == "voice_keysplit"
-        || voiceType == "voice_keysplit_all"
-      {
-        //        var first: String = rawArgs.first ?? ""
-        //        if let cmntChar = first.lastIndex(of: "@") {
-        //          first = String(first[..<cmntChar])
-        //        }
-        if isKeySplitVoicegroup(in: line) {
-          return .unresolvedKeysplit(
-            UnresolvedKeysplit(
-              voicegroupLabel: line,
-              keysplitLabel: line,
+
+        let parseableArgs = line[line.index(after: firstSpace)...]
+        switch voiceType {
+        case "directsound",
+          "directsound_alt",
+          "programmable_wave",
+          "programmable_wave_alt":
+
+          let args = try parseVoiceArguements(
+            as:
+              DirectSoundorPGMWaveVoiceArguements.self,
+            from: parseableArgs
+          )
+          return .directsound(
+            DirectSoundVoice(type: String(voiceType), voiceParams: args)
+          )
+
+        case "square_1",
+          "square_1_alt":
+          let args = try parseVoiceArguements(
+            as: Square1VoiceArguements.self,
+            from: parseableArgs
+          )
+          return .square1(
+            Square1Voice( voiceParams: args)
+          )
+        case "square_2",
+          "square_2_alt":
+          let args = try parseVoiceArguements(
+            as: Square2VoiceArguements.self,
+            from: parseableArgs
+          )
+          return .square2(
+            Square2Voice(voiceParams: args)
+          )
+        case "noise",
+          "noise_alt":
+          return .noise(
+            NoiseVoice(
+              voiceParams: try parseVoiceArguements(
+                as: NoiseWaveVoiceArguements.self,
+                from: parseableArgs
+              )
             )
           )
-        } else {
-          return .unresolvedVoicegroup(
-            UnresolvedVoicegroup(
-              voicegroupLabel: line,
-            )
+        default:
+          throw ParseError.malformedLine(
+            line: String(line),
+            reason: String("fuck")
           )
         }
-      }
-      let baseKey = args.indices.contains(0) ? parseUInt8(args[0]) : 0
-      let pan = args.indices.contains(1) ? parseUInt8(args[1]) : 0
+      } catch {
+        throw ParseError.malformedLine(
+          line: String(line),
+          reason: "Voice arguments parsing failed: \(error)"
 
-      let envelope = ADSREnvelope(args: args.suffix(4).map { String($0) })
-
-      if voiceType == "voice_directsound" {
-        let sample = args.indices.contains(2) ? String(args[2]) : ""
-
-        // let asset = symbols.directSound[sample]
-        return .directsound(
-          DirectSoundVoice(
-            voiceParams: CommonVoiceParams(
-              envelope: envelope,
-              baseKey: baseKey,
-              pan: pan
-            ),
-            sample: sample,
-          )
         )
       }
-      if voiceType == "voice_programmable_wave" {
-        let sample = args.indices.contains(2) ? String(args[2]) : ""
-
-        // let asset = symbols.programmable[sample]
-        return .programmable(
-          PGMWaveVoice(
-            voiceParams: CommonVoiceParams(
-              envelope: envelope,
-              baseKey: baseKey,
-              pan: pan
-            ),
-            sample: sample,
-          )
-        )
-
-      }
-      if voiceType == "voice_square" {
-        let sweep = args.indices.contains(2) ? parseUInt8(args[2]) : 0
-
-        return .square(
-          SquareVoice(
-            voiceParams: CommonVoiceParams(
-              envelope: envelope,
-              baseKey: baseKey,
-              pan: pan
-            ),
-            sweep: sweep,
-          )
-        )
-
-      }
-      if voiceType == "voice_noise" {
-        let period = args.indices.contains(2) ? parseUInt8(args[2]) : 0
-
-        return .noise(
-          NoiseVoice(
-            voiceParams: CommonVoiceParams(
-              envelope: envelope,
-              baseKey: baseKey,
-              pan: pan
-            ),
-            period: period,
-          )
-        )
-      }
-      return nil
     }
 
-    // fileprivate func readVoicegroupFile(path: URL) throws -> String {
-    //   return try Data(contentsOf: path).withUnsafeBytes {
-    //     String(decoding: $0, as: UTF8.self)
-    //   }
-    // }
+    @inline(__always)
     fileprivate func voicegroupPath(label: Substring) -> URL {
       let digits = label.drop(while: { !$0.isNumber }).prefix(while: {
         $0.isNumber
@@ -476,32 +446,38 @@ public struct Voicegroup: Sendable, Encodable {
         "voicegroup" + String(digits) + ".inc"
       )
     }
+
     fileprivate func parseVoicegroupFile(
       path: URL,
 
     ) throws
       -> [Node]
     {
+      let tab = UInt8(ascii: "\t")
 
-      let data = try Data(contentsOf: path, options: .uncached).withUnsafeBytes {
-        $0.split(
-          separator: UInt8(ascii: "\n"),
-          omittingEmptySubsequences: true
-        )
-        .map { String(decoding: $0, as: UTF8.self) }
-      }
+      let data = try Data(contentsOf: path, options: .mappedIfSafe)
+        .withUnsafeBytes { raw in
+          let lines = raw.split(
+            separator: UInt8(ascii: "\n"),
+            omittingEmptySubsequences: true
+          ).filter { $0.first == tab }
 
-      var nodes: [Node] = []
-      nodes.reserveCapacity(128)
-      for raw in data {
-        let line = Substring(raw)
-        guard line.hasPrefix("\tvoice_") else { continue }
-        if let node = try parseLine(line: line) {
-          nodes.append(node)
+          return lines.compactMap { slice -> String? in
+
+            let s = String(decoding: slice, as: UTF8.self)
+            guard !s.hasPrefix(".") else { return nil }
+
+            return s.hasPrefix("\tvoice") ? s : nil
+          }
         }
+
+      return try data.map { raw in
+        let line = Substring(raw)
+        //        guard line.hasPrefix("\tvoice_") else { continue }
+        return try parseLine(line: line)
       }
 
-      return nodes
+      //      return nodes
     }
 
     fileprivate func resolveGroup(
@@ -525,6 +501,7 @@ public struct Voicegroup: Sendable, Encodable {
     /**
      * Check if the voicegroup is a key split voicegroup false otherwise
      */
+    @inline(__always)
     fileprivate func isKeySplitVoicegroup(in line: Substring) -> Bool {
       let vgTypeLabel = line.prefix { $0 != " " }
       var c = 0
@@ -598,5 +575,4 @@ public struct Voicegroup: Sendable, Encodable {
     //   }
     // }
   }
-
 }

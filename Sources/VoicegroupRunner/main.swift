@@ -29,17 +29,20 @@ struct VoicegroupRunner {
 
   static func main() {
     fputs("vgparse starting...\n", stderr)
-    let config = parseConfiguration()
+    //    let config = parseConfiguration()
 
     // Optional: allow giving Instruments / debugger time to attach.
     let env = ProcessInfo.processInfo.environment
     if let waitStr = env["VG_WAIT_ATTACH"], let seconds = UInt32(waitStr) {
-      fputs("[vgparse] PID \(getpid()) waiting \(seconds)s for attach...\n", stderr)
+      fputs(
+        "[vgparse] PID \(getpid()) waiting \(seconds)s for attach...\n",
+        stderr
+      )
       sleep(seconds)
     }
 
     var timesMs: [Double] = []
-    timesMs.reserveCapacity(config.iterations)
+    //    timesMs.reserveCapacity(config.iterations)
     var results: [Data] = []
 
     defer {
@@ -56,7 +59,9 @@ struct VoicegroupRunner {
       let mode =
         frequency.max(by: { $0.value.count < $1.value.count })?.key ?? 0
 
-      let sampleStd = computeStdDev(fromVariance: computeSampleVariance(timesMs))
+      let sampleStd = computeStdDev(
+        fromVariance: computeSampleVariance(timesMs)
+      )
       print("📊 Execution Time Stats:")
       print("  Runs: \(timesMs.count)")
       print("  2nd run: \(timesMs[2])")
@@ -68,21 +73,33 @@ struct VoicegroupRunner {
 
       if let first = results.first {
         do {
-          let outURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+          let out = URL(
+            fileURLWithPath: "/Users/spencer/dev/reactProjects/smidi-electron/"
+          )
+          let outURL =
+            out
             .appendingPathComponent("results.json")
           try first.write(to: outURL, options: .atomic)
-          print("Wrote example result to results.json (\(first.count) bytes)")
+          print("Wrote example result to (\(outURL)) (\(first.count) bytes)")
         } catch {
           fputs("Error writing results.json: \(error)\n", stderr)
         }
       }
     }
+    let homeDir = FileManager.default.homeDirectoryForCurrentUser
+      .standardizedFileURL
 
-    for _ in 0..<config.iterations {
+    let defaultRoot =
+      homeDir
+      .appendingPathComponent("dev")
+      .appendingPathComponent("nodeProjects")
+      .appendingPathComponent("pokeemerald-expansion")
+      .path
+    for _ in 0..<50 {
       let start = DispatchTime.now()
       let result: Result<Data, Error> = Voicegroup.parseVoicegroupFile(
-        rootDir: config.rootDir,
-        voicegroup: config.voicegroup
+        rootDir: defaultRoot,
+        voicegroup: "voicegroup229"
       )
       let end = DispatchTime.now()
       let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
@@ -97,37 +114,37 @@ struct VoicegroupRunner {
       }
     }
   }
-
-  private static func parseConfiguration() -> Config {
-    let args = CommandLine.arguments
-
-    func value(after flag: String) -> String? {
-      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
-      return args[idx + 1]
-    }
-
-    let env = ProcessInfo.processInfo.environment
-    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
-
-    // Defaults mirror the test
-    let defaultRoot =
-      homeDir
-      .appendingPathComponent("dev")
-      .appendingPathComponent("nodeProjects")
-      .appendingPathComponent("pokeemerald-expansion")
-      .path
-
-    let root = value(after: "--root") ?? env["VG_ROOT"] ?? defaultRoot
-    let vg = value(after: "--voicegroup") ?? env["VG_LABEL"] ?? "voicegroup229"
-    let iterationsStr = value(after: "--iterations") ?? env["VG_ITERATIONS"]
-    let iterations = Int(iterationsStr ?? "50") ?? 50
-
-    return Config(rootDir: root, voicegroup: vg, iterations: iterations)
-  }
-
-  private struct Config {
-    let rootDir: String
-    let voicegroup: String
-    let iterations: Int
-  }
 }
+//  private static func parseConfiguration() -> Config {
+//    let args = CommandLine.arguments
+//
+//    func value(after flag: String) -> String? {
+//      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
+//      return args[idx + 1]
+//    }
+//
+//    let env = ProcessInfo.processInfo.environment
+//    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+//
+//    // Defaults mirror the test
+//    let defaultRoot =
+//      homeDir
+//      .appendingPathComponent("dev")
+//      .appendingPathComponent("nodeProjects")
+//      .appendingPathComponent("pokeemerald-expansion")
+//      .path
+//
+//    let root = value(after: "--root") ?? env["VG_ROOT"] ?? defaultRoot
+//    let vg = value(after: "--voicegroup") ?? env["VG_LABEL"] ?? "voicegroup229"
+//    let iterationsStr = value(after: "--iterations") ?? env["VG_ITERATIONS"]
+//    let iterations = Int(iterationsStr ?? "50") ?? 50
+//
+//    return Config(rootDir: root, voicegroup: vg, iterations: iterations)
+//  }
+//
+//  private struct Config {
+//    let rootDir: String
+//    let voicegroup: String
+//    let iterations: Int
+//  }
+//}
