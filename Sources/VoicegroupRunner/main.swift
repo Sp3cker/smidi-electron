@@ -1,130 +1,133 @@
 import Dispatch
 import Foundation
 import Voicegroups
+
 //
 //Task {
-    VoicegroupRunner.main()
+VoicegroupRunner.main()
 //    exit(0)
 //}
 //dispatchMain()
 private func computePopulationVariance(from values: [Double]) -> Double {
 
-    guard !values.isEmpty else { return 0 }
-    let mean = values.reduce(0, +) / Double(values.count)
-    let sumSq = values.reduce(0) { $0 + ($1 - mean) * ($1 - mean) }
-    return sumSq / Double(values.count)
+  guard !values.isEmpty else { return 0 }
+  let mean = values.reduce(0, +) / Double(values.count)
+  let sumSq = values.reduce(0) { $0 + ($1 - mean) * ($1 - mean) }
+  return sumSq / Double(values.count)
 }
 private func computeSampleVariance(_ values: [Double]) -> Double {
-    guard values.count > 1 else { return 0 }
-    let mean = values.reduce(0, +) / Double(values.count)
-    let sumSq = values.reduce(0) { $0 + ($1 - mean) * ($1 - mean) }
-    return sumSq / Double(values.count - 1)
+  guard values.count > 1 else { return 0 }
+  let mean = values.reduce(0, +) / Double(values.count)
+  let sumSq = values.reduce(0) { $0 + ($1 - mean) * ($1 - mean) }
+  return sumSq / Double(values.count - 1)
 }
 private func computeStdDev(fromVariance variance: Double) -> Double {
-    return sqrt(variance)
+  return sqrt(variance)
 }
 
 struct VoicegroupRunner {
 
-    static func main() {
-        fputs("vgparse starting...\n", stderr)
-        let config = parseConfiguration()
+  static func main() {
+    fputs("vgparse starting...\n", stderr)
+    let config = parseConfiguration()
 
-        // Optional: allow giving Instruments / debugger time to attach.
-        let env = ProcessInfo.processInfo.environment
-        if let waitStr = env["VG_WAIT_ATTACH"], let seconds = UInt32(waitStr) {
-            fputs("[vgparse] PID \(getpid()) waiting \(seconds)s for attach...\n", stderr)
-            sleep(seconds)
-        }
-
-        var timesMs: [Double] = []
-        timesMs.reserveCapacity(config.iterations)
-        var results: [Data] = []
-
-        defer {
-            if timesMs.isEmpty {
-                fputs("No timing data collected.\n", stderr)
-            }
-
-            let mean = timesMs.reduce(0, +) / Double(timesMs.count)
-            let sorted = timesMs.sorted()
-            let minVal = sorted.first ?? 0
-            let maxVal = sorted.last ?? 0
-
-            let frequency = Dictionary(grouping: timesMs, by: { $0 })
-
-            let sampleStd = computeStdDev(fromVariance: computeSampleVariance(timesMs))
-            print("📊 Execution Time Stats:")
-            print("  Runs: \(timesMs.count)")
-            print("  2nd run: \(timesMs[2])")
-            print("  48nd run: \(timesMs[48])")
-            print("  Mean: \(String(format: "%.1f", mean))ms")
-            print("  Std: \(String(format: "%.1f", sampleStd))ms")
-            print("  Min: \(String(format: "%.1f", minVal))ms")
-            print("  Max: \(String(format: "%.1f", maxVal))ms")
-
-            if let first = results.first {
-                do {
-                    let outURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                        .appendingPathComponent("results.json")
-                    try first.write(to: outURL, options: .atomic)
-                    print("Wrote example result to results.json (\(first.count) bytes)")
-                } catch {
-                    fputs("Error writing results.json: \(error)\n", stderr)
-                }
-            }
-        }
-
-        for _ in 0..<config.iterations {
-            let start = DispatchTime.now()
-            let result: Result<Data, Error> = Voicegroup.parseVoicegroupFile(
-                rootDir: config.rootDir,
-                voicegroup: config.voicegroup
-            )
-            let end = DispatchTime.now()
-            let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
-            timesMs.append(Double(nanos) / 1_000_000)
-
-            switch result {
-            case .success(let data):
-                results.append(data)
-            case .failure(let error):
-                fputs("Parsing failed: \(error)\n", stderr)
-                return
-            }
-        }
+    // Optional: allow giving Instruments / debugger time to attach.
+    let env = ProcessInfo.processInfo.environment
+    if let waitStr = env["VG_WAIT_ATTACH"], let seconds = UInt32(waitStr) {
+      fputs("[vgparse] PID \(getpid()) waiting \(seconds)s for attach...\n", stderr)
+      sleep(seconds)
     }
 
-    private static func parseConfiguration() -> Config {
-        let args = CommandLine.arguments
+    var timesMs: [Double] = []
+    timesMs.reserveCapacity(config.iterations)
+    var results: [Data] = []
 
-        func value(after flag: String) -> String? {
-            guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
-            return args[idx + 1]
+    defer {
+      if timesMs.isEmpty {
+        fputs("No timing data collected.\n", stderr)
+      }
+
+      let mean = timesMs.reduce(0, +) / Double(timesMs.count)
+      let sorted = timesMs.sorted()
+      let minVal = sorted.first ?? 0
+      let maxVal = sorted.last ?? 0
+
+      let frequency = Dictionary(grouping: timesMs, by: { $0 })
+      let mode =
+        frequency.max(by: { $0.value.count < $1.value.count })?.key ?? 0
+
+      let sampleStd = computeStdDev(fromVariance: computeSampleVariance(timesMs))
+      print("📊 Execution Time Stats:")
+      print("  Runs: \(timesMs.count)")
+      print("  2nd run: \(timesMs[2])")
+      print("  48nd run: \(timesMs[48])")
+      print("  Mean: \(String(format: "%.1f", mean))ms")
+      print("  Mode: \(String(format: "%.1f", mode))ms")
+      print("  Min: \(String(format: "%.1f", minVal))ms")
+      print("  Max: \(String(format: "%.1f", maxVal))ms")
+
+      if let first = results.first {
+        do {
+          let outURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("results.json")
+          try first.write(to: outURL, options: .atomic)
+          print("Wrote example result to results.json (\(first.count) bytes)")
+        } catch {
+          fputs("Error writing results.json: \(error)\n", stderr)
         }
-
-        let env = ProcessInfo.processInfo.environment
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
-
-        // Defaults mirror the test
-        let defaultRoot =
-            homeDir
-            .appendingPathComponent("dev")
-            // .appendingPathComponent("nodeProjects")
-            .appendingPathComponent("pokeemerald-expansion")
-            .path
-
-        let root = value(after: "--root") ?? env["VG_ROOT"] ?? defaultRoot
-        let vg = value(after: "--voicegroup") ?? env["VG_LABEL"] ?? "voicegroup229"
-        let iterationsStr = value(after: "--iterations") ?? env["VG_ITERATIONS"]
-        let iterations = Int(iterationsStr ?? "50") ?? 50
-
-        return Config(rootDir: root, voicegroup: vg, iterations: iterations)
+      }
     }
 
-    private struct Config {
-        let rootDir: String
-        let voicegroup: String
-        let iterations: Int
+    for _ in 0..<config.iterations {
+      let start = DispatchTime.now()
+      let result: Result<Data, Error> = Voicegroup.parseVoicegroupFile(
+        rootDir: config.rootDir,
+        voicegroup: config.voicegroup
+      )
+      let end = DispatchTime.now()
+      let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
+      timesMs.append(Double(nanos) / 1_000_000)
+
+      switch result {
+      case .success(let data):
+        results.append(data)
+      case .failure(let error):
+        fputs("Parsing failed: \(error)\n", stderr)
+        return
+      }
     }
+  }
+
+  private static func parseConfiguration() -> Config {
+    let args = CommandLine.arguments
+
+    func value(after flag: String) -> String? {
+      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
+      return args[idx + 1]
+    }
+
+    let env = ProcessInfo.processInfo.environment
+    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+
+    // Defaults mirror the test
+    let defaultRoot =
+      homeDir
+      .appendingPathComponent("dev")
+      .appendingPathComponent("nodeProjects")
+      .appendingPathComponent("pokeemerald-expansion")
+      .path
+
+    let root = value(after: "--root") ?? env["VG_ROOT"] ?? defaultRoot
+    let vg = value(after: "--voicegroup") ?? env["VG_LABEL"] ?? "voicegroup229"
+    let iterationsStr = value(after: "--iterations") ?? env["VG_ITERATIONS"]
+    let iterations = Int(iterationsStr ?? "50") ?? 50
+
+    return Config(rootDir: root, voicegroup: vg, iterations: iterations)
+  }
+
+  private struct Config {
+    let rootDir: String
+    let voicegroup: String
+    let iterations: Int
+  }
 }
