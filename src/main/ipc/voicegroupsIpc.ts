@@ -26,8 +26,7 @@ export const setVoicegroupsIpc = (
       try {
         const voicegroupDetails =
           await voicegroupsService.getVoicegroupDetails(voicegroupName);
-        sendToStream("voicegroup-details", { voicegroupDetails });
-        
+        // sendToStream("voicegroup-details", { voicegroupDetails });
         return { success: true, data: voicegroupDetails };
       } catch (error) {
         event.sender.send(IPC_CHANNELS.APP_ERROR, {

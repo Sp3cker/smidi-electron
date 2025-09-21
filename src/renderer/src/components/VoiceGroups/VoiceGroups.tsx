@@ -1,5 +1,3 @@
-import { useWatchStore } from "@renderer/store";
-import { useEffect } from "react";
 import VoicegroupDetails from "./VoicegroupDetails";
 import { useVoicegroups } from "@renderer/hooks/useVoicegroups";
 
@@ -55,7 +53,7 @@ const VoiceGroups = () => {
     <>
       <h1 className="font-bold text-xl">Voice Groups</h1>
       <div className="flex flex-row gap-2">
-        <div className="flex order-1 max-w-30 flex-col gap-2 ring-1 ring-stone-900 bg-[var(--yatsugi-blue-50)]  rounded-sm p-1">
+        <div className="flex order-1 max-w-30 max-h-[50vh] overflow-y-auto flex-col gap-2 ring-1 ring-stone-900 bg-[var(--yatsugi-blue-50)]  rounded-sm p-1">
           {voiceGroups.map((voiceGroup) => (
             <VoiceGroupItem
               selected={selectedVoicegroup === voiceGroup}

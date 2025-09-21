@@ -1,3 +1,4 @@
+import Config
 import Foundation
 
 public enum ParseError: Error {
@@ -7,26 +8,25 @@ public enum ParseError: Error {
   case validation(String)
 }
 
-public actor Voicegroup: Sendable {
+public class Voicegroup {
   public var voiceGroup: String? = nil
-  init() {
-    
+  var rootDir: String
+  public init(rootDir: String) {
+    self.rootDir = rootDir
   }
-  public static func parseVoicegroupFile(rootDir: String, voicegroup: String)
-    -> Result<
-      Data, Error
-    >
+  public func parseVoicegroupFile(voicegroup: String)
+   throws -> Data
   {
     do {
-      let parser = try Parser(rootDir: rootDir)
+      let parser = try Parser(rootDir: self.rootDir)
       let vgLabel = Substring(voicegroup)
       let root = try parser.resolveGroup(
         label: vgLabel,
       )
       let data = try JSONEncoder().encode(root)
-      return .success(data)
+      return data
     } catch {
-      return .failure(error)
+      throw error
     }
   }
 

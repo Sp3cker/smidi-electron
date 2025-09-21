@@ -20,7 +20,6 @@ export const useVoicegroups = () => {
           setError(new Error("Error getting voice groups"));
           return;
         }
-        console.log("voiceGroups", voiceGroups);
         setVoiceGroups(voiceGroups.data);
       } catch (error) {
         setError(error as Error);

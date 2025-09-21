@@ -1,26 +1,31 @@
 import { useWatchStore } from "@renderer/store";
-import { useMessageStream } from "@renderer/hooks/useSharedJson";
-
-const VoicegroupDetails = () => {
-  const { selectedVoicegroupDetails } = useWatchStore();
-  const { messages } = useMessageStream("voicegroup-details");
-
-  // if (!ready) return <div>Loading voicegroup details…</div>;
-
-  console.log("VoicegroupDetails: messages", messages);
-
-  if (messages.length > 0) {
-    const latest = messages[messages.length - 1];
-    if (latest.voicegroupDetails) {
-      console.log(
-        "VoicegroupDetails: latest voicegroupDetails",
-        latest.voicegroupDetails
-      );
-    }
-  }
+import { GroupVoice, Node } from "@shared/dto";
+const VoicegroupVoice = ({ voice }: { voice: Node }) => {
+  return (
+    <div className="flex flex-col gap-2 ring-1 ring-stone-900 bg-[var(--yatsugi-blue-50)]  rounded-sm p-1">
+      {voice.type}
+    </div>
+  );
+};
+const VoicegroupDetailList = ({ voicegroup }: { voicegroup: GroupVoice }) => {
   return (
     <div>
-      <code>{JSON.stringify(selectedVoicegroupDetails)}</code>
+      <h1>{voicegroup.voicegroup}</h1>
+      <div className="flex flex-col gap-2 ring-1 ring-stone-900 bg-[var(--yatsugi-blue-50)]  rounded-sm p-1">
+        {voicegroup.voices.map((voice, index) => (
+          <VoicegroupVoice key={index} voice={voice} />
+        ))}
+      </div>
+    </div>
+  );
+};
+const VoicegroupDetails = () => {
+  const { selectedVoicegroupDetails } = useWatchStore();
+  const data = selectedVoicegroupDetails as GroupVoice;
+  if (!data) return <div>No data</div>;
+  return (
+    <div>
+      <VoicegroupDetailList voicegroup={data} />
     </div>
   );
 };

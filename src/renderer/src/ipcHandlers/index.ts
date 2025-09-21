@@ -1,6 +1,6 @@
 import { toast } from "@renderer/ui";
 import { IPC_CHANNELS } from "../../../shared/ipc";
-import type { ParsedMidiMeasures } from "@shared/dto";
+import type { GroupVoice, ParsedMidiMeasures } from "@shared/dto";
 /** Mostly for *listening* for events from the server. */
 const createIPCListener = <T>(
   channel: string,
@@ -62,15 +62,14 @@ export const onConfigLoaded = (
 };
 export const getVoicegroupDetails = (
   voicegroupName: string,
-  set: (state: any) => void
-): Promise<any> => {
+  set: (state: { selectedVoicegroupDetails: GroupVoice }) => void
+): Promise<void> => {
   console.time("getVoicegroupDetails");
   window.electron.ipcRenderer
     .invoke(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUP_DETAILS, voicegroupName)
     .then((vg) => {
-      console.table(vg);
-      set({ selectedVoicegroupDetails: vg });
-      console.timeEnd("getVoicegroupDetails");
+      console.log("vg", vg);
+      set({ selectedVoicegroupDetails: JSON.parse(vg.data) });
     })
     .catch((err) =>
       toast.error("Error getting voicegroup details: " + err.message)

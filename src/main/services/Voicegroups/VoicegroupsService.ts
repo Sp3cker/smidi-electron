@@ -5,8 +5,8 @@ import type Config from "../Config/Config";
 const fetchVGDetails = (root: string, voicegroupName: string) => {
   return new Promise((resolve, reject) => {
     //@ts-ignore - native Module.node lacks TS types for keysplit callback signature
-    Module.keysplit(root, voicegroupName, (result, err) => {
-      if (err) {
+    Module.keysplit(root, voicegroupName, (err, result) => {
+      if (err.length !== 0) {
         reject(err);
       } else {
         resolve(result);

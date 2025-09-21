@@ -1,10 +1,11 @@
+import Config
 import Dispatch
 import Foundation
 import Voicegroups
 
 //
 //Task {
-VoicegroupRunner.main()
+try! await VoicegroupRunner.main()
 //    exit(0)
 //}
 //dispatchMain()
@@ -24,10 +25,10 @@ private func computeSampleVariance(_ values: [Double]) -> Double {
 private func computeStdDev(fromVariance variance: Double) -> Double {
   return sqrt(variance)
 }
-
+@MainActor
 struct VoicegroupRunner {
 
-  static func main() {
+  static func main() async throws {
     fputs("vgparse starting...\n", stderr)
     //    let config = parseConfiguration()
 
@@ -95,23 +96,25 @@ struct VoicegroupRunner {
       .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
+    let config = Config()
+    await config.setRootDir(root: defaultRoot)
+    let vg = try! await Voicegroup(config: config)
     for _ in 0..<50 {
       let start = DispatchTime.now()
-      let result: Result<Data, Error> = Voicegroup.parseVoicegroupFile(
-        rootDir: defaultRoot,
+      let result: Data = try! await vg.parseVoicegroupFile(
         voicegroup: "voicegroup229"
       )
       let end = DispatchTime.now()
       let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
       timesMs.append(Double(nanos) / 1_000_000)
-
-      switch result {
-      case .success(let data):
-        results.append(data)
-      case .failure(let error):
-        fputs("Parsing failed: \(error)\n", stderr)
-        return
-      }
+      results.append(result)
+//      switch result {
+//      case .success(let data):
+//        results.append(data)
+//      case .failure(let error):
+//        fputs("Parsing failed: \(error)\n", stderr)
+//        return
+//      }
     }
   }
 }

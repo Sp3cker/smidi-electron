@@ -7,7 +7,7 @@ import {
   getVoicegroupDetails,
 } from "../ipcHandlers";
 import { toast } from "@renderer/ui/Toast/ToastStore";
-import type { ParsedMidiMeasures } from "@shared/dto";
+import type { ParsedMidiMeasures, GroupVoice } from "@shared/dto";
 
 type WatchStore = {
   directory: string;
@@ -15,7 +15,7 @@ type WatchStore = {
   midiFiles: ParsedMidiMeasures[];
 
   selectedVoicegroup: string | null;
-  selectedVoicegroupDetails: any | null;
+  selectedVoicegroupDetails: GroupVoice | null;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
   promptDirectory: () => void;
