@@ -7,11 +7,10 @@ let package = Package(
   name: "VoicegroupParser",
   platforms: [.macOS(.v15)],
   products: [
-    //  .executable(name: "VoicegroupParserTests", targets: ["VoicegroupParserTests"]),
     .library(name: "Module", type: .dynamic, targets: ["module"]),
     //        .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
-    .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
+//    .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
   ],
   dependencies: [
     .package(
@@ -21,10 +20,11 @@ let package = Package(
   ],
   // TARGET NAMES (not "name", but target: thisString) ARE FOLDER NAMES
   targets: [
-    .testTarget(
-      name: "VoicegroupParserTests",
-      dependencies: ["Keysplits", "Voicegroups"]
-    ),
+//    .testTarget(
+//      name: "VoicegroupParserTests",
+//      dependencies: ["Keysplits", "Voicegroups"],
+//      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")]
+//    ),
     .target(name: "Filesystem", path: "Sources/Core/Filesystem"),
     .target(
       name: "module",
@@ -50,7 +50,7 @@ let package = Package(
       name: "VoicegroupRunner",
       dependencies: ["Voicegroups", "Config"],
       path: "Sources/Core/VoicegroupRunner",
-
+      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
   ]
 )

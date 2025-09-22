@@ -56,13 +56,13 @@ let keysplit: String? = nil
         voicegroup: vg
       )
       guard let jsonString = String(data: results, encoding: .utf8) else {
-        try? callback(["Failed to decode voicegroup data as UTF-8"], [])
+         try callback(["Failed to decode voicegroup data as UTF-8"], [])
         return
       }
-      try? callback([], jsonString)  // nil error, success data
+      try callback([], jsonString)  // nil error, success data
     } catch {
       // Avoid throwing from within error handling; best-effort callback
-      try? callback([error.localizedDescription], [])  // error, nil data
+      try! callback([error.localizedDescription], [])  // error, nil data
     }
   },
 ]

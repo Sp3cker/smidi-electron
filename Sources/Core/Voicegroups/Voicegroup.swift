@@ -10,6 +10,7 @@ public enum ParseError: Error {
 }
 
 public class Voicegroup {
+  
   public var voiceGroup: String? = nil
   var rootDir: String
   public init(rootDir: String) {
@@ -189,24 +190,16 @@ public class Voicegroup {
     }
   }
 
-  fileprivate struct SymbolMaps {
-    let directSound: [String: String]
-    let programmable: [String: String]
-  }
 
   fileprivate struct Parser {
     let rootDir: URL
     let soundDir: URL
     let voicegroupsDir: URL
-    let directSoundDataPath: URL
-    let programmableWaveDataPath: URL
+
 
     let fileManager = FileManager.default
     //    var fileMap: [String: URL]
-    private var symbols: SymbolMaps = SymbolMaps(
-      directSound: [:],
-      programmable: [:]
-    )
+
     init(rootDir: String) throws {
       self.rootDir = URL(fileURLWithPath: rootDir)
       self.soundDir = self.rootDir.appendingPathComponent(
@@ -217,20 +210,7 @@ public class Voicegroup {
         "voicegroups",
         isDirectory: true
       )
-      self.directSoundDataPath = self.soundDir.appendingPathComponent(
-        "direct_sound_data.inc",
-        isDirectory: false
-      )
-      self.programmableWaveDataPath =
-        self.rootDir.appendingPathComponent(
-          "programmable_wave_data.inc",
-          isDirectory: false
-        )
-      //      self.fileMap = try preloadDirectoryFileNames(atPath: self.voicegroupsDir)
-      // self.symbols = try await preloadSymbols()
-      // if self.symbols.directSound.isEmpty {
-      //   throw ParseError.noTables
-      // }
+
 
     }
     //    func secondDelimiter(in line: Substring, first char: Character, _ end: Character ) {
@@ -241,7 +221,7 @@ public class Voicegroup {
     //    }
 
     @inline(__always)
-    fileprivate func parseLine(line: Substring)
+    fileprivate func parseLine(line: consuming Substring)
       throws
       -> Node
     {
@@ -293,7 +273,7 @@ public class Voicegroup {
           } else {
             let args = try parseVoiceArguements(
               as: KeysplitVoiceArguements.self,
-              from: parseableArgs
+              from: consume parseableArgs
             )
 
             return .unresolvedKeysplit(
@@ -316,7 +296,7 @@ public class Voicegroup {
           let args = try parseVoiceArguements(
             as:
               DirectSoundorPGMWaveVoiceArguements.self,
-            from: parseableArgs
+            from: consume parseableArgs
           )
           let type =
             switch voiceType {
@@ -338,7 +318,7 @@ public class Voicegroup {
           "square_1_alt":
           let args = try parseVoiceArguements(
             as: Square1VoiceArguements.self,
-            from: parseableArgs
+            from: consume parseableArgs
           )
           return .square1(
             Square1Voice(voiceParams: args)
@@ -347,7 +327,7 @@ public class Voicegroup {
           "square_2_alt":
           let args = try parseVoiceArguements(
             as: Square2VoiceArguements.self,
-            from: parseableArgs
+            from: consume parseableArgs
           )
           return .square2(
             Square2Voice(voiceParams: args)
@@ -358,7 +338,7 @@ public class Voicegroup {
             NoiseVoice(
               voiceParams: try parseVoiceArguements(
                 as: NoiseWaveVoiceArguements.self,
-                from: parseableArgs
+                from: consume parseableArgs
               )
             )
           )
@@ -434,17 +414,17 @@ public class Voicegroup {
             omittingEmptySubsequences: true
           ).filter { $0.first == tab && $0.first != period }
 
-          return lines.compactMap { slice -> String? in
+          return lines.compactMap { slice -> Substring? in
 
-            var s = String(decoding: slice, as: UTF8.self)
+            var s = Substring(decoding: slice, as: UTF8.self)
             s.makeContiguousUTF8()
             return s.hasPrefix("\tvoice") ? s : nil
           }
         }
-
+      
       return try data.map { raw in
-        let line = Substring(raw)
-        return try parseLine(line: line)
+
+        return try parseLine(line: raw)
       }
     }
 
@@ -471,9 +451,10 @@ public class Voicegroup {
     @inline(__always)
     fileprivate func isKeySplitAll(in line: Substring) -> Bool {
       let vgTypeLabel = line.prefix { $0 != " " }
+      let underscore = UInt8(ascii: "_")
       var c = 0
       for b in vgTypeLabel.utf8 {
-        if b == UInt8(ascii: "_") {
+        if b == underscore {
           c += 1
           if c == 2 {
             return true
@@ -485,7 +466,7 @@ public class Voicegroup {
 
   }
 }
-@inline(__always)
+@_transparent
 func parseVoiceGroupUTF8(from line: Substring) throws -> String {
   var components: [[UInt8]] = []
   var currentComponent: [UInt8] = []

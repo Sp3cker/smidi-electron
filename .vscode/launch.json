@@ -117,6 +117,24 @@
       "name": "Release vgparse",
       "program": "${workspaceFolder:smidi-electron}/.build/release/vgparse",
       "preLaunchTask": "swift: Build Release vgparse"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Debug VoicegroupRunner",
+      "program": "${workspaceFolder:smidi-electron}/.build/debug/VoicegroupRunner",
+      "preLaunchTask": "swift: Build Debug VoicegroupRunner"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Release VoicegroupRunner",
+      "program": "${workspaceFolder:smidi-electron}/.build/release/VoicegroupRunner",
+      "preLaunchTask": "swift: Build Release VoicegroupRunner"
     }
   ],
   "compounds": [

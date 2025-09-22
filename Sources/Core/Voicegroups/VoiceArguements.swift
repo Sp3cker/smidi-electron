@@ -414,7 +414,7 @@ struct GroupVoiceArguements: VoiceArguements {
 @inline(__always)
 public func parseVoiceArguements<A: VoiceArguements>(
   as type: A.Type,
-  from line: Substring
+  from line:  Substring
 ) throws -> A {
   var args: [Substring] = []
   args.reserveCapacity(8)

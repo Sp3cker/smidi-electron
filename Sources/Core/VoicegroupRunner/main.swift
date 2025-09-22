@@ -45,6 +45,8 @@ struct VoicegroupRunner {
     var timesMs: [Double] = []
     //    timesMs.reserveCapacity(config.iterations)
     var results: [Data] = []
+    let homeDir = FileManager.default.homeDirectoryForCurrentUser
+      .standardizedFileURL
 
     defer {
       if timesMs.isEmpty {
@@ -75,8 +77,11 @@ struct VoicegroupRunner {
 
       if let first = results.first {
         do {
-          let out = URL(
-            fileURLWithPath: "/Users/spencer/dev/reactProjects/smidi-electron/"
+          // let out = URL(
+          //   fileURLWithPath: "/Users/spencer/dev/reactProjects/smidi-electron/"
+          // )
+          let out = homeDir.appending(path: "dev").appending(path: "reactProjects").appending(
+            path: "smidi-electron"
           )
           let outURL =
             out
@@ -88,13 +93,11 @@ struct VoicegroupRunner {
         }
       }
     }
-    let homeDir = FileManager.default.homeDirectoryForCurrentUser
-      .standardizedFileURL
 
     let defaultRoot =
       homeDir
       .appendingPathComponent("dev")
-      .appendingPathComponent("nodeProjects")
+      // .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
     do {
@@ -102,7 +105,7 @@ struct VoicegroupRunner {
       for _ in 0..<50 {
         let start = DispatchTime.now()
         let result: Data = try await vg.parseVoicegroupFile(
-          voicegroup: "voicegroup229"
+           voicegroup: "voicegroup229"
         )
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
