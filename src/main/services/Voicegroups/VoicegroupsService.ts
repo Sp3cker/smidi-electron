@@ -37,15 +37,13 @@ class VoicegroupsService {
         this.repository.repoRoot,
         vgLabel,
       );
-      console.timeEnd(`vg:fetch:${voicegroupName}`);
       // console.debug("VoicegroupsService: keysplitResult", keysplitResult);
       console.debug(
         "VoicegroupsService: getting voicegroup details",
         voicegroupName,
       );
-      console.time(`vg:read:${voicegroupName}`);
       // const vg = await this.repository.readVoicegroupFile(voicegroupName);
-      console.timeEnd(`vg:read:${voicegroupName}`);
+      console.timeEnd(`vg:fetch:${voicegroupName}`);
       return keysplitResult;
     } catch (error) {
       console.error(

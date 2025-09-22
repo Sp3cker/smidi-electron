@@ -102,7 +102,7 @@ struct VoicegroupRunner {
       for _ in 0..<50 {
         let start = DispatchTime.now()
         let result: Data = try await vg.parseVoicegroupFile(
-          voicegroup: "voicegroup192"
+          voicegroup: "voicegroup229"
         )
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
