@@ -49,6 +49,7 @@ struct VoicegroupRunner {
     defer {
       if timesMs.isEmpty {
         fputs("No timing data collected.\n", stderr)
+        exit(1)
       }
 
       let mean = timesMs.reduce(0, +) / Double(timesMs.count)
@@ -60,13 +61,13 @@ struct VoicegroupRunner {
       let mode =
         frequency.max(by: { $0.value.count < $1.value.count })?.key ?? 0
 
-      let sampleStd = computeStdDev(
-        fromVariance: computeSampleVariance(timesMs)
-      )
+      // let sampleStd = computeStdDev(
+      //   fromVariance: computeSampleVariance(timesMs)
+      // )
       print("📊 Execution Time Stats:")
       print("  Runs: \(timesMs.count)")
       print("  2nd run: \(timesMs[2])")
-      print("  48nd run: \(timesMs[48])")
+      //      print("  48nd run: \(timesMs[48])")
       print("  Mean: \(String(format: "%.1f", mean))ms")
       print("  Mode: \(String(format: "%.1f", mode))ms")
       print("  Min: \(String(format: "%.1f", minVal))ms")
@@ -96,26 +97,30 @@ struct VoicegroupRunner {
       .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
-    let config = Config()
-    await config.setRootDir(root: defaultRoot)
-    let vg = try! await Voicegroup(config: config)
-    for _ in 0..<50 {
-      let start = DispatchTime.now()
-      let result: Data = try! await vg.parseVoicegroupFile(
-        voicegroup: "voicegroup229"
-      )
-      let end = DispatchTime.now()
-      let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
-      timesMs.append(Double(nanos) / 1_000_000)
-      results.append(result)
-//      switch result {
-//      case .success(let data):
-//        results.append(data)
-//      case .failure(let error):
-//        fputs("Parsing failed: \(error)\n", stderr)
-//        return
-//      }
+    do {
+      let vg = Voicegroup(rootDir: defaultRoot)
+      for _ in 0..<50 {
+        let start = DispatchTime.now()
+        let result: Data = try await vg.parseVoicegroupFile(
+          voicegroup: "voicegroup192"
+        )
+        let end = DispatchTime.now()
+        let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
+        timesMs.append(Double(nanos) / 1_000_000)
+        results.append(result)
+      }
+    } catch {
+      print(error)
+      throw (error)
     }
+    //      switch result {
+    //      case .success(let data):
+    //        results.append(data)
+    //      case .failure(let error):
+    //        fputs("Parsing failed: \(error)\n", stderr)
+    //        return
+    //      }
+
   }
 }
 //  private static func parseConfiguration() -> Config {

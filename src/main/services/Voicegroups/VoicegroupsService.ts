@@ -31,10 +31,11 @@ class VoicegroupsService {
   }
   async getVoicegroupDetails(voicegroupName: string) {
     try {
+      const vgLabel = voicegroupName.split(".")[0];
       console.time(`vg:fetch:${voicegroupName}`);
       const keysplitResult = await fetchVGDetails(
         this.repository.repoRoot,
-        voicegroupName,
+        vgLabel,
       );
       console.timeEnd(`vg:fetch:${voicegroupName}`);
       // console.debug("VoicegroupsService: keysplitResult", keysplitResult);

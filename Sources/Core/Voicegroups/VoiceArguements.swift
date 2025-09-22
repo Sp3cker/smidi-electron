@@ -50,7 +50,7 @@ extension Square1VoiceArguements: VoiceArguements {
   public static var expectedCount: Int { 8 }
 
   public init(parsed: [Substring]) throws {
-    guard parsed.count == Self.expectedCount else {
+    guard parsed.count >= Self.expectedCount else {
       throw VoiceArgsParseError.wrongCount(
         expected: Self.expectedCount,
         got: parsed.count,
@@ -128,7 +128,7 @@ extension Square2VoiceArguements: VoiceArguements {
   public static var expectedCount: Int { 7 }
 
   public init(parsed: [Substring]) throws {
-    guard parsed.count == Self.expectedCount else {
+    guard parsed.count >= Self.expectedCount else {
       throw VoiceArgsParseError.wrongCount(
         expected: Self.expectedCount,
         got: parsed.count,
@@ -196,7 +196,7 @@ struct NoiseWaveVoiceArguements: Sendable, Encodable {
 
 extension NoiseWaveVoiceArguements: VoiceArguements {
   public init(parsed: [Substring]) throws {
-    guard parsed.count == Self.expectedCount else {
+    guard parsed.count >= Self.expectedCount else {
       throw VoiceArgsParseError.wrongCount(
         expected: Self.expectedCount,
         got: parsed.count,
@@ -263,7 +263,8 @@ public struct DirectSoundorPGMWaveVoiceArguements: VoiceArguements {
   private var params: (UInt8, UInt8, String, UInt8, UInt8, UInt8, UInt8)
 
   public init(parsed: [Substring]) throws {
-    guard parsed.count == Self.expectedCount else {
+    // Make sure we got at least 8 params
+    guard parsed.count >= Self.expectedCount else {
       throw VoiceArgsParseError.wrongCount(
         expected: Self.expectedCount,
         got: parsed.count,
@@ -320,7 +321,6 @@ public struct DirectSoundorPGMWaveVoiceArguements: VoiceArguements {
       }
     }
   }
-
 }
 
 extension DirectSoundorPGMWaveVoiceArguements: Sendable, Encodable {
@@ -336,6 +336,81 @@ extension DirectSoundorPGMWaveVoiceArguements: Sendable, Encodable {
   }
 }
 
+struct KeysplitVoiceArguements: VoiceArguements {
+
+  
+  public static var expectedCount: Int { 3 }
+  public typealias Element = String?
+  private var params: (String, String, String?)
+
+  public init(parsed: [Substring]) throws {
+    // We need at least 2, maybe 3 if theres a comment
+    guard parsed.count >= Self.expectedCount - 1 else {
+      throw VoiceArgsParseError.wrongCount(
+        expected: Self.expectedCount,
+        got: parsed.count,
+        voiceType: String(describing: Self.self)
+      )
+    }
+    let comment = parsed.indices.contains(2) ? parsed[2] : nil
+
+    self.params = (
+      String(parsed[0]), String(parsed[1]), comment.map { String($0) }
+    )
+  }
+
+  public subscript(position: Int) -> String? {
+    get {
+      switch position {
+      case 0: return params.0
+      case 1: return params.1
+      case 2: return params.2
+      default: fatalError("Invalid voice arguement position: \(position)")
+      }
+    }
+    set {
+      switch (position, newValue) {
+      case (0, let v): params.0 = v!
+      case (1, let v): params.1 = v!
+      case (2, let v): params.2 = v
+      default: fatalError("Invalid voice arguement position: \(position)")
+      }
+    }
+  }
+  
+}
+struct GroupVoiceArguements: VoiceArguements {
+  public static var expectedCount: Int { 1 }
+  public typealias Element = String
+  private var params: String
+
+  public init(parsed: [Substring]) throws {
+    guard parsed.count == Self.expectedCount else {
+      throw VoiceArgsParseError.wrongCount(
+        expected: Self.expectedCount,
+        got: parsed.count,
+        voiceType: String(describing: Self.self)
+      )
+    }
+    func b(_ i: Int) -> Substring { parsed[i] }
+    self.params = String(b(0))
+  }
+
+  public subscript(position: Int) -> String {
+    get {
+      switch position {
+      case 0: return params
+      default: fatalError("Invalid voice arguement position: \(position)")
+      }
+    }
+    set {
+      switch position {
+      case 0: params = newValue
+      default: fatalError("Invalid voice arguement position: \(position)")
+      }
+    }
+  }
+}
 @inline(__always)
 public func parseVoiceArguements<A: VoiceArguements>(
   as type: A.Type,
@@ -351,7 +426,7 @@ public func parseVoiceArguements<A: VoiceArguements>(
     }
     if cur == line.endIndex { break }
     let start = cur  // start of argument
-    while cur < line.endIndex && line[cur] != "," {
+    while cur < line.endIndex && line[cur] != "," && line[cur] != "@" {
       cur = line.index(after: cur)
     }
     var end = cur
@@ -368,3 +443,29 @@ public func parseVoiceArguements<A: VoiceArguements>(
   }
   return try A(parsed: args)
 }
+
+//public func parseVoicegroupLabel(_ line: Substring) throws -> String {
+//  var cur = line.startIndex
+//  while cur < line.endIndex {
+//    while cur < line.endIndex && line[cur].isWhitespace {
+//      cur = line.index(after: cur)  // loop through whitespace
+//    }
+//    if cur == line.endIndex { break }
+//    let start = cur  // start of argument
+//    while cur < line.endIndex && line[cur] != "," {
+//      cur = line.index(after: cur)
+//    }
+//    var end = cur
+//    // trim trailing ws
+//    while end > start && line[line.index(before: end)].isWhitespace {
+//      end = line.index(before: end)
+//    }
+//    if start < end {
+//      args.append(line[start..<end])
+//    }
+//    if cur < line.endIndex {  // skip comma
+//      cur = line.index(after: cur)
+//    }
+//  }
+//
+//}

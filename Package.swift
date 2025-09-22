@@ -25,7 +25,7 @@ let package = Package(
       name: "VoicegroupParserTests",
       dependencies: ["Keysplits", "Voicegroups"]
     ),
-
+    .target(name: "Filesystem", path: "Sources/Core/Filesystem"),
     .target(
       name: "module",
       dependencies: [
@@ -34,6 +34,7 @@ let package = Package(
         "Keysplits",
         "Voicegroups",
         "Config",
+
       ]
     ),
     .target(name: "Keysplits", path: "Sources/Core/Keysplits"),
@@ -41,7 +42,7 @@ let package = Package(
     .target(name: "Config", path: "Sources/Core/Config"),
     .target(
       name: "Voicegroups",
-      dependencies: ["Config"],
+      dependencies: ["Config", "Filesystem"],
       path: "Sources/Core/Voicegroups"
     ),
 
