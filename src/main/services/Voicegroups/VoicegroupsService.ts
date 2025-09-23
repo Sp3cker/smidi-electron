@@ -2,10 +2,10 @@ import VoicegroupRepository from "../../repos/Voicegroups/VoicegroupRepository";
 import Module from "../../voicegroupParser/build/release/Module.node";
 import type Config from "../Config/Config";
 
-const fetchVGDetails = (root: string, voicegroupName: string) => {
+const fetchVGDetails = (voicegroupName: string) => {
   return new Promise((resolve, reject) => {
     //@ts-ignore - native Module.node lacks TS types for keysplit callback signature
-    Module.keysplit(root, voicegroupName, (err, result) => {
+    Module.keysplit(voicegroupName, (err, result) => {
       if (err.length !== 0) {
         reject(err);
       } else {
@@ -33,14 +33,11 @@ class VoicegroupsService {
     try {
       const vgLabel = voicegroupName.split(".")[0];
       console.time(`vg:fetch:${voicegroupName}`);
-      const keysplitResult = await fetchVGDetails(
-        this.repository.repoRoot,
-        vgLabel,
-      );
+      const keysplitResult = await fetchVGDetails(vgLabel);
       // console.debug("VoicegroupsService: keysplitResult", keysplitResult);
       console.debug(
         "VoicegroupsService: getting voicegroup details",
-        voicegroupName,
+        voicegroupName
       );
       // const vg = await this.repository.readVoicegroupFile(voicegroupName);
       console.timeEnd(`vg:fetch:${voicegroupName}`);
@@ -48,7 +45,7 @@ class VoicegroupsService {
     } catch (error) {
       console.error(
         "VoicegroupsService: error getting voicegroup details",
-        error as Error,
+        error as Error
       );
       throw new Error("VoicegroupsService: error getting voicegroup details");
     }

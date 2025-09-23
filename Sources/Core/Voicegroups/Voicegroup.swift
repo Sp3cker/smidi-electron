@@ -9,20 +9,21 @@ public enum ParseError: Error {
   case validation(String)
 }
 
-public class Voicegroup {
-  
+public actor Voicegroup {
+
   public var voiceGroup: String? = nil
   var rootDir: String
+  fileprivate let parser: Parser
   public init(rootDir: String) {
     self.rootDir = rootDir
+    self.parser = Parser(rootDir: self.rootDir)
   }
   public func parseVoicegroupFile(voicegroup: String)
     async throws -> Data
   {
     do {
-      let parser = try Parser(rootDir: self.rootDir)
 
-      let root = try await parser.resolveGroup(
+      let root = try await self.parser.resolveGroup(
         label: voicegroup,
       )
       let data = try JSONEncoder().encode(root)
@@ -190,17 +191,14 @@ public class Voicegroup {
     }
   }
 
-
-  fileprivate struct Parser {
+  fileprivate struct Parser: Sendable {
     let rootDir: URL
     let soundDir: URL
     let voicegroupsDir: URL
 
-
-    let fileManager = FileManager.default
     //    var fileMap: [String: URL]
 
-    init(rootDir: String) throws {
+    init(rootDir: String) {
       self.rootDir = URL(fileURLWithPath: rootDir)
       self.soundDir = self.rootDir.appendingPathComponent(
         "sound",
@@ -210,7 +208,6 @@ public class Voicegroup {
         "voicegroups",
         isDirectory: true
       )
-
 
     }
     //    func secondDelimiter(in line: Substring, first char: Character, _ end: Character ) {
@@ -421,7 +418,7 @@ public class Voicegroup {
             return s.hasPrefix("\tvoice") ? s : nil
           }
         }
-      
+
       return try data.map { raw in
 
         return try parseLine(line: raw)
@@ -496,3 +493,4 @@ func parseVoiceGroupUTF8(from line: Substring) throws -> String {
   // Convert the second component’s UTF-8 bytes to String
   return String(decoding: components[1], as: UTF8.self)
 }
+

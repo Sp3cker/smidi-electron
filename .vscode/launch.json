@@ -101,7 +101,7 @@
       "preLaunchTask": "swift: Build Release VoicegroupNode (src/main/voicegroupParser)"
     },
     {
-      "type": "swift",
+      "type": "lldb",
       "request": "launch",
       "args": [],
       "cwd": "${workspaceFolder:smidi-electron}",
@@ -110,7 +110,7 @@
       "preLaunchTask": "swift: Build Debug vgparse"
     },
     {
-      "type": "swift",
+      "type": "lldb",
       "request": "launch",
       "args": [],
       "cwd": "${workspaceFolder:smidi-electron}",
@@ -135,6 +135,24 @@
       "name": "Release VoicegroupRunner",
       "program": "${workspaceFolder:smidi-electron}/.build/release/VoicegroupRunner",
       "preLaunchTask": "swift: Build Release VoicegroupRunner"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Debug ksparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/debug/ksparse",
+      "preLaunchTask": "swift: Build Debug ksparse"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Release ksparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/release/ksparse",
+      "preLaunchTask": "swift: Build Release ksparse"
     }
   ],
   "compounds": [

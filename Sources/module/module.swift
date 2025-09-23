@@ -1,8 +1,7 @@
 import Config
 import Foundation
-import Keysplits
+import Instruments
 import NodeAPI
-import Voicegroups
 
 public struct ParseBothResult {
   public let keysplit: Result<String, Error>
@@ -32,7 +31,7 @@ let keysplit: String? = nil
 //  //   ksResult = error.localizedDescription
 //  // }
 //
-
+let instruments = Instruments()
 #NodeModule(exports: [
   // "setConfig": try NodeFunction {
   //   (root: String, callback: NodeFunction) async -> Void in
@@ -44,19 +43,26 @@ let keysplit: String? = nil
 
   //   }
   // },
+  "init": try NodeFunction {
+    (rootDir: String, callback: NodeFunction) async -> Void in
+    do {
+      await instruments.configure(rootDir: rootDir)
+      print("init: success")
+      try callback([], true)
+    } catch {
+      try! callback([error.localizedDescription], [])
+    }
+  },
   "voicegroup": try NodeFunction {
 
   },
   "keysplit": try NodeFunction {
-    (root: String, vg: String, callback: NodeFunction) async -> Void in
+    (vg: String, callback: NodeFunction) async -> Void in
     do {
-      let voicegroupClass = Voicegroup(rootDir: root)
+      let results = try await instruments.parseVoicegroupFile(label: vg)
 
-      let results = try await voicegroupClass.parseVoicegroupFile(
-        voicegroup: vg
-      )
       guard let jsonString = String(data: results, encoding: .utf8) else {
-         try callback(["Failed to decode voicegroup data as UTF-8"], [])
+        try callback(["Failed to decode voicegroup data as UTF-8"], [])
         return
       }
       try callback([], jsonString)  // nil error, success data

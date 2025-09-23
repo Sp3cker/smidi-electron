@@ -1,4 +1,5 @@
 import type ConfigRepository from "../../repos/Config/ConfigRepository";
+import Module from "../../voicegroupParser/build/release/Module.node";
 // * Plan is for this to be ran before app initialization
 // * So we know if the config is valid before we start the app.
 class Config {
@@ -51,6 +52,13 @@ class Config {
       this.rootDir = "";
       this.configIsValid = false;
     } else {
+      Module.init(config.expansionDir, (err, result) => {
+        if (err.length !== 0) {
+          throw new Error(
+            "ConfigService: error initializing expansion dir" + err
+          );
+        }
+      });
       this.rootDir = config.expansionDir;
       this.configIsValid = true;
     }

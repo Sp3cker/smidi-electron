@@ -19,7 +19,7 @@ struct ConfigError: LocalizedError {
 public actor Config {
   public init() {}
   private var _rootDir: String? = nil
-  public var rootDir: String! {
+  public var rootDir: String {
     get throws {
       if self._rootDir == nil {
         throw ConfigError("No rootdir set")
