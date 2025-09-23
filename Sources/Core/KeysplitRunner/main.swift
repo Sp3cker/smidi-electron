@@ -89,7 +89,7 @@ struct KeysplitRunner {
     let defaultKeysplitPath =
       homeDir
       .appendingPathComponent("dev")
-      .appendingPathComponent("nodeProjects")
+      // .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .appendingPathComponent("sound")
       .appendingPathComponent("keysplit_tables.inc")

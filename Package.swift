@@ -61,7 +61,7 @@ let package = Package(
     ),
     .executableTarget(
       name: "KeysplitRunner",
-      dependencies: ["Keysplits"],
+      dependencies: ["Keysplits", "Config"],
       path: "Sources/Core/KeysplitRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
