@@ -15,6 +15,10 @@ public struct KeySplitWithVoices: Codable {
 public struct KeySplitTablesFile: Codable {
   public let tables: [KeySplitWithVoices]
 }
+public enum KeySplitError: Error {
+  case badTable(table: String)
+}
+let keytableMatch = "Ke".utf8
 
 // }
 ///Scans consecutive decimal digits in a Substring starting at the given index,
@@ -54,7 +58,7 @@ public func parseBetweenDelimiters(_ line: Substring, delimiters: [Character])
   return args.joined(separator: "")
 }
 public actor KeysplitParser {
-  
+
   //  @inline(__always)
   //  static func parseLeadingUInt(
   //    from line: Substring,
@@ -75,83 +79,176 @@ public actor KeysplitParser {
   //    }
   //    return began ? value : nil
   //  }
-  
-  static func parseByteLine(_ line: Substring) -> UInt8? {
-    let prefix = "\t.byte"
-    //    var i = line.index(line.startIndex, offsetBy: prefix.count)
-    //    // skip 1+ whitespace
-    //    while i < line.endIndex, line[i].isWhitespace { i = line.index(after: i) }
-    let byte = try? parseBetweenDelimiters(
-      line[prefix.endIndex..<line.endIndex],
-      delimiters: ["@", "\n"]
-    )
-    guard byte != nil else { return nil }
-    let n = UInt8(byte!)
-    //    guard let n = parseLeadingUInt(from: line, start: &i), n <= 255 else {
-    //      return nil
-    //    }
-    return n
-  }
-  
+
   @inline(__always)
-  static func parseTableHeader(_ line: Substring) -> KeySplitTable? {
-    let prefix = ".set KeySplitTable"
-    //    guard line.hasPrefix(prefix) else { return nil }
-    var i = line.index(line.startIndex, offsetBy: prefix.count)
-    guard
-      let n = try? parseBetweenDelimiters(
-        line[i..<line.endIndex],
-        delimiters: [","]
-      )
-    else {
-      return nil
+  public static func parseByteValue(from line: Substring) -> Int? {
+    let bytes = line.utf8
+    var i = bytes.startIndex
+    let end = bytes.endIndex
+
+    // Scan for ".byte" anywhere in the line
+    while i != end {
+      // Look for '.'
+      guard bytes[i] == 0x2E /* '.' */ else {
+        i = bytes.index(after: i)
+        continue
+      }
+
+      // Try to match "byte" after '.'
+      var j = bytes.index(after: i)
+      let expected: [UInt8] = [0x62, 0x79, 0x74, 0x65]  // "byte"
+      var matched = true
+      for b in expected {
+        guard j != end, bytes[j] == b else {
+          matched = false
+          break
+        }
+        j = bytes.index(after: j)
+      }
+      if !matched {
+        i = bytes.index(after: i)
+        continue
+      }
+
+      // Skip spaces/tabs after ".byte"
+      var k = j
+      var sawSpace = false
+      while k != end, bytes[k] == 0x20 /* ' ' */ || bytes[k] == 0x09 {
+        sawSpace = true
+        k = bytes.index(after: k)
+      }
+      guard sawSpace else { return nil }
+
+      // Optional sign
+      var sign = 1
+      if k != end, bytes[k] == 0x2D /* '-' */ {
+        sign = -1
+        k = bytes.index(after: k)
+      }
+
+      // Parse digits
+      var value = 0
+      var parsed = false
+      while k != end {
+        let c = bytes[k]
+        // Fast digit test: c in '0'...'9'
+        if c &- 0x30 <= 9 {
+          parsed = true
+          value = value &* 10 &+ Int(c - 0x30)
+          k = bytes.index(after: k)
+        } else {
+          break
+        }
+      }
+
+      return parsed ? sign * value : nil
     }
-    //    var offset: UInt8? = nil
-    //    let offsetMatcher = Matcher(
-    //      identifiers: ["-"],
-    //      terminators: ["\n"],
-    //      allowMultipleMatches: false,
-    //      handler: { substring, _ in
-    //        offset = UInt8(substring.trimmingCharacters(in: .whitespaces))!
-    //      }
-    //    )
-    //    let found = line.substrings(between: ["-"], and: [.end, "@"]).map {
-    //      $0.trimmingCharacters(in: .whitespaces)
-    //    }
-    //    guard let offset = found.first else { return nil }
-    //    if offset == nil { return nil }
-    return KeySplitTable(name: "KeySplitTable\(n)", offset: UInt8(n)!)
+
+    return nil
   }
+
+  @inline(__always)
+  static func parseTableHeader(_ line: Substring) throws -> KeySplitTable? {
+
+    // Slice off the prefix
+
+    // Expect format: "<name>, <offset>" possibly followed by a comment (e.g., "@ ...")
+    guard let commaIndex = line.firstIndex(of: ",") else {
+      throw KeySplitError.badTable(table: String(line))
+    }
+
+    // Name is everything before the comma
+    let namePart = line[..<commaIndex]
+    let name = String(namePart).trimmingCharacters(in: .whitespaces)
+
+    // After the comma, parse the offset up to a comment or end of line
+    let afterComma = line[line.index(after: commaIndex)...]
+    guard let dashIndex = afterComma.firstIndex(of: "-") else {
+      throw KeySplitError.badTable(table: String(line))
+    }
+    let afterDash = afterComma[afterComma.index(after: dashIndex)...]
+    let byteOffsetSegment: Substring
+    if let atIndex = afterDash.firstIndex(of: "@") {
+      byteOffsetSegment = afterDash[..<atIndex]  // All
+    } else {
+      byteOffsetSegment = afterDash
+    }
+    let offsetString = String(byteOffsetSegment).trimmingCharacters(
+      in: .whitespaces
+    )
+    guard let offset = UInt8(offsetString) else {
+      throw KeySplitError.badTable(table: String(line))
+    }
+
+    return KeySplitTable(name: name, offset: offset)
+  }
+
+  public static func splitFileOnSet(data: consuming String) throws
+    -> [[Substring]]
+
+  {
+    return data.split(separator: ".set ").map {
+
+      return $0.split(
+        separator: "\n",
+        omittingEmptySubsequences: true
+      )
+      .filter { !$0.isEmpty && !$0.hasPrefix("@") }
+
+    }.filter { !$0.isEmpty }
+  }
+
+  public static func parseKeysplitTableSubstring(_ tableSub: [Substring]) throws
+    -> KeySplitWithVoices
+  {
+    guard tableSub[0].hasPrefix("Ke") else {
+      throw KeySplitError.badTable(table: String(tableSub[0]))
+    }
+    //    if let table = tableSub[0].utf8.starts(with: keytableMatch) {
+    guard let keysplitTable = try parseTableHeader(tableSub[0]) else {
+      throw KeySplitError.badTable(table: String(tableSub[0]))
+    }
+    let parsedBytes: [Int?] = tableSub[1...].map { parseByteValue(from: $0) }
+    var voiceSplits: VoiceSplits = [:]
+    for (index, maybeByte) in parsedBytes.enumerated() {
+      guard let intValue = maybeByte, intValue >= 0 && intValue <= 255 else { continue }
+      let splitByte = UInt8(intValue)
+      let byteOffset = UInt8(index) &+ keysplitTable.offset
+      voiceSplits[splitByte, default: []].append(byteOffset)
+    }
+    return KeySplitWithVoices(table: keysplitTable, voices: voiceSplits)  }
+
   // Function to parse the complete file
-  public static func parseFile(_ filePath: String) throws -> String {
+  public static func parseFile(_ filePath: String) throws -> [KeySplitWithVoices] {
     //    do {
-    
+
     var tables: [KeySplitWithVoices] = []
     var bytesUnderTable: UInt8 = 0
-    
+
     var currentTable: KeySplitTable?
     var currentBytes: [UInt8: [UInt8]] = [0: []]
     // currentBytes.reserveCapacity(128)
-    tables.reserveCapacity(60)
+    //    tables.reserveCapacity(60)
     let data = try String(
       contentsOf: URL(fileURLWithPath: filePath),
       encoding: .utf8
-    ).split(separator: "\n").filter {$0.first != "@"}
+    )
     //      .withUnsafeBytes {
-    //        $0.split(
-    //          separator: UInt8(ascii: "\n"),
-    //          omittingEmptySubsequences: true
-    //        ).filter {
-    //          $0.first != UInt8(ascii: "@")
-    //        }
-    //        }.reduce("") { (cur, next) in
-    //
-    //          return cur + String(decoding: next, as: UTF8.self)
-    //          //          s.makeContiguousUTF8()
-    //
-    //        }
-    
-    var tableToLineNo: [Int] = []
+    //      $0.split(
+    //        separator: UInt8(ascii: "\n"),
+    //        omittingEmptySubsequences: true
+    //      ).filter {
+    //        $0.first != UInt8(ascii: "@")
+    //      }
+    //    }
+    let sections = try splitFileOnSet(data: consume data)
+    for table in sections {
+
+      let keysplitTable = try parseKeysplitTableSubstring(table)
+      tables.append(keysplitTable)
+    }
+    return tables
+
     //      for (index, line) in data.enumerated() {
     //
     //        switch line. {
@@ -198,12 +295,5 @@ public actor KeysplitParser {
     //        )
     //        return String(decoding: line, as: UTF8.self)
     //      }
-    return "asdf"
   }
 }
-//    } catch let error {
-//      throw error
-//    }
-  
-
-

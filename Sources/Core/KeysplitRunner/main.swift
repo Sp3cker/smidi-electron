@@ -8,9 +8,8 @@ struct KeysplitRunner {
 
   static func main() async throws {
     fputs("ksparse starting...\n", stderr)
-    
-    // Optional: allow giving Instruments / debugger time to attach.
 
+    // Optional: allow giving Instruments / debugger time to attach.
 
     var timesMs: [Double] = []
     var results: [String] = []
@@ -42,7 +41,9 @@ struct KeysplitRunner {
 
       if let first = results.first {
         do {
-          let out = homeDir.appending(path: "dev").appending(path: "reactProjects").appending(
+          let out = homeDir.appending(path: "dev").appending(
+            path: "reactProjects"
+          ).appending(
             path: "smidi-electron"
           )
           let outURL =
@@ -57,44 +58,47 @@ struct KeysplitRunner {
     }
 
     let defaultKeysplitPath = parseKeysplitPath()
-    
+
     do {
       for _ in 0..<50 {
         let start = DispatchTime.now()
-        let result = try KeysplitParser.parseFile(defaultKeysplitPath)
+        let _ = try KeysplitParser.parseFile(defaultKeysplitPath)
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
         timesMs.append(Double(nanos) / 1_000_000)
-        
-        results.append(result)
+
+
       }
     } catch {
       print(error)
       throw error
     }
   }
-  
+
   private static func parseKeysplitPath() -> String {
     let args = CommandLine.arguments
-    
+
     func value(after flag: String) -> String? {
-      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
+      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else {
+        return nil
+      }
       return args[idx + 1]
     }
-    
+
     let env = ProcessInfo.processInfo.environment
-    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+    let homeDir = FileManager.default.homeDirectoryForCurrentUser
+      .standardizedFileURL
 
     // Default keysplit path
     let defaultKeysplitPath =
       homeDir
       .appendingPathComponent("dev")
-      // .appendingPathComponent("nodeProjects")
+      .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .appendingPathComponent("sound")
       .appendingPathComponent("keysplit_tables.inc")
       .path
-    
+
     return value(after: "--keysplit") ?? env["KS_PATH"] ?? defaultKeysplitPath
   }
 }
