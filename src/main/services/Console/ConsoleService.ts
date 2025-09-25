@@ -6,16 +6,20 @@ class ConsoleService {
   emitter: EventEmitter;
   constructor() {
     this.module = Module;
-    const x = new EventEmitter();
+    this.emitter = new EventEmitter();
 
-    console.log(Module.bridgeConsole);
-    this.emitter = Module.bridgeConsole;
+    this.emitter.on("start", () => {
+      console.log("start event received");
+    });
+    this.emitter.on("sensor1", () => {
+      console.log("start event received");
+    });
+    Module.bridgeConsole(this.emitter.emit.bind(this.emitter));
+
     // this.emitter.on("emit", (message) => {
     //   console.log(message);
     // });
-    console.log('typeof emitter:', typeof this.emitter); // should be 'object' (not 'function')
-console.log('has on:', typeof this.emitter?.on);     // should be 'function'
-console.log('proto:', Object.getPrototypeOf(this.emitter)?.constructor?.name);
+  
   }
 }
 

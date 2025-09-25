@@ -21,26 +21,30 @@ public struct ParseBothResult {
 let keysplit: String? = nil
 
 let instruments = Instruments()
-nonisolated(unsafe) private var bridgeEmitter: NodeObject? = nil
+// nonisolated(unsafe) private var bridgeEmitter: NodeObject? = nil
 #NodeModule(exports: [
-  "bridgeConsole": try NodeFunction { () -> NodeObject in
-    let events = try NodeEnvironment.current.global.require("node:events")
-    guard let ctor = try events.EventEmitter.as(NodeFunction.self) else {
-      throw ModuleError.eventEmitterMissing
-    }
+ "bridgeConsole": try  NodeFunction { (emit: NodeFunction) async throws -> Void in
 
-    // Create a new EventEmitter instance using its constructor
-    let emitter = try ctor.construct(withArguments: [])
-    bridgeEmitter = emitter
-    if let emitter = bridgeEmitter,
-       let emitFn = try? emitter["emit"].as(NodeFunction.self)
-    {
-      _ = try? emitFn.dynamicallyCall(
-        withArguments: ["keysplit:error", 123]
-      )
-    }
-    return emitter
-  },
+  try emit.call(["start", "hello!!!"])
+
+  for i in 0..<5 {
+    try await Task.sleep(for: .seconds(2))
+
+    try emit.call(["sensor1", "i"])
+  }
+  try emit.call(["end"])
+    // guard
+    //     let eventsModule = try requireFn.dynamicallyCall(withArguments: ["node:events"]).as(NodeObject.self),
+    //     let ctor = try eventsModule["EventEmitter"].as(NodeFunction.self)
+    // else {
+    //     throw ModuleError.eventEmitterMissing
+    // }
+
+    // let emitter = try ctor.construct(withArguments: [])
+    // bridgeEmitter = emitter
+    // return emitter
+},
+
   "init": try NodeFunction {
     (rootDir: String, callback: NodeFunction) async -> Void in
     do {
