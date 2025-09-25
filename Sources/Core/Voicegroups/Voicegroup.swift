@@ -402,27 +402,28 @@ public actor Voicegroup {
     ) async throws
       -> [Node]
     {
-      let tab = UInt8(ascii: "\t")
-      let period = UInt8(ascii: ".")
-      let data = try Data(contentsOf: path, options: .mappedIfSafe)
+
+      return try Data(contentsOf: path, options: .mappedIfSafe)
         .withUnsafeBytes { raw in
-          let lines = raw.split(
-            separator: UInt8(ascii: "\n"),
+          let voicePrefix: [UInt8] = [0x09, 118, 111, 105, 99, 101]  //\tvoice
+          let newline: UInt8 = 0x0A
+          var out: [Node] = []
+          for slice in raw.split(
+            separator: newline,
             omittingEmptySubsequences: true
-          ).filter { $0.first == tab && $0.first != period }
+          ) {
+            guard slice.starts(with: voicePrefix) else { continue }
+            let s = Substring(decoding: slice, as: UTF8.self)
 
-          return lines.compactMap { slice -> Substring? in
-
-            var s = Substring(decoding: slice, as: UTF8.self)
-            s.makeContiguousUTF8()
-            return s.hasPrefix("\tvoice") ? s : nil
+            do {
+              out.append(try parseLine(line: s))
+            } catch {
+              print("Error parsing line: \(error)")
+            }
           }
+          return out
         }
 
-      return try data.map { raw in
-
-        return try parseLine(line: raw)
-      }
     }
 
     fileprivate func resolveGroup(
@@ -493,4 +494,3 @@ func parseVoiceGroupUTF8(from line: Substring) throws -> String {
   // Convert the second component’s UTF-8 bytes to String
   return String(decoding: components[1], as: UTF8.self)
 }
-
