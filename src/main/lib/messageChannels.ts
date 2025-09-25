@@ -1,5 +1,5 @@
-import { BrowserWindow, MessageChannelMain, MessagePortMain } from 'electron';
-import { randomUUID } from 'crypto';
+import { BrowserWindow, MessageChannelMain, MessagePortMain } from "electron";
+import { randomUUID } from "crypto";
 
 /**
  * Bootstrap + dynamic stream channel manager.
@@ -26,24 +26,24 @@ export function initMessageChannels(win: BrowserWindow) {
   if (bootstrapPort) return; // already initialised for first window
   const { port1, port2 } = new MessageChannelMain();
   bootstrapPort = port1;
-  port1.on('message', (ev) => onBootstrapMessage(win, ev.data));
+  port1.on("message", (ev) => onBootstrapMessage(win, ev.data));
   port1.start();
-  win.webContents.postMessage('bootstrap-port', { t: 'bootstrap' }, [port2]);
+  win.webContents.postMessage("bootstrap-port", { t: "bootstrap" }, [port2]);
   resolveBootstrapWaiters();
 }
 
 function onBootstrapMessage(_win: BrowserWindow, data: any) {
-  if (!data || typeof data !== 'object') return;
+  if (!data || typeof data !== "object") return;
   switch (data.t) {
-    case 'open-stream': {
+    case "open-stream": {
       const id: string = data.id || randomUUID();
       const { port1, port2 } = new MessageChannelMain();
       streams.set(id, { id, port: port1 });
       port1.start();
-      bootstrapPort?.postMessage({ t: 'stream-open', id }, [port2]);
+      bootstrapPort?.postMessage({ t: "stream-open", id }, [port2]);
       break;
     }
-    case 'close-stream': {
+    case "close-stream": {
       const rec = streams.get(data.id);
       if (rec) {
         rec.port.close();
@@ -67,7 +67,7 @@ export async function createStream(_win: BrowserWindow, id?: string) {
   const { port1, port2 } = new MessageChannelMain();
   streams.set(streamId, { id: streamId, port: port1 });
   port1.start();
-  bootstrapPort?.postMessage({ t: 'stream-open', id: streamId }, [port2]);
+  bootstrapPort?.postMessage({ t: "stream-open", id: streamId }, [port2]);
   return {
     id: streamId,
     send: (message: any, transfer?: MessagePortMain[] | any[]) => {
@@ -76,7 +76,7 @@ export async function createStream(_win: BrowserWindow, id?: string) {
     close: () => {
       port1.close();
       streams.delete(streamId);
-      bootstrapPort?.postMessage({ t: 'stream-closed', id: streamId });
+      bootstrapPort?.postMessage({ t: "stream-closed", id: streamId });
     },
     port: port1,
   };
@@ -92,5 +92,5 @@ export function closeStream(id: string) {
   if (!rec) return;
   rec.port.close();
   streams.delete(id);
-  bootstrapPort?.postMessage({ t: 'stream-closed', id });
+  bootstrapPort?.postMessage({ t: "stream-closed", id });
 }

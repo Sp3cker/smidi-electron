@@ -10,11 +10,13 @@ type ConfigStore = {
   configDrawerOpen: boolean;
   isLoading: boolean; // Set by listener. No reason to have setter
   validConfig: boolean;
+  consoleOpen: boolean;
   getConfig: () => void;
   updateConfig: (key: string, value: string | number) => void;
   setConfigDrawerOpen: (open: boolean) => void;
   updateExpansionDir: (value: string) => void;
   resetConfig: () => void;
+  setConsoleOpen: (open: boolean) => void;
 };
 
 const configStore = create<ConfigStore>((set, get) => ({
@@ -22,9 +24,11 @@ const configStore = create<ConfigStore>((set, get) => ({
   validConfig: false,
   isLoading: true,
   configDrawerOpen: false,
+  consoleOpen: false,
   getConfig: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.CONFIG.GET_CONFIG);
   },
+  setConsoleOpen: (open: boolean) => set({ consoleOpen: open }),
   updateExpansionDir: (value: string) => {
     window.electron.ipcRenderer.send(
       IPC_CHANNELS.CONFIG.UPDATE_EXPANSION_DIR,

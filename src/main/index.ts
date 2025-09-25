@@ -14,6 +14,7 @@ import MidiManService from "./services/MidiMan/MidiMan";
 import VoicegroupsService from "./services/Voicegroups/VoicegroupsService";
 import Config from "./services/Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
+import ConsoleService from "./services/Console/ConsoleService";
 import { db } from "./lib/db";
 
 import { initMessageChannels } from "./lib/messageChannels";
@@ -81,6 +82,7 @@ app.whenReady().then(() => {
   const config = new Config(new ConfigRepository(db));
   const midiMan = new MidiManService();
   const voicegroupsService = new VoicegroupsService(config);
+  const consoleService = new ConsoleService();
   hookUpIpc(config, midiMan, voicegroupsService);
   createWindow();
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface StreamMessage {
   t: string;
-  [k: string]: any;
+  [k: string]: unknown;
 }
 
 export function useMessageStream(streamId?: string) {
@@ -17,28 +17,27 @@ export function useMessageStream(streamId?: string) {
           if (cancelled) return;
           portRef.current = port;
           port.onmessage = (e) => {
-            console.log(e);
-            const msg = e.data;
-            setMessages((prev) => prev.concat(msg));
-            if (msg?.t === "end") port.close();
+            setMessages((prev) => prev.concat(e.data));
+            if (e.data?.t === "end") port.close();
           };
           setReady(true);
           return port;
         })
         .catch(console.error);
     },
-    [ready]
+    [streamId]
   );
+
   useEffect(() => {
     let cancelled = false;
-    const port = handleListenStream(cancelled);
+    handleListenStream(cancelled);
     return () => {
       cancelled = true;
       portRef.current?.close();
     };
-  }, [streamId]);
+  }, [handleListenStream]);
 
-  const send = (msg: any, transfer?: Transferable[]) => {
+  const send = (msg: StreamMessage, transfer?: Transferable[]) => {
     portRef.current?.postMessage(msg, transfer || []);
   };
 

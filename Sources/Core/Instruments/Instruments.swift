@@ -11,7 +11,7 @@ protocol InstrumentsService {
 public actor Instruments {
   let config = Config()
   var voicegroups: Voicegroup? = nil
-  var keysplits: Keysplit? = nil
+  // var keysplits: Keysplit? = nil
   public init() {
     print("Instruments initialized")
   }

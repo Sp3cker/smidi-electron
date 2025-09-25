@@ -4,6 +4,7 @@ import useConfigStore from "./store/useConfigStore";
 import { GlobalConfig } from "./components/GlobalConfig";
 import ToastContainer from "./ui/Toast/ToastContainer";
 import { TabBar } from "./components/TabBar";
+import { Console } from "./components/Console";
 import { Route, Router, Switch } from "wouter";
 const Home = () => {
   return (
@@ -46,6 +47,7 @@ function App() {
         </Router>
       </div>
       <GlobalConfig />
+      <Console />
       <ToastContainer />
     </main>
   );

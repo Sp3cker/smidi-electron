@@ -8,38 +8,43 @@ const pendingStreamResolvers = new Map<string, (port: MessagePort) => void>();
 
 window.addEventListener("message", (e: MessageEvent) => {
   const { data } = e;
-  if (data?.t === "bootstrap") {
-    if (e.ports && e.ports[0]) {
-      bootstrapPort = e.ports[0];
-      bootstrapPort.start();
-      bootstrapPort.onmessage = (evt) => {
-        const msg = evt.data;
-        if (msg?.t === "stream-open" && evt.ports && evt.ports[0]) {
-          const port = evt.ports[0];
-          port.start();
-          const resolve = pendingStreamResolvers.get(msg.id);
-          if (resolve) {
-            pendingStreamResolvers.delete(msg.id);
-            resolve(port);
-          }
+  if (data?.t === "bootstrap" && e.ports?.[0]) {
+    bootstrapPort = e.ports[0];
+    bootstrapPort.start();
+    bootstrapPort.onmessage = (evt) => {
+      const msg = evt.data;
+      if (msg?.t === "stream-open" && evt.ports && evt.ports[0]) {
+        const port = evt.ports[0];
+        port.start();
+        const resolve = pendingStreamResolvers.get(msg.id);
+        if (resolve) {
+          pendingStreamResolvers.delete(msg.id);
+          resolve(port);
         }
-      };
-    }
+      }
+    };
+    bootstrapReadyResolve?.();
   }
 });
 
-function requestStream(
+let bootstrapReadyResolve: (() => void) | null = null;
+const bootstrapReady = new Promise<void>((resolve) => {
+  bootstrapReadyResolve = resolve;
+});
+
+async function requestStream(
   id?: string
 ): Promise<{ id: string; port: MessagePort }> {
+  await bootstrapReady;
+  const streamId = id || Math.random().toString();
   return new Promise((resolve, reject) => {
-    const streamId = id || Math.random().toString()
     if (!bootstrapPort) {
       return reject(new Error("Bootstrap port not ready"));
     }
     pendingStreamResolvers.set(streamId, (port) =>
       resolve({ id: streamId, port })
     );
-    bootstrapPort.postMessage({ t: "open-stream", id: streamId });
+    bootstrapPort!.postMessage({ t: "open-stream", id: streamId });
   });
 }
 
