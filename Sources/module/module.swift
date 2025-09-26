@@ -1,4 +1,5 @@
 import Config
+import Console
 import Foundation
 import Instruments
 import NodeAPI
@@ -8,8 +9,8 @@ public enum ModuleError: LocalizedError {
 
   public var errorDescription: String? {
     switch self {
-    case .eventEmitterMissing:
-      return "EventEmitter missing from Swift env."
+      case .eventEmitterMissing:
+        return "EventEmitter missing from Swift env."
     }
   }
 }
@@ -33,10 +34,18 @@ let instruments = Instruments()
 
       try emit.call(["sensor1", "i"])
     }
-    let onError = {
-      print("hello")
+    let onError: @Sendable (any ConsoleProtocol) -> Void = { console in
+      Task { @NodeActor in
+        do {
+
+          try emit.call(["console:error", console.level.rawValue, console.message])
+
+        } catch {
+          print("Failed to emit console error: \(error)")
+        }
+      }
     }
-    instruments.onError(action: onError)
+    instruments.onError(onError)
 
     //  try emit.call(["end"])
     // guard

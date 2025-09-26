@@ -30,7 +30,7 @@ let package = Package(
         .product(name: "NodeModuleSupport", package: "node-swift"),
         "Instruments",
         "Config",
-
+        "Console",
       ]
     ),
     .target(
@@ -41,7 +41,7 @@ let package = Package(
     ),
     .target(name: "Config", path: "Sources/Core/Config"),
     .target(name: "Console", path: "Sources/Core/Console"),
-//    .target(name: "ConsoleProtocol", path: "Sources/Core/Console"),
+    //    .target(name: "ConsoleProtocol", path: "Sources/Core/Console"),
     .target(
       name: "Voicegroups",
       dependencies: ["Config", "Console"],

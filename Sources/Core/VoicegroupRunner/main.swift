@@ -1,8 +1,9 @@
 import Config
+import Console
 import Dispatch
 import Foundation
 import Voicegroups
-import Console
+
 //
 //Task {
 try! await VoicegroupRunner.main()
@@ -99,10 +100,10 @@ struct VoicegroupRunner {
     let defaultRoot =
       homeDir
       .appendingPathComponent("dev")
-//       .appendingPathComponent("nodeProjects")
+      //       .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
-    let onError: @Sendable ( any ConsoleProtocol) -> Void = { meme in
+    let onError: @Sendable (any ConsoleProtocol) -> Void = { meme in
       print(meme)
     }
     do {
@@ -110,58 +111,19 @@ struct VoicegroupRunner {
       for _ in 0..<50 {
         let start = DispatchTime.now()
         let result: Data = try await vg.parseVoicegroupFile(
-          voicegroup: "voicegroup229"
+          voicegroup: "voicegroup000"
         )
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
         timesMs.append(Double(nanos) / 1_000_000)
         results.append(result)
       }
-    } catch {
-      print(error)
-      throw (error)
+    } catch ParseError.malformedLine(let line, let reason) {
+      let consoleError = ConsoleErrorMessage(message: reason, level: .fixable)
+      onError(consoleError)
+
+      // throw (consoleError)
     }
-    //      switch result {
-    //      case .success(let data):
-    //        results.append(data)
-    //      case .failure(let error):
-    //        fputs("Parsing failed: \(error)\n", stderr)
-    //        return
-    //      }
 
   }
 }
-//  private static func parseConfiguration() -> Config {
-//    let args = CommandLine.arguments
-//
-//    func value(after flag: String) -> String? {
-//      guard let idx = args.firstIndex(of: flag), idx + 1 < args.count else { return nil }
-//      return args[idx + 1]
-//    }
-//
-//    let env = ProcessInfo.processInfo.environment
-//    let homeDir = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
-//
-//    // Defaults mirror the test
-//    let defaultRoot =
-//      homeDir
-//      .appendingPathComponent("dev")
-//      .appendingPathComponent("nodeProjects")
-//      .appendingPathComponent("pokeemerald-expansion")
-//      .path
-//
-//    let root = value(after: "--root") ?? env["VG_ROOT"] ?? defaultRoot
-//    let vg = value(after: "--voicegroup") ?? env["VG_LABEL"] ?? "voicegroup229"
-//    let iterationsStr = value(after: "--iterations") ?? env["VG_ITERATIONS"]
-//    let iterations = Int(iterationsStr ?? "50") ?? 50
-//
-//    return Config(rootDir: root, voicegroup: vg, iterations: iterations)
-//  }
-//
-//  private struct Config {
-//    let rootDir: String
-//    let voicegroup: String
-//    let iterations: Int
-//  }
-//}
-

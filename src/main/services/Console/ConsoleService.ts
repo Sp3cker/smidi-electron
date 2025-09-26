@@ -14,6 +14,9 @@ class ConsoleService {
     this.emitter.on("sensor1", () => {
       console.log("start event received");
     });
+    this.emitter.on("console:error", (level: string, message: string) => {
+      console.log(`Console Error [${level}]: ${message}`);
+    });
     Module.bridgeConsole(this.emitter.emit.bind(this.emitter));
 
     // this.emitter.on("emit", (message) => {

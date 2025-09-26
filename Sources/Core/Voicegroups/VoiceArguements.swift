@@ -9,6 +9,7 @@ public enum VoiceArgsParseError: Error {
   case wrongCount(expected: Int, got: Int, voiceType: String)
   case invalidValue(index: Int, found: Substring)
 }
+
 /// A gaurenteed 7-length array of arguements
 @inlinable
 func parseUInt8(_ s: Substring, default def: UInt8 = 0) throws -> UInt8 {

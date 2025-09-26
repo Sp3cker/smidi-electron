@@ -2,7 +2,7 @@ import Config
 import Console
 import Foundation
 
-private enum ParseError: Error {
+public enum ParseError: Error {
   case io(file: String, underlying: Error?)
   case malformedLine(line: String, reason: String)
   case noTables
@@ -15,8 +15,7 @@ public actor Voicegroup {
   var rootDir: String
   fileprivate let parser: Parser
 
-  public init(rootDir: String, onError: @Sendable @escaping (any ConsoleProtocol) -> Void)
-  {
+  public init(rootDir: String, onError: @Sendable @escaping (any ConsoleProtocol) -> Void) {
     self.rootDir = rootDir
     self.parser = Parser(rootDir: self.rootDir, onError: onError)
 
@@ -179,16 +178,16 @@ public actor Voicegroup {
     case group(GroupVoice)
     func encode(to encoder: Encoder) throws {
       switch self {
-      case .unresolvedKeysplit(let v): try v.encode(to: encoder)
-      case .keysplit(let v): try v.encode(to: encoder)
-      case .unresolvedVoicegroup(let v): try v.encode(to: encoder)
-      case .directsound(let v): try v.encode(to: encoder)
-      case .programmable(let v): try v.encode(to: encoder)
-      case .square1(let v): try v.encode(to: encoder)
-      case .square2(let v): try v.encode(to: encoder)
+        case .unresolvedKeysplit(let v): try v.encode(to: encoder)
+        case .keysplit(let v): try v.encode(to: encoder)
+        case .unresolvedVoicegroup(let v): try v.encode(to: encoder)
+        case .directsound(let v): try v.encode(to: encoder)
+        case .programmable(let v): try v.encode(to: encoder)
+        case .square1(let v): try v.encode(to: encoder)
+        case .square2(let v): try v.encode(to: encoder)
 
-      case .noise(let v): try v.encode(to: encoder)
-      case .group(let v): try v.encode(to: encoder)
+        case .noise(let v): try v.encode(to: encoder)
+        case .group(let v): try v.encode(to: encoder)
       }
     }
   }
@@ -223,7 +222,7 @@ public actor Voicegroup {
         else {
           throw ParseError.malformedLine(
             line: String(line),
-            reason: String("fuck")
+            reason: String("Malformed voice argument")
           )
         }
         let afterUnderscore = line.index(after: firstUnderscore)
@@ -273,65 +272,65 @@ public actor Voicegroup {
         }
 
         switch voiceType {
-        case "directsound",
-          "directsound_alt",
-          "programmable_wave",
-          "programmable_wave_alt":
+          case "directsound",
+            "directsound_alt",
+            "programmable_wave",
+            "programmable_wave_alt":
 
-          let args = try parseVoiceArguements(
-            as:
-              DirectSoundorPGMWaveVoiceArguements.self,
-            from: consume parseableArgs
-          )
-          let type =
-            switch voiceType {
-            case "directsound", "directsound_alt":
-              "DirectSound"
-            case "programmable_wave", "programmable_wave_alt":
-              "Programwave"
-            default:
-              throw ParseError.malformedLine(
-                line: String(line),
-                reason: String("fuck")
-              )
-            }
-          return .directsound(
-            DirectSoundVoice(type: type, voiceParams: args)
-          )
+            let args = try parseVoiceArguements(
+              as:
+                DirectSoundorPGMWaveVoiceArguements.self,
+              from: consume parseableArgs
+            )
+            let type =
+              switch voiceType {
+                case "directsound", "directsound_alt":
+                  "DirectSound"
+                case "programmable_wave", "programmable_wave_alt":
+                  "Programwave"
+                default:
+                  throw ParseError.malformedLine(
+                    line: String(line),
+                    reason: String("fuck")
+                  )
+              }
+            return .directsound(
+              DirectSoundVoice(type: type, voiceParams: args)
+            )
 
-        case "square_1",
-          "square_1_alt":
-          let args = try parseVoiceArguements(
-            as: Square1VoiceArguements.self,
-            from: consume parseableArgs
-          )
-          return .square1(
-            Square1Voice(voiceParams: args)
-          )
-        case "square_2",
-          "square_2_alt":
-          let args = try parseVoiceArguements(
-            as: Square2VoiceArguements.self,
-            from: consume parseableArgs
-          )
-          return .square2(
-            Square2Voice(voiceParams: args)
-          )
-        case "noise",
-          "noise_alt":
-          return .noise(
-            NoiseVoice(
-              voiceParams: try parseVoiceArguements(
-                as: NoiseWaveVoiceArguements.self,
-                from: consume parseableArgs
+          case "square_1",
+            "square_1_alt":
+            let args = try parseVoiceArguements(
+              as: Square1VoiceArguements.self,
+              from: consume parseableArgs
+            )
+            return .square1(
+              Square1Voice(voiceParams: args)
+            )
+          case "square_2",
+            "square_2_alt":
+            let args = try parseVoiceArguements(
+              as: Square2VoiceArguements.self,
+              from: consume parseableArgs
+            )
+            return .square2(
+              Square2Voice(voiceParams: args)
+            )
+          case "noise",
+            "noise_alt":
+            return .noise(
+              NoiseVoice(
+                voiceParams: try parseVoiceArguements(
+                  as: NoiseWaveVoiceArguements.self,
+                  from: consume parseableArgs
+                )
               )
             )
-          )
-        default:
-          throw ParseError.malformedLine(
-            line: String(line),
-            reason: String("fuck")
-          )
+          default:
+            throw ParseError.malformedLine(
+              line: String(line),
+              reason: String("Unable to determine voice")
+            )
         }
       } catch {
         throw ParseError.malformedLine(
@@ -348,29 +347,29 @@ public actor Voicegroup {
       for i in nodes.indices {
         switch nodes[i] {
 
-        case .unresolvedKeysplit(let v):
-          let referencedEntries = try await parseVoicegroupFile(
-            path: voicegroupPath(label: v.voicegroupLabel),
-          )
-          // let keysplit =
-          nodes[i] = .keysplit(
-            KeysplitVoice(
-              voicegroup: Substring(v.voicegroupLabel),
-              keysplit: Substring(v.keysplitLabel),
-              voices: referencedEntries
+          case .unresolvedKeysplit(let v):
+            let referencedEntries = try await parseVoicegroupFile(
+              path: voicegroupPath(label: v.voicegroupLabel),
             )
-          )
-        case .unresolvedVoicegroup(let v):
-          let referencedEntries = try await parseVoicegroupFile(
-            path: voicegroupPath(label: v.voicegroupLabel),
-          )
-          nodes[i] = .group(
-            GroupVoice(
-              voicegroup: v.voicegroupLabel,
-              voices: referencedEntries
+            // let keysplit =
+            nodes[i] = .keysplit(
+              KeysplitVoice(
+                voicegroup: Substring(v.voicegroupLabel),
+                keysplit: Substring(v.keysplitLabel),
+                voices: referencedEntries
+              )
             )
-          )
-        default: continue
+          case .unresolvedVoicegroup(let v):
+            let referencedEntries = try await parseVoicegroupFile(
+              path: voicegroupPath(label: v.voicegroupLabel),
+            )
+            nodes[i] = .group(
+              GroupVoice(
+                voicegroup: v.voicegroupLabel,
+                voices: referencedEntries
+              )
+            )
+          default: continue
         }
       }
     }
@@ -382,9 +381,6 @@ public actor Voicegroup {
         directoryHint: .notDirectory
       )
       guard FileManager.default.fileExists(atPath: path.path) else {
-        self.errorHandler(
-          myConsoleProtocol(message: "Missing File: \(label)", level: .fixable)
-        )
 
         throw ParseError.malformedLine(
           line: label,
@@ -396,11 +392,9 @@ public actor Voicegroup {
 
     fileprivate func parseVoicegroupFile(
       path: URL,
-
     ) async throws
       -> [Node]
     {
-
       return try Data(contentsOf: path, options: .mappedIfSafe)
         .withUnsafeBytes { raw in
           let voicePrefix: [UInt8] = [0x09, 118, 111, 105, 99, 101]  //\tvoice
@@ -416,7 +410,7 @@ public actor Voicegroup {
             do {
               out.append(try parseLine(line: s))
             } catch {
-              print("Error parsing line: \(error)")
+             throw error
             }
           }
           return out
@@ -492,4 +486,3 @@ func parseVoiceGroupUTF8(from line: Substring) throws -> String {
   // Convert the second component’s UTF-8 bytes to String
   return String(decoding: components[1], as: UTF8.self)
 }
-
