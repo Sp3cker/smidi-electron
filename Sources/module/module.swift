@@ -23,16 +23,22 @@ let keysplit: String? = nil
 let instruments = Instruments()
 // nonisolated(unsafe) private var bridgeEmitter: NodeObject? = nil
 #NodeModule(exports: [
- "bridgeConsole": try  NodeFunction { (emit: NodeFunction) async throws -> Void in
+  "bridgeConsole": try NodeFunction {
+    (emit: NodeFunction) async throws -> Void in
 
-  try emit.call(["start", "hello!!!"])
+    try emit.call(["start", "hello!!!"])
 
-  for i in 0..<5 {
-    try await Task.sleep(for: .seconds(2))
+    for i in 0..<5 {
+      try await Task.sleep(for: .seconds(2))
 
-    try emit.call(["sensor1", "i"])
-  }
-  try emit.call(["end"])
+      try emit.call(["sensor1", "i"])
+    }
+    let onError = {
+      print("hello")
+    }
+    instruments.onError(action: onError)
+
+    //  try emit.call(["end"])
     // guard
     //     let eventsModule = try requireFn.dynamicallyCall(withArguments: ["node:events"]).as(NodeObject.self),
     //     let ctor = try eventsModule["EventEmitter"].as(NodeFunction.self)
@@ -43,7 +49,7 @@ let instruments = Instruments()
     // let emitter = try ctor.construct(withArguments: [])
     // bridgeEmitter = emitter
     // return emitter
-},
+  },
 
   "init": try NodeFunction {
     (rootDir: String, callback: NodeFunction) async -> Void in

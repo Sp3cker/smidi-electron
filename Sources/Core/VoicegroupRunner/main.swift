@@ -2,7 +2,7 @@ import Config
 import Dispatch
 import Foundation
 import Voicegroups
-
+import Console
 //
 //Task {
 try! await VoicegroupRunner.main()
@@ -80,7 +80,9 @@ struct VoicegroupRunner {
           // let out = URL(
           //   fileURLWithPath: "/Users/spencer/dev/reactProjects/smidi-electron/"
           // )
-          let out = homeDir.appending(path: "dev").appending(path: "reactProjects").appending(
+          let out = homeDir.appending(path: "dev").appending(
+            path: "reactProjects"
+          ).appending(
             path: "smidi-electron"
           )
           let outURL =
@@ -97,15 +99,18 @@ struct VoicegroupRunner {
     let defaultRoot =
       homeDir
       .appendingPathComponent("dev")
-      // .appendingPathComponent("nodeProjects")
+//       .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
+    let onError: @Sendable ( any ConsoleProtocol) -> Void = { meme in
+      print(meme)
+    }
     do {
-      let vg = Voicegroup(rootDir: defaultRoot)
+      let vg = Voicegroup(rootDir: defaultRoot, onError: onError)
       for _ in 0..<50 {
         let start = DispatchTime.now()
         let result: Data = try await vg.parseVoicegroupFile(
-           voicegroup: "voicegroup229"
+          voicegroup: "voicegroup229"
         )
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds
@@ -159,3 +164,4 @@ struct VoicegroupRunner {
 //    let iterations: Int
 //  }
 //}
+

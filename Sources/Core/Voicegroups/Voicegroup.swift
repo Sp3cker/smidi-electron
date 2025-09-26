@@ -1,8 +1,8 @@
 import Config
-import Filesystem
+import Console
 import Foundation
 
-public enum ParseError: Error {
+private enum ParseError: Error {
   case io(file: String, underlying: Error?)
   case malformedLine(line: String, reason: String)
   case noTables
@@ -11,18 +11,20 @@ public enum ParseError: Error {
 
 public actor Voicegroup {
 
-  public var voiceGroup: String? = nil
+  var voiceGroup: String? = nil
   var rootDir: String
   fileprivate let parser: Parser
-  public init(rootDir: String) {
+
+  public init(rootDir: String, onError: @Sendable @escaping (any ConsoleProtocol) -> Void)
+  {
     self.rootDir = rootDir
-    self.parser = Parser(rootDir: self.rootDir)
+    self.parser = Parser(rootDir: self.rootDir, onError: onError)
+
   }
   public func parseVoicegroupFile(voicegroup: String)
     async throws -> Data
   {
     do {
-
       let root = try await self.parser.resolveGroup(
         label: voicegroup,
       )
@@ -195,10 +197,10 @@ public actor Voicegroup {
     let rootDir: URL
     let soundDir: URL
     let voicegroupsDir: URL
-
+    var errorHandler: @Sendable (any ConsoleProtocol) -> Void
     //    var fileMap: [String: URL]
 
-    init(rootDir: String) {
+    init(rootDir: String, onError: @escaping @Sendable (any ConsoleProtocol) -> Void) {
       self.rootDir = URL(fileURLWithPath: rootDir)
       self.soundDir = self.rootDir.appendingPathComponent(
         "sound",
@@ -208,14 +210,8 @@ public actor Voicegroup {
         "voicegroups",
         isDirectory: true
       )
-
+      self.errorHandler = onError
     }
-    //    func secondDelimiter(in line: Substring, first char: Character, _ end: Character ) {
-    //      var count = 0
-    //      for index in line.indices
-    //            if line[index] === char {count += 1}
-    //      if count == 2 {
-    //    }
 
     @inline(__always)
     fileprivate func parseLine(line: consuming Substring)
@@ -243,14 +239,6 @@ public actor Voicegroup {
           )
         }
         let firstSpace = firstSpaceRange.lowerBound
-
-        //        guard let firstSpace: Substring.Index = line.(of: " ")
-        //        else {
-        //          throw ParseError.malformedLine(
-        //            line: String(line),
-        //            reason: String("fuck")
-        //          )
-        //        }
 
         let voiceType = line[firstUnderscore..<firstSpace].dropFirst()  // if we don't dropFirst, still has an underscore.
 
@@ -393,6 +381,16 @@ public actor Voicegroup {
         component: label + ".inc",
         directoryHint: .notDirectory
       )
+      guard FileManager.default.fileExists(atPath: path.path) else {
+        self.errorHandler(
+          myConsoleProtocol(message: "Missing File: \(label)", level: .fixable)
+        )
+
+        throw ParseError.malformedLine(
+          line: label,
+          reason: "Voicegroup file does not exist"
+        )
+      }
       return path
     }
 
@@ -494,3 +492,4 @@ func parseVoiceGroupUTF8(from line: Substring) throws -> String {
   // Convert the second component’s UTF-8 bytes to String
   return String(decoding: components[1], as: UTF8.self)
 }
+

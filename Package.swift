@@ -22,12 +22,7 @@ let package = Package(
   ],
   // TARGET NAMES (not "name", but target: thisString) ARE FOLDER NAMES
   targets: [
-    //    .testTarget(
-    //      name: "VoicegroupParserTests",
-    //      dependencies: ["Keysplits", "Voicegroups"],
-    //      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")]
-    //    ),
-    .target(name: "Filesystem", path: "Sources/Core/Filesystem"),
+
     .target(
       name: "module",
       dependencies: [
@@ -38,24 +33,30 @@ let package = Package(
 
       ]
     ),
-    //    .target(name: "Keysplits", path: "Sources/Core/Keysplits"),
     .target(
       name: "Instruments",
-      dependencies: ["Voicegroups", "Config", "Keysplits"],
+      dependencies: ["Voicegroups", "Config", "Keysplits", "Console"],
       path: "Sources/Core/Instruments",
 
     ),
     .target(name: "Config", path: "Sources/Core/Config"),
+    .target(name: "Console", path: "Sources/Core/Console"),
+//    .target(name: "ConsoleProtocol", path: "Sources/Core/Console"),
     .target(
       name: "Voicegroups",
-      dependencies: ["Config", "Filesystem"],
+      dependencies: ["Config", "Console"],
       path: "Sources/Core/Voicegroups"
     ),
-    .target(name: "Keysplits", dependencies: ["Sweep"], path: "Sources/Core/Keysplits"),
+    .target(
+      name: "Keysplits",
+      dependencies: ["Sweep"],
+      path: "Sources/Core/Keysplits"
+    ),
     .target(name: "Sweep", path: "Sources/Core/Sweep"),
+
     .executableTarget(
       name: "VoicegroupRunner",
-      dependencies: ["Voicegroups", "Config"],
+      dependencies: ["Voicegroups", "Config", "Console"],
       path: "Sources/Core/VoicegroupRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
