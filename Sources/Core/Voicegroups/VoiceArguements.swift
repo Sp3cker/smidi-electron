@@ -415,7 +415,7 @@ struct GroupVoiceArguements: VoiceArguements {
 @inline(__always)
 public func parseVoiceArguements<A: VoiceArguements>(
   as type: A.Type,
-  from line:  Substring
+  from line: consuming Substring
 ) throws -> A {
   var args: [Substring] = []
   args.reserveCapacity(8)
@@ -437,6 +437,7 @@ public func parseVoiceArguements<A: VoiceArguements>(
     }
     if start < end {
       args.append(line[start..<end])
+      if args.count == type.expectedCount { break }
     }
     if cur < line.endIndex {  // skip comma
       cur = line.index(after: cur)

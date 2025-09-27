@@ -16,15 +16,27 @@ const Square1Voice = ({ voice, number }: { voice: Node; number: number }) => {
     </div>
   </div>;
 };
-const KeysplitVoiceRow = ({ voice, number }: { voice: KeysplitVoice; number: number }) => {
+const KeysplitVoiceRow = ({
+  voice,
+  number,
+}: {
+  voice: KeysplitVoice;
+  number: number;
+}) => {
   return (
-    <div className="flex flex-col gap-2 ring-1 ring-[var(--yatsugi-blue-500)] bg-[var(--yatsugi-blue-50)] rounded-sm p-1">
-      <div className="flex flex-row gap-2">
-        <p>{number}</p>
-        <p>{voice.type.charAt(0).toUpperCase() + voice.type.slice(1)}</p>
-        <div>
-          <p>Keysplit: {voice.keysplit}</p>
+    <div className="voicegroup-row-item ">
+      <div className="flex flex-row gap-x-2">
+        <div className="font-bold w-full">
+          <p>#{number}</p>
+          <p>
+            {voice.commentLabel
+              ? voice.commentLabel.charAt(0).toUpperCase() +
+                voice.commentLabel.slice(1)
+              : voice.type.charAt(0).toUpperCase() + voice.type.slice(1)}
+          </p>
         </div>
+        <div className="w-full"></div> {/* Forces a line break */}
+        <p>Keysplit: {voice.keysplit}</p>
       </div>
     </div>
   );
@@ -37,7 +49,7 @@ const VoicegroupVoice = ({
   number: number;
 }) => {
   return (
-    <div className="flex flex-col gap-2 ring-1 ring-[var(--yatsugi-blue-500)] bg-[var(--yatsugi-blue-50)] rounded-sm p-1">
+    <div className="voicegroup-row-item ">
       <div className="flex flex-row gap-2">
         <p>{number}</p>
         <p>{voice.type.charAt(0).toUpperCase() + voice.type.slice(1)}</p>
@@ -58,7 +70,11 @@ const VoicegroupDetailList = ({ voicegroup }: { voicegroup: GroupVoice }) => {
               );
             case "Keysplit":
               return (
-                <KeysplitVoiceRow key={index} voice={voice} number={index + 1} />
+                <KeysplitVoiceRow
+                  key={index}
+                  voice={voice}
+                  number={index + 1}
+                />
               );
             case "DirectSound":
               return (

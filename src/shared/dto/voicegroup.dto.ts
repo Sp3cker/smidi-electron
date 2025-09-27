@@ -34,6 +34,7 @@ export type KeysplitVoice = {
   type: "Keysplit";
   keysplit: string;
   voices: Node[];
+  commentLabel: string | null;
 };
 export type DirectSoundVoice = {
   type: "DirectSound";
@@ -59,6 +60,7 @@ export type GroupVoice = {
   type: "Group";
   voicegroup: string;
   voices: Node[];
+  commentLabel: string | null;
 };
 
 export type Node =

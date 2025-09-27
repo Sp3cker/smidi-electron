@@ -100,7 +100,7 @@ struct VoicegroupRunner {
     let defaultRoot =
       homeDir
       .appendingPathComponent("dev")
-      //       .appendingPathComponent("nodeProjects")
+      .appendingPathComponent("nodeProjects")
       .appendingPathComponent("pokeemerald-expansion")
       .path
     let onError: @Sendable (any ConsoleProtocol) -> Void = { meme in
@@ -111,7 +111,7 @@ struct VoicegroupRunner {
       for _ in 0..<50 {
         let start = DispatchTime.now()
         let result: Data = try await vg.parseVoicegroupFile(
-          voicegroup: "voicegroup000"
+          voicegroup: "voicegroup229"
         )
         let end = DispatchTime.now()
         let nanos = end.uptimeNanoseconds - start.uptimeNanoseconds

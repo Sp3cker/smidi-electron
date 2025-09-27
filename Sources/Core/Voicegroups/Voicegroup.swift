@@ -8,7 +8,9 @@ public enum ParseError: Error {
   case noTables
   case validation(String)
 }
-
+public protocol UnresolvedVoice: Sendable {
+  var voicegroupLabel: String { get set }
+}
 public actor Voicegroup {
 
   var voiceGroup: String? = nil
@@ -89,15 +91,14 @@ public actor Voicegroup {
   fileprivate struct DirectSoundVoice: Sendable, Encodable {
     let type: String  // Keep variable because gets set in `parseLine`
     let voiceParams: DirectSoundorPGMWaveVoiceArguements
-
+    var commentLabel: String?
     enum CodingKeys: CodingKey {
-      case type, voiceParams
+      case type, voiceParams, commentLabel
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(type, forKey: .type)
       try container.encode(voiceParams, forKey: .voiceParams)
-
     }
 
   }
@@ -106,8 +107,9 @@ public actor Voicegroup {
     let voicegroup: Substring
     let keysplit: Substring
     let voices: [Node]?
+    let commentLabel: String?
     enum CodingKeys: CodingKey {
-      case type, voicegroup, keysplit, voices
+      case type, voicegroup, keysplit, voices, commentLabel
     }
     func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
@@ -115,30 +117,33 @@ public actor Voicegroup {
       try container.encode(String(voicegroup.utf8), forKey: .voicegroup)
       try container.encode(String(keysplit.utf8), forKey: .keysplit)
       try container.encode(voices, forKey: .voices)
+      try container.encode(commentLabel, forKey: .commentLabel)
     }
   }
-  fileprivate struct UnresolvedVoicegroup: Sendable {
-    let voicegroupLabel: String
+  fileprivate struct UnresolvedVoicegroup: UnresolvedVoice, Sendable {
+    var voicegroupLabel: String
+    let commentLabel: String?
     func encode(to encoder: Encoder) throws {
       var container = encoder.singleValueContainer()
       try container.encode(voicegroupLabel)
+      //      try container.encode(commentLabel, forKey: .commentLabel)
+
     }
   }
-  fileprivate struct UnresolvedKeysplit: Sendable {
-    let voicegroupLabel: String
+  fileprivate struct UnresolvedKeysplit: UnresolvedVoice, Sendable {
+    var voicegroupLabel: String
     let keysplitLabel: String
-    let comment: String?
+    let commentLabel: String?
     enum CodingKeys: CodingKey {
-      case voicegroup, keysplit, comment
+      case voicegroup, keysplit
     }
     func encode(to encoder: Encoder) throws {
-      var container = encoder.container(keyedBy: CodingKeys.self)
-      try container.encode(
-        voicegroupLabel,
-        forKey: .voicegroup
-      )
-      try container.encode(keysplitLabel, forKey: .keysplit)
-      try container.encode(comment, forKey: .comment)
+      //      var container = encoder.container(keyedBy: CodingKeys.self)
+      //      try container.encode(
+      //        voicegroupLabel,
+      //        forKey: .voicegroup
+      //      )
+      //      try container.encode(keysplitLabel, forKey: .keysplit)
     }
 
   }
@@ -197,7 +202,6 @@ public actor Voicegroup {
     let soundDir: URL
     let voicegroupsDir: URL
     var errorHandler: @Sendable (any ConsoleProtocol) -> Void
-    //    var fileMap: [String: URL]
 
     init(rootDir: String, onError: @escaping @Sendable (any ConsoleProtocol) -> Void) {
       self.rootDir = URL(fileURLWithPath: rootDir)
@@ -212,6 +216,27 @@ public actor Voicegroup {
       self.errorHandler = onError
     }
 
+    @inline(__always)
+    fileprivate func parseComment(subLine: inout Substring) -> Substring? {
+      let at = UInt8(ascii: "@")
+      let comma = UInt8(ascii: ",")
+      var comment: Substring? = nil
+      var cur = subLine.endIndex
+      while cur > subLine.startIndex {
+        if subLine[subLine.index(before: cur)].asciiValue == at {
+          comment = subLine[subLine.index(after: cur)..<subLine.endIndex]
+
+          break
+        } else if subLine[subLine.index(before: cur)].asciiValue == comma {
+          break
+        }
+        cur = subLine.index(before: cur)
+      }
+      if comment != nil {
+        subLine = subLine.prefix(upTo: comment!.startIndex)
+      }
+      return comment
+    }
     @inline(__always)
     fileprivate func parseLine(line: consuming Substring)
       throws
@@ -241,17 +266,19 @@ public actor Voicegroup {
 
         let voiceType = line[firstUnderscore..<firstSpace].dropFirst()  // if we don't dropFirst, still has an underscore.
 
-        let parseableArgs = line[line.index(after: firstSpace)...]
+        var parseableArgs = line[line.index(after: firstSpace)...]
 
         if voiceType == "keysplit"
           || voiceType == "keysplit_all"
         {
 
+          let comment = parseComment(subLine: &parseableArgs)
           if isKeySplitAll(in: line) {
 
             return .unresolvedVoicegroup(
               UnresolvedVoicegroup(
                 voicegroupLabel: try parseVoiceGroupUTF8(from: line),
+                commentLabel: comment != nil ? String(comment!) : nil
               )
             )
           } else {
@@ -264,7 +291,8 @@ public actor Voicegroup {
               UnresolvedKeysplit(
                 voicegroupLabel: args[0]!,
                 keysplitLabel: args[1]!,
-                comment: args[2]
+                commentLabel: comment != nil ? String(comment!) : nil
+
               )
             )
 
@@ -348,25 +376,23 @@ public actor Voicegroup {
         switch nodes[i] {
 
           case .unresolvedKeysplit(let v):
-            let referencedEntries = try await parseVoicegroupFile(
-              path: voicegroupPath(label: v.voicegroupLabel),
-            )
-            // let keysplit =
             nodes[i] = .keysplit(
               KeysplitVoice(
                 voicegroup: Substring(v.voicegroupLabel),
                 keysplit: Substring(v.keysplitLabel),
-                voices: referencedEntries
+                voices: try await parseVoicegroupFile(
+                  path: voicegroupPath(label: v.voicegroupLabel)),
+                commentLabel: v.commentLabel
               )
             )
           case .unresolvedVoicegroup(let v):
-            let referencedEntries = try await parseVoicegroupFile(
-              path: voicegroupPath(label: v.voicegroupLabel),
-            )
+
             nodes[i] = .group(
               GroupVoice(
                 voicegroup: v.voicegroupLabel,
-                voices: referencedEntries
+                voices: try await parseVoicegroupFile(
+                  path: voicegroupPath(label: v.voicegroupLabel),
+                )
               )
             )
           default: continue
@@ -410,7 +436,7 @@ public actor Voicegroup {
             do {
               out.append(try parseLine(line: s))
             } catch {
-             throw error
+              throw error
             }
           }
           return out

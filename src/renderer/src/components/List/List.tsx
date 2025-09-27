@@ -193,19 +193,6 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
   }, [midiFiles]);
   return (
     <div ref={containerRef} className="space-y-6">
-      {/* Debug info */}
-      <div className="text-sm text-gray-600 p-2 bg-gray-100 rounded">
-        <div>Parent Width: {parentWidth}px</div>
-        <div>Measures on Screen: {measureCalculation.measuresOnScreen}</div>
-        <div>
-          Pixels per Beat: {measureCalculation.pixelsPerBeat.toFixed(1)}
-        </div>
-        <div>Total Measures: {totalMeasures}</div>
-        <div>
-          Constrained: {measureCalculation.isConstrained ? "Yes" : "No"}
-        </div>
-      </div>
-
       <Stage
         width={parentWidth || window.innerWidth}
         height={window.innerHeight}
@@ -240,9 +227,7 @@ const List = () => {
           <MidiList midiFiles={midiFiles} />
         ) : (
           <div className="text-center text-[var(--tallow)] py-12 px-4 bg-gray-50 border-2 border-gray-200 border-dashed rounded-lg">
-            <div className=" text-lg font-medium">
-              No MIDI files loaded
-            </div>
+            <div className=" text-lg font-medium">No MIDI files loaded</div>
             <div className=" text-sm mt-2">
               Load some MIDI files to see the piano roll visualization
             </div>

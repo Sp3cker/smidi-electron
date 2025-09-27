@@ -89,4 +89,7 @@ body {
     stroke: var(--yatsugi-grey-2);
     fill: var(--yatsugi-grey-3);
   }
+  .voicegroup-row-item {
+    @apply min-h-12 flex flex-col gap-2 ring-1 ring-[var(--yatsugi-blue-500)] bg-[var(--yatsugi-blue-50)] rounded-sm p-1
+  }
 }

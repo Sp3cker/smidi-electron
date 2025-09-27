@@ -12,7 +12,7 @@ protocol InstrumentsService {
 public actor Instruments {
   let config = Config()
   var voicegroups: Voicegroup? = nil
-  public nonisolated(unsafe) var  errorHandler: (@Sendable (any ConsoleProtocol) -> Void)? = nil
+  public nonisolated(unsafe) var errorHandler: (@Sendable (any ConsoleProtocol) -> Void)? = nil
   // var keysplits: Keysplit? = nil
   public init() {
     print("Instruments initialized")
@@ -29,8 +29,8 @@ public actor Instruments {
   }
 
   private nonisolated func forwardError(_ console: any ConsoleProtocol) {
-    let consoleMessage = ConsoleErrorMessage(message: console.message, level: , message: String?, context: [String : String]?)
-    Task { await self.invokeErrorHandler(console) }
+    let consoleMessage = ConsoleErrorMessage(message: console.message, level: console.level)
+    Task { await self.invokeErrorHandler(consoleMessage) }
   }
 
   private func invokeErrorHandler(_ console: any ConsoleProtocol) {
