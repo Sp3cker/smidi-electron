@@ -4,10 +4,6 @@ export type UpdateConfigCommand = {
   value: string;
 };
 
-export type GetConfigQuery = {
-  // No payload needed, but could include filters if needed
-};
-
 export type ConfigResponse =
   | {
       success: true;

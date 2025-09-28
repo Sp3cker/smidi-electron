@@ -8,48 +8,62 @@ import { parseMidiToResolution } from "../services/MidiMan/MidiMan";
 
 export const setMidiManIpc = (midiManInstance: MidiManService) => {
   // Handle directory selection dialog
-  ipcMain.on(IPC_CHANNELS.OPEN_WATCH_DIRECTORY, async (event) => {
+  ipcMain.handle(IPC_CHANNELS.PROMPT_MIDI_DIRECTORY, async (event) => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory"],
     });
-
     if (!result.canceled && result.filePaths.length > 0) {
-      event.sender.send(IPC_CHANNELS.SET_WATCH_DIRECTORY, result.filePaths[0]);
-      midiManInstance.watchDirectory = result.filePaths[0];
-      midiManInstance
-        .parseMidiDirectory()
-        .then((midiObjects) => {
-          // console.log(
-          //   "Midiman: Parsed midi directory",
-          //   parseMidiToResolution(midiObjects[0], 120).measures[23]
-          // );
-          // Convert MidiFile objects to serializable format for IPC
-
-          const serializableData = midiObjects.map((midiFile: MidiFile) =>
-            parseMidiToResolution(midiFile)
-          );
-
-          event.sender.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, serializableData);
-        })
-        .catch((error) => {
-          console.error("Midiman: Error parsing midi directory", error);
-          event.sender.send(IPC_CHANNELS.APP_ERROR, {
-            success: false,
-            error: error as AppErrorPayload,
-          });
-        });
+      return result.filePaths[0];
     }
+    return null;
+    event.sender.send(IPC_CHANNELS.SET_WATCH_DIRECTORY, result.filePaths[0]);
+    midiManInstance.watchDirectory = result.filePaths[0];
+    midiManInstance
+      .parseMidiDirectory()
+      .then((midiObjects) => {
+        // console.log(
+        //   "Midiman: Parsed midi directory",
+        //   parseMidiToResolution(midiObjects[0], 120).measures[23]
+        // );
+        // Convert MidiFile objects to serializable format for IPC
+
+        const serializableData = midiObjects.map((midiFile: MidiFile) =>
+          parseMidiToResolution(midiFile)
+        );
+
+        event.sender.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, serializableData);
+      })
+      .catch((error) => {
+        console.error("Midiman: Error parsing midi directory", error);
+        event.sender.send(IPC_CHANNELS.APP_ERROR, {
+          success: false,
+          error: error as AppErrorPayload,
+        });
+      });
   });
 
   // Handle watch start/stop commands
   ipcMain.on(IPC_CHANNELS.START_WATCHING, (event, directory: string) => {
+    console.log("IPC START_WATCHING", directory);
     if (midiManInstance && directory) {
       console.log("START_WATCHING", directory);
       // prolyl handle if this is false
+      midiManInstance.watchDirectory = directory;
+      midiManInstance.parseMidiDirectory().then((midiObjects) => {
+        // console.log(
+        //   "Midiman: Parsed midi directory",
+        //   parseMidiToResolution(midiObjects[0], 120).measures[23]
+        // );
+        // Convert MidiFile objects to serializable format for IPC
 
-      midiManInstance.setWatcher(directory);
+        const serializableData = midiObjects.map((midiFile: MidiFile) =>
+          parseMidiToResolution(midiFile)
+        );
 
-      event.sender.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, true);
+        midiManInstance.setWatcher(directory);
+
+        event.sender.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, serializableData);
+      });
     } else {
       console.error("MidiMan instance not set or directory is empty");
       event.sender.send(IPC_CHANNELS.APP_ERROR, {

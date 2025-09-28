@@ -7,9 +7,11 @@ import {
   getVoicegroupDetails,
 } from "../ipcHandlers";
 import { toast } from "@renderer/ui/Toast/ToastStore";
-import type { ParsedMidiMeasures, GroupVoice } from "@shared/dto";
+import type { ParsedMidiMeasures, GroupVoice, Project } from "@shared/dto";
 
 type WatchStore = {
+  selectedProjectName: string;
+  projects: string[];
   directory: string;
   watching: boolean;
   midiFiles: ParsedMidiMeasures[];
@@ -18,15 +20,18 @@ type WatchStore = {
   selectedVoicegroupDetails: GroupVoice | null;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
-  promptDirectory: () => void;
+
   startWatch: () => void;
   stopWatch: () => void;
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
 
   setSelectedVoicegroup: (voicegroup: string | null) => void;
+  setSelectedProject: (project: Project) => void;
 };
 
 const watchStore = create<WatchStore>((set, get) => ({
+  selectedProjectName: "",
+  projects: [],
   directory: "",
   watching: false,
   selectedVoicegroup: null,
@@ -36,17 +41,17 @@ const watchStore = create<WatchStore>((set, get) => ({
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
   setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
-  promptDirectory: () => {
-    window.electron.ipcRenderer.send(IPC_CHANNELS.OPEN_WATCH_DIRECTORY);
-  },
+  // promptDirectory: () => {
+  //   window.api.promptMidiDirectory();
+  // },
 
   startWatch: () => {
-    const directory = get().directory;
-    if (directory === "") {
-      toast.error("No directory set");
-      return;
-    }
-    window.electron.ipcRenderer.send(IPC_CHANNELS.START_WATCHING, directory);
+    // const directory = get().directory;
+    // if (directory === "") {
+    //   toast.error("No directory set");
+    //   return;
+    // }
+    // window.electron.ipcRenderer.send(IPC_CHANNELS.START_WATCHING, directory);
   },
 
   stopWatch: () => {
@@ -59,6 +64,22 @@ const watchStore = create<WatchStore>((set, get) => ({
     }
     set({ selectedVoicegroup: voicegroup });
     getVoicegroupDetails(voicegroup, set);
+  },
+  setSelectedProject: (project) => {
+    set(() => ({
+      selectedProjectName: project.name,
+      directory: project.midiPath,
+    }));
+    // const directory = get().directory;
+    // if (directory === "") {
+    //   toast.error("No directory set");
+    //   return;
+    // }
+    console.log(project)
+    window.electron.ipcRenderer.send(
+      IPC_CHANNELS.START_WATCHING,
+      project.midiPath
+    );
   },
 }));
 

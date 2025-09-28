@@ -2,7 +2,7 @@
 @import "./font.css";
 @import "./neir.css";
 body {
-  font-family: "Mondwest", sans-serif;
+  font-family: "PP Mori", sans-serif;
   color: var(--color-neir-dark);
 }
 :root {
@@ -25,7 +25,7 @@ body {
   --yatsugi-red-2: oklch(0.5064 0.2097 26.01);
   --yatsugi-blue: oklch(44.602% 0.0328 233);
   --yatsugi-blue-50: oklch(98.36% 0.01866 204.07);
-  --yatsugi-blue-600: oklch(68.973% 0.10831 205.977);
+  --yatsugi-blue-600: oklch(60.973% 0.10831 204.977);
   --yatsugi-blue-700: oklch(52.725% 0.09158 227.291);
   --yatsugi-blue-900: oklch(39.601% 0.07386 236.11);
 
@@ -38,22 +38,16 @@ body {
 }
 @layer components {
   .input {
-    @apply font-pkmnem text-stone-100 bg-zinc-900 border-2 border-zinc-600 focus:outline-none  transition-colors duration-200 placeholder:text-zinc-500 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)];
-    text-shadow:
-      -0.3px 0px rgba(195, 191, 190, 0.25),
-      -0.3px -0.3px rgba(195, 191, 190, 0.25),
-      0px 0.5px #413141,
-      0.5px 0px #413141,
-      0.75px 0.75px rgba(106, 90, 90, 0.5);
+    @apply font-pkmnem rounded-sm py-0 border border-[var(--yatsugi-blue-1)] bg-[var(--color-neir-darkest)] px-3 py-1 text-sm text-[var(--yatsugi-white-1)] placeholder:text-[var(--yatsugi-grey-2)] focus:border-[var(--yatsugi-blue-600)] focus:outline-none focus:ring-1 focus:ring-[var(--yatsugi-blue-600)];
   }
   .button {
-    @apply font-pkmnem px-2 font-bold text-stone-100 border-2 border-zinc-600 focus:outline-none duration-200 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(251,191,36,0.3)] active:shadow-[1px_1px_0px_rgba(0,0,0,0.8)] active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[2px_2px_0px_rgba(0,0,0,0.8)];
-    text-shadow:
+    @apply font-pkmnem text-sm bg-transparent px-2 py-0 font-bold text-[var(--color-neir-darkest)] border-1 rounded-sm border-[var(--yatsugi-grey-1)] focus:outline-none duration-200;
+    /* text-shadow:
       -0.3px 0px rgba(195, 191, 190, 0.25),
       -0.3px -0.3px rgba(195, 191, 190, 0.25),
       0px 0.5px #413141,
       0.5px 0px #413141,
-      0.75px 0.75px rgba(106, 90, 90, 0.5);
+      0.75px 0.75px rgba(106, 90, 90, 0.5); */
   }
   .hover-active-button {
     @apply font-pkmnem cursor-pointer font-bold;
@@ -90,6 +84,6 @@ body {
     fill: var(--yatsugi-grey-3);
   }
   .voicegroup-row-item {
-    @apply min-h-12 flex flex-col gap-2 ring-1 ring-[var(--yatsugi-blue-500)] bg-[var(--yatsugi-blue-50)] rounded-sm p-1
+    @apply min-h-12 flex flex-col gap-2 ring-1 ring-[var(--yatsugi-blue-500)] bg-[var(--yatsugi-blue-50)] rounded-sm p-1;
   }
 }

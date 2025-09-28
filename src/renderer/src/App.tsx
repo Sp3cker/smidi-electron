@@ -1,4 +1,4 @@
-import { Watch, List, VoiceGroups } from "./components";
+import { List, VoiceGroups } from "./components";
 import { useLayoutEffect, useRef } from "react";
 import useConfigStore from "./store/useConfigStore";
 import { GlobalConfig } from "./components/GlobalConfig";
@@ -6,20 +6,12 @@ import ToastContainer from "./ui/Toast/ToastContainer";
 import { TabBar } from "./components/TabBar";
 import { Console } from "./components/Console";
 import { Route, Router, Switch } from "wouter";
-const Home = () => {
-  return (
-    <div>
-      <Watch />
-      <List />
-    </div>
-  );
-};
+
 function App() {
   const { isLoading, config, getConfig } = useConfigStore();
   const hasRequestedConfig = useRef(false);
 
   useLayoutEffect(() => {
-
     if (!config && isLoading && !hasRequestedConfig.current) {
       hasRequestedConfig.current = true;
       getConfig();
@@ -38,7 +30,7 @@ function App() {
           ) : (
             <Switch>
               <Route path="/voice-groups" component={VoiceGroups} />
-              <Route path="/" component={Home} />
+              <Route path="/" component={List} />
 
               <div className="p-2"></div>
               <VoiceGroups />

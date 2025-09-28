@@ -20,7 +20,6 @@ let package = Package(
       branch: "main"
     )
   ],
-  // TARGET NAMES (not "name", but target: thisString) ARE FOLDER NAMES
   targets: [
 
     .target(
@@ -31,39 +30,50 @@ let package = Package(
         "Instruments",
         "Config",
         "Console",
-      ]
+      ],
+      path: "Sources/module"
     ),
     .target(
       name: "Instruments",
       dependencies: ["Voicegroups", "Config", "Keysplits", "Console"],
-      path: "Sources/Core/Instruments",
-
+      path: "Sources/Instruments",
+      sources: ["Instruments.swift"]
     ),
-    .target(name: "Config", path: "Sources/Core/Config"),
-    .target(name: "Console", path: "Sources/Core/Console"),
-    //    .target(name: "ConsoleProtocol", path: "Sources/Core/Console"),
+    .target(
+      name: "Config",
+      path: "Sources/Core",
+      sources: ["Config.swift"]
+    ),
+    .target(
+      name: "Console",
+      path: "Sources/Core",
+      sources: ["Console.swift", "ConsoleProtocol.swift"]
+    ),
     .target(
       name: "Voicegroups",
       dependencies: ["Config", "Console"],
-      path: "Sources/Core/Voicegroups"
+      path: "Sources/Instruments/Voicegroups"
     ),
     .target(
       name: "Keysplits",
       dependencies: ["Sweep"],
-      path: "Sources/Core/Keysplits"
+      path: "Sources/Instruments/Keysplits"
     ),
-    .target(name: "Sweep", path: "Sources/Core/Sweep"),
+    .target(
+      name: "Sweep",
+      path: "Sources/Core/Sweep"
+    ),
 
     .executableTarget(
       name: "VoicegroupRunner",
       dependencies: ["Voicegroups", "Config", "Console"],
-      path: "Sources/Core/VoicegroupRunner",
+      path: "Sources/Instruments/VoicegroupRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
     .executableTarget(
       name: "KeysplitRunner",
       dependencies: ["Keysplits", "Config"],
-      path: "Sources/Core/KeysplitRunner",
+      path: "Sources/Instruments/KeysplitRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
   ]

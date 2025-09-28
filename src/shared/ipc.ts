@@ -16,11 +16,15 @@ export const IPC_CHANNELS = {
     GET_VOICEGROUPS: "get-voicegroups",
     GET_VOICEGROUP_DETAILS: "get-voicegroup-details",
   },
+  PROJECTS: {
+    GET_PROJECTS: "get-projects",
+    CREATE_PROJECT: "create-project",
+  },
   MIDI_MAN: {
     MIDI_FILES: "midi-files",
   },
   // From renderer to main
-  OPEN_WATCH_DIRECTORY: "open-watch-directory",
+  PROMPT_MIDI_DIRECTORY: "open-watch-directory",
   START_WATCHING: "start-watching",
   STOP_WATCHING: "stop-watching",
 

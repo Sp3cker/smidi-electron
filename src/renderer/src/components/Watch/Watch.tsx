@@ -27,13 +27,13 @@ const Watch: React.FC = () => {
         />
         <div className="flex flex-row gap-2">
           <Button
-            className="hover-active-button rounded-sm"
+            className="hover-active-button "
             onMouseDown={promptDirectory}
           >
             Browse
           </Button>
           <Button
-            className="hover-active-button rounded-sm"
+            className="hover-active-button "
             variant={isWatching ? "secondary" : "primary"}
             onClick={handleClick}
           >

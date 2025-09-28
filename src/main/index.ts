@@ -18,6 +18,8 @@ import ConsoleService from "./services/Console/ConsoleService";
 import { db } from "./lib/db";
 
 import { initMessageChannels } from "./lib/messageChannels";
+import ProjectService from "./services/Project/ProjectService";
+import ProjectsRepository from "./repos/Projects/ProjectsRepository";
 /** Renderer config is sent upon request
  * check `ipc/configIpc.ts`
  */
@@ -44,8 +46,8 @@ function createWindow(): void {
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
-  // Initialize high-throughput bootstrap message channel
-  initMessageChannels(mainWindow);
+    // Initialize high-throughput bootstrap message channel
+    initMessageChannels(mainWindow);
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -83,7 +85,8 @@ app.whenReady().then(() => {
   const midiMan = new MidiManService();
   const voicegroupsService = new VoicegroupsService(config);
   const consoleService = new ConsoleService();
-  hookUpIpc(config, midiMan, voicegroupsService);
+  const projectService = new ProjectService(new ProjectsRepository(db));
+  hookUpIpc(config, midiMan, voicegroupsService, projectService);
   createWindow();
 
   app.on("activate", function () {

@@ -11,7 +11,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className="w-full">
         <label
           htmlFor={props.id}
-          className="block mb-0 font-pkmnem text-lg font-bold"
+          className="block mb-0 font-pkmnem text-lg font-bold text-[var(--yatsugi-white-1)]"
         >
           {label}
         </label>

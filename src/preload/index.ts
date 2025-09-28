@@ -52,10 +52,22 @@ const api = {
   getVoiceGroups: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUPS);
   },
+  getProjects: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.PROJECTS.GET_PROJECTS);
+  },
   browseExpansionDirectory: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.CONFIG.BROWSE_EXPANSION_DIRECTORY);
   },
+  createProject: (name: string, midiPath: string) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.PROJECTS.CREATE_PROJECT, {
+      name,
+      midiPath,
+    });
+  },
   requestStream,
+  promptMidiDirectory: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.PROMPT_MIDI_DIRECTORY);
+  },
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
