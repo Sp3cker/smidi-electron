@@ -2,7 +2,7 @@
 @import "./font.css";
 @import "./neir.css";
 body {
-  font-family: "PP Mori", sans-serif;
+  font-family: "PP Mondwest", sans-serif;
   color: var(--color-neir-dark);
 }
 :root {

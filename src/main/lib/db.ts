@@ -9,6 +9,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 name TEXT NOT NULL UNIQUE,  -- User-defined project name (e.g., 'MyMidiProject')
 midiPath TEXT NOT NULL,  -- Full path to the watched MIDI directory (e.g., '/Users/me/midis/')
 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+base64Path TEXT NOT NULL,  -- Base64-encoded path for cross-platform compatibility
 voicegroup TEXT NOT NULL DEFAULT 'voicegroup191.inc'
 );
 CREATE TABLE if not EXISTS config (

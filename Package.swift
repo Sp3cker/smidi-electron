@@ -11,6 +11,7 @@ let package = Package(
     //        .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Instruments", targets: ["Instruments"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
+    .library(name: "Bookmarks", targets: ["Bookmarks"]),
     .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
     .executable(name: "ksparse", targets: ["KeysplitRunner"]),
   ],
@@ -30,6 +31,7 @@ let package = Package(
         "Instruments",
         "Config",
         "Console",
+        "Bookmarks"
       ],
       path: "Sources/module"
     ),
@@ -46,7 +48,7 @@ let package = Package(
     ),
     .target(
       name: "Console",
-      path: "Sources/Core",
+      path: "Sources/Core/Console",
       sources: ["Console.swift", "ConsoleProtocol.swift"]
     ),
     .target(
@@ -63,6 +65,18 @@ let package = Package(
       name: "Sweep",
       path: "Sources/Core/Sweep"
     ),
+    .target(
+      name: "SmidiDatabase",
+      path: "Sources/Core/Database",
+      linkerSettings: [
+        .linkedLibrary("sqlite3")
+      ]),
+    .target(
+      name: "Bookmarks",
+      dependencies: ["SmidiDatabase"],
+      path: "Sources/Core/Bookmarks",
+      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
+    ),
 
     .executableTarget(
       name: "VoicegroupRunner",
@@ -76,5 +90,6 @@ let package = Package(
       path: "Sources/Instruments/KeysplitRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
+
   ]
 )

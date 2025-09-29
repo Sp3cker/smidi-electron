@@ -10,14 +10,16 @@ class ProjectsRepository {
 
     return statement.all() as Project[];
   }
-  createProject(name: string, midiPath: string) {
+
+  // Try to read the directory to check access
+  createProject(name: string, midiPath: string, base64Path: string): number {
     const project = this.db
       .prepare(
-        "INSERT INTO projects (name, midipath) VALUES (?, ?) RETURNING id"
+        "INSERT INTO projects (name, midipath, base64Path) VALUES (?, ?, ?) RETURNING id"
       )
-      .run(name, midiPath);
+      .run(name, midiPath, base64Path);
 
-    return project.lastInsertRowid;
+    return Number(project.lastInsertRowid);
   }
 }
 

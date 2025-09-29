@@ -14,6 +14,7 @@ class ProjectService {
       throw new Error("ProjectService: error getting projects" + error);
     }
   }
+
   async createProject(name: string, midiPath: string) {
     try {
       return this.projectsRepository.createProject(name, midiPath);

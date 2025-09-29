@@ -1,3 +1,4 @@
+import Bookmarks
 import Config
 import Console
 import Foundation
@@ -46,18 +47,6 @@ let instruments = Instruments()
       }
     }
     instruments.onError(onError)
-
-    //  try emit.call(["end"])
-    // guard
-    //     let eventsModule = try requireFn.dynamicallyCall(withArguments: ["node:events"]).as(NodeObject.self),
-    //     let ctor = try eventsModule["EventEmitter"].as(NodeFunction.self)
-    // else {
-    //     throw ModuleError.eventEmitterMissing
-    // }
-
-    // let emitter = try ctor.construct(withArguments: [])
-    // bridgeEmitter = emitter
-//     return emitter
   },
 
   "init": try NodeFunction {
@@ -65,15 +54,10 @@ let instruments = Instruments()
     do {
       await instruments.configure(rootDir: rootDir)
       print("init: success")
-      // Emit event to Node listeners if available
-      //      if let emitter = bridgeEmitter, let emitFn = try? emitter["emit"].as(NodeFunction.self) {
-      //        _ = try? emitFn.call(this: emitter, withArguments: ["init:success", rootDir])
-      //      }
+
       try callback([], true)
     } catch {
-      //      if let emitter = bridgeEmitter, let emitFn = try? emitter["emit"].as(NodeFunction.self) {
-      //        _ = try? emitFn.call(this: emitter, withArguments: ["init:error", error.localizedDescription])
-      //      }
+
       try! callback([error.localizedDescription], [])
     }
   },
@@ -82,21 +66,26 @@ let instruments = Instruments()
     (vg: String, callback: NodeFunction) async -> Void in
     do {
       let results = try await instruments.parseVoicegroupFile(label: vg)
-
       guard let jsonString = String(data: results, encoding: .utf8) else {
         try callback(["Failed to decode voicegroup data as UTF-8"], [])
         return
       }
-      //      if let emitter = bridgeEmitter, let emitFn = try? emitter["emit"].as(NodeFunction.self) {
-      //        _ = try? emitFn.call(this: emitter, withArguments: ["keysplit:success", jsonString])
-      //      }
       try callback([], jsonString)  // nil error, success data
     } catch {
-      //      if let emitter = bridgeEmitter, let emitFn = try? emitter["emit"].as(NodeFunction.self) {
-      //        _ = try? emitFn.call(this: emitter, withArguments: ["keysplit:error", error.localizedDescription])
-      //      }
-      // Avoid throwing from within error handling; best-effort callback
       try! callback([error.localizedDescription], [])  // error, nil data
+    }
+  },
+  "readProjectFolder": try NodeFunction {
+    (midiFolder: String) async -> String? in
+    do {
+      
+      let b64 = try  Bookmarks.createBookmark(for: midiFolder)
+      print("swift \(b64)")
+      return b64
+    } catch {
+      print(error)
+      return nil  // error, nil data
+
     }
   },
 ]

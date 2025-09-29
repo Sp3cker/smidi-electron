@@ -2,7 +2,8 @@ import type fs from "fs";
 import { readdir } from "fs/promises";
 import FileWatcher from "../../lib/FileWatcher";
 import { MidiFile } from "@shared/MidiFile";
-
+import Module from "../../voicegroupParser/build/release/Module.node";
+import db from "../../lib/db";
 export function parseMidiToResolution(midi: MidiFile) {
   const ppq = midi.header.ppq;
 
@@ -33,8 +34,7 @@ export function parseMidiToResolution(midi: MidiFile) {
         offsetTicksInBar,
         durationTicksInBar: chunkTicks,
         startTick: note.ticks + (durationTicksTotal - remainingTicks),
-        endTick:
-          note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
+        endTick: note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
         originalNote: note,
       });
 
@@ -66,65 +66,6 @@ export function parseMidiToResolution(midi: MidiFile) {
   }; // Add metadata for grid calc
 }
 
-// Usage:
-// const processed = processMidiToMeasures(midi, 120);
-
-// Usage example:
-// const midi = await Midi.fromUrl('path/to/file.mid');
-// const formatted = formatNotesTo128Measures(midi, 120); // fallback BPM if MIDI lacks it
-// console.log(formatted);
-// try {
-//   console.log("Midiman: Parsing midi to resolution", midi.header.ppq);
-
-//   // Parse MIDI data
-
-//   const ppqn = midi.header.ppq; // Ticks per quarter note
-//   const beatsPerMeasure = timeSignature[0]; // e.g., 4 for 4/4
-//   const beatNoteValue = timeSignature[1]; // e.g., 4 for quarter note
-
-//   // Calculate ticks per 1/128 note
-
-//   const ticksPer128thNote = ppqn / (resolution / 4); // 1/128 note = 1/32 of a quarter note
-
-//   // Calculate ticks per measure (e.g., 4 quarter notes in 4/4)
-//   const ticksPerMeasure = ppqn * beatsPerMeasure * (4 / beatNoteValue);
-
-//   // Number of 1/128 notes per measure
-//   const num128thNotesPerMeasure = ticksPerMeasure / ticksPer128thNote;
-
-//   // Initialize output structure
-//   const measures = {};
-
-//   // Process each track
-//   midi.tracks.forEach((track, trackIndex) => {
-//     track.notes.forEach((note) => {
-//       // Get note start time in ticks
-//       const startTicks = note.ticks;
-
-//       // Calculate measure and position within measure
-//       const measureNumber = Math.floor(startTicks / ticksPerMeasure);
-//       const positionInMeasureTicks = startTicks % ticksPerMeasure;
-//       const positionIn128thNotes = Math.round(
-//         positionInMeasureTicks / ticksPer128thNote
-//       );
-
-//       // Initialize measure if not exists
-//       if (!measures[measureNumber]) {
-//         measures[measureNumber] = Array(num128thNotesPerMeasure).fill([]);
-//       }
-
-//       // Add note to the appropriate 1/128 note slot
-//       measures[measureNumber][positionIn128thNotes].push({
-//         note: note.name, // e.g., 'C4'
-//         velocity: note.velocity,
-//         durationTicks: note.durationTicks,
-//         track: trackIndex,
-//       });
-//     });
-//   });
-
-//   return measure
-
 class MidiMan {
   fileWatcher: FileWatcher | null = null;
   watchDirectory: string | null = null;
@@ -134,6 +75,7 @@ class MidiMan {
   }
   async setWatcher(directory: string) {
     this.watchDirectory = directory;
+    await Module.readProjectFolder(directory);
     if (this.fileWatcher) {
       await this.fileWatcher.stop();
     }
