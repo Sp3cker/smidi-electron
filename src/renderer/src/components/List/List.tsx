@@ -4,7 +4,7 @@ import { Text, Group, Layer, Line, Rect, Stage } from "react-konva";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MeasureGrid } from "../Konva/Grid";
 import { NoteSegment, ParsedMidiMeasures } from "@shared/dto";
-import { grey1 } from "@renderer/ui";
+import { grey1, white2 } from "@renderer/ui";
 import {
   useMeasureCalculation,
   useParentWidth,
@@ -64,16 +64,15 @@ const MidiMeasure = ({
 
   // Need to set X and Y of Group so Midi note knows correct vertical and horizontal position
   return (
-    <Group>
+    <Group width={pixelsPerMeasure} height={96}>
       <Rect
         width={pixelsPerMeasure}
         height={96}
-        fill="rgba(80,160,255,0.25)"
-        borderRadius={4}
         x={measureXPosition}
-        stroke={grey1}
-        strokeWidth={1}
-      ></Rect>
+        // fill="rgba(80,160,255,0.25)"
+        borderRadius={4}
+        stroke={white2}
+        strokeWidth={0.5}></Rect>
       <Group>
         {measure.map((qtrNote, i) => {
           if (qtrNote) {
@@ -156,46 +155,77 @@ const MidiTrack = ({
   );
   const noteHeightAtMinVerticalNotes = 64;
   const scaledHeight = noteHeightAtMinVerticalNotes / verticalRange;
+  const measureBlocks = useMemo(() => {
+    const blocks: {
+      id: string;
+      startIndex: number;
+      measures: NoteSegment[][];
+    }[] = [];
+    let current: (typeof blocks)[number] | null = null;
+
+    midiTrack.measures.forEach((measure, index) => {
+      const hasNotes = Array.isArray(measure) && measure.some(Boolean);
+      if (hasNotes === false) {
+        if (current) {
+          blocks.push(current);
+          current = null;
+        }
+        return;
+      }
+
+      if (!current) {
+        current = {
+          id: `${midiTrack.fileName}-${index}`,
+          startIndex: index,
+          measures: [measure],
+        };
+      } else {
+        current.measures.push(measure);
+      }
+    });
+
+    if (current) blocks.push(current);
+    return blocks;
+  }, [midiTrack.fileName, midiTrack.measures]);
 
   // Map MIDI pitch to Y so that lower pitches appear lower on screen
   // (Konva Y grows downward). Highest pitch -> y = 0, lowest -> max.
   const noteToY = (midi: number) => (highestNoteInMidi - midi) * scaledHeight;
-
+  debugger
   // For every octave between the highest and lowest note, we make midi notes 1/2 as big.
   return (
-    <Group>
+    <Group >
       <Text
         text={midiTrack.fileName}
         zIndex={1000}
         fontSize={14}
-        fontFamily="font-neuebit"
+        fontWeight="bold"
+        fontFamily="Neuebit"
       />
-      {midiTrack.measures.map((measure, i) => {
-        if (measure !== undefined) {
-          return (
+      {measureBlocks.map((block, i) => (
+        <Group key={block.id} x={block.startIndex * pixelsPerMeasure}>
+          {/* <Rect
+            width={block.measures.length * pixelsPerMeasure}
+            height={96}
+            fill="#0396A2"
+            cornerRadius={4}
+            stroke={white2}
+            strokeWidth={1}
+          /> */}
+
+          {block.measures.map((measure, idx) => (
             <MidiMeasure
+              key={`${block.id}-${idx}`}
               measure={measure}
-              order={i}
-              key={i}
+              order={idx}
               ticksPerBar={midiTrack.ticksPerBar}
               pixelsPerMeasure={pixelsPerMeasure}
               noteHeight={scaledHeight}
               noteToY={noteToY}
             />
-          );
-        } else {
-          return (
-            <Rect
-              width={pixelsPerMeasure}
-              height={96}
-              x={i * pixelsPerMeasure}
-              stroke={grey1}
-              strokeWidth={1}
-              key={i}
-            />
-          );
-        }
-      })}
+          ))}
+        </Group>
+      ))}
     </Group>
   );
 };
@@ -238,8 +268,7 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
       <Stage
         width={parentWidth || window.innerWidth}
         height={window.innerHeight}
-        ref={stageRef}
-      >
+        ref={stageRef}>
         <Layer>
           <MeasureGrid
             totalMeasures={totalMeasures}
