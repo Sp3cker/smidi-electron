@@ -6,10 +6,10 @@ import {
   onWatchStatusChanged,
   getVoicegroupDetails,
 } from "../ipcHandlers";
-import { toast } from "@renderer/ui/Toast/ToastStore";
 import type { ParsedMidiMeasures, GroupVoice, Project } from "@shared/dto";
 
 type WatchStore = {
+  selectedProjectId: number | null;
   selectedProjectName: string;
   projects: string[];
   directory: string;
@@ -20,8 +20,6 @@ type WatchStore = {
   selectedVoicegroupDetails: GroupVoice | null;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
-
-  startWatch: () => void;
   stopWatch: () => void;
   setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
 
@@ -29,7 +27,8 @@ type WatchStore = {
   setSelectedProject: (project: Project) => void;
 };
 
-const watchStore = create<WatchStore>((set, get) => ({
+const watchStore = create<WatchStore>((set) => ({
+  selectedProjectId: null,
   selectedProjectName: "",
   projects: [],
   directory: "",
@@ -41,18 +40,6 @@ const watchStore = create<WatchStore>((set, get) => ({
   setDirectory: (directory) => set(() => ({ directory })),
   setWatching: (watching) => set(() => ({ watching })),
   setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
-  // promptDirectory: () => {
-  //   window.api.promptMidiDirectory();
-  // },
-
-  startWatch: () => {
-    // const directory = get().directory;
-    // if (directory === "") {
-    //   toast.error("No directory set");
-    //   return;
-    // }
-    // window.electron.ipcRenderer.send(IPC_CHANNELS.START_WATCHING, directory);
-  },
 
   stopWatch: () => {
     window.electron.ipcRenderer.send(IPC_CHANNELS.STOP_WATCHING);
@@ -67,19 +54,10 @@ const watchStore = create<WatchStore>((set, get) => ({
   },
   setSelectedProject: (project) => {
     set(() => ({
+      selectedProjectId: project.id,
       selectedProjectName: project.name,
       directory: project.midiPath,
     }));
-    // const directory = get().directory;
-    // if (directory === "") {
-    //   toast.error("No directory set");
-    //   return;
-    // }
-    console.log(project)
-    window.electron.ipcRenderer.send(
-      IPC_CHANNELS.START_WATCHING,
-      project.midiPath
-    );
   },
 }));
 

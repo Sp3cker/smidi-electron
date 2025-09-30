@@ -64,6 +64,11 @@ const api = {
       midiPath,
     });
   },
+  openProject: (projectId: number) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.PROJECTS.OPEN_PROJECT, {
+      projectId,
+    });
+  },
   requestStream,
   promptMidiDirectory: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.PROMPT_MIDI_DIRECTORY);

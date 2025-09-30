@@ -19,13 +19,13 @@ export const IPC_CHANNELS = {
   PROJECTS: {
     GET_PROJECTS: "get-projects",
     CREATE_PROJECT: "create-project",
+    OPEN_PROJECT: "open-project",
   },
   MIDI_MAN: {
     MIDI_FILES: "midi-files",
   },
   // From renderer to main
   PROMPT_MIDI_DIRECTORY: "open-watch-directory",
-  START_WATCHING: "start-watching",
   STOP_WATCHING: "stop-watching",
 
   // From main to renderer

@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useWatchStore } from "@renderer/store";
+import { useWatchStore, watchStore } from "@renderer/store";
 import { Button } from "@renderer/ui/Button";
 import NewProjectDropdown from "./NewProject";
 import OpenProjectDropdown from "./OpenProject/OpenProject";
 import type { Project } from "@shared/dto";
 
 const ProjectSelect = () => {
-  const { selectedProjectName, setSelectedProject, setDirectory } =
-    useWatchStore();
+  const { selectedProjectName, setSelectedProject } = useWatchStore();
   const [activeModal, setActiveModal] = useState<"new" | "open" | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -46,20 +45,19 @@ const ProjectSelect = () => {
     void window.api
       .createProject(projectName, midiPath)
       .then((result) => {
-        if (!result?.success) {
-          console.error("Failed to create project", result?.error);
+        if (!result || !result.success) {
+          const message = result && "error" in result ? result.error : undefined;
+          console.error("Failed to create project", message);
           return;
         }
-        if (result.data === null || result.data === undefined) {
-          console.error("Failed to create project, no project ID returned");
+        if (!result.data?.project) {
+          console.error("Failed to create project, no project returned");
           return;
         }
-        setSelectedProject({
-          name: projectName,
-          midiPath: midiPath,
-          id: result.data,
-        });
-        setDirectory(midiPath);
+        setSelectedProject(result.data.project);
+        if (result.data.midiFiles) {
+          watchStore.getState().setMidiFiles(result.data.midiFiles);
+        }
         setActiveModal(null);
       })
       .catch((error) => {
@@ -68,11 +66,24 @@ const ProjectSelect = () => {
   };
 
   const handleOpenProject = (project: Project) => {
-    setSelectedProject(project);
-    if (project.midiPath) {
-      setDirectory(project.midiPath);
-    }
-    setActiveModal(null);
+    void window.api
+      .openProject(project.id)
+      .then((result) => {
+        if (!result || !result.success || !result.data?.project) {
+          const message = result && "error" in result ? result.error : undefined;
+          console.error("Failed to open project", message);
+          return;
+        }
+
+        setSelectedProject(result.data.project);
+        if (result.data.midiFiles) {
+          watchStore.getState().setMidiFiles(result.data.midiFiles);
+        }
+        setActiveModal(null);
+      })
+      .catch((error) => {
+        console.error("Error opening project", error);
+      });
   };
 
   return (

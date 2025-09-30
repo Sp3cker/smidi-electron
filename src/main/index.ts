@@ -10,7 +10,6 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import hookUpIpc from "./ipc";
 import makeMenu from "./lib/Menu";
-import MidiManService from "./services/MidiMan/MidiMan";
 import VoicegroupsService from "./services/Voicegroups/VoicegroupsService";
 import Config from "./services/Config/Config";
 import ConfigRepository from "./repos/Config/ConfigRepository";
@@ -82,11 +81,10 @@ app.whenReady().then(() => {
   });
 
   const config = new Config(new ConfigRepository(db));
-  const midiMan = new MidiManService();
   const voicegroupsService = new VoicegroupsService(config);
-  const consoleService = new ConsoleService();
+  new ConsoleService();
   const projectService = new ProjectService(new ProjectsRepository(db));
-  hookUpIpc(config, midiMan, voicegroupsService, projectService);
+  hookUpIpc(config, voicegroupsService, projectService);
   createWindow();
 
   app.on("activate", function () {

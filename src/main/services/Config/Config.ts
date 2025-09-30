@@ -52,7 +52,7 @@ class Config {
       this.rootDir = "";
       this.configIsValid = false;
     } else {
-      Module.init(config.expansionDir, (err, result) => {
+      Module.init(config.expansionDir, (err, _result) => {
         if (err.length !== 0) {
           throw new Error(
             "ConfigService: error initializing expansion dir" + err

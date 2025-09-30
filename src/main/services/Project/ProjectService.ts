@@ -1,27 +1,338 @@
+import { app, type WebContents } from "electron";
+import { readdir } from "fs/promises";
+import { join } from "path";
+import FileWatcher from "../../lib/FileWatcher";
 import type ProjectsRepository from "../../repos/Projects/ProjectsRepository";
-import type { Project } from "@shared/dto";
+import type {
+  NoteSegment,
+  ParsedMidiMeasures,
+  Project,
+} from "@shared/dto";
+import { MidiFile } from "@shared/MidiFile";
+import { IPC_CHANNELS } from "../../../shared/ipc";
+
+type CreateProjectPayload = {
+  name: string;
+  midiPath: string;
+  bookmark?: string;
+};
+
+type StartWorkspaceResult = {
+  project: Project;
+  midiFiles: ParsedMidiMeasures[];
+};
+
+type PersistedProject = Project & { bookmark: string };
 
 class ProjectService {
   private readonly projectsRepository: ProjectsRepository;
+  private renderer: WebContents | null = null;
+  private watcher: FileWatcher | null = null;
+  private stopAccessingSecurityScope: (() => void) | null = null;
+  private activeProject: PersistedProject | null = null;
+  private readonly pendingBookmarks: Map<string, string> = new Map();
+
   constructor(projectsRepository: ProjectsRepository) {
     this.projectsRepository = projectsRepository;
   }
 
+  attachRenderer(webContents: WebContents) {
+    this.renderer = webContents;
+  }
+
   async getProjects(): Promise<Project[]> {
+    return this.projectsRepository.getProjects();
+  }
+
+  async createProject({ name, midiPath, bookmark }: CreateProjectPayload): Promise<StartWorkspaceResult> {
+    const bookmarkForProject =
+      bookmark ?? this.consumeBookmark(midiPath) ?? this.generateBookmarkFallback(midiPath);
+
+    const projectId = this.projectsRepository.createProject(
+      name,
+      midiPath,
+      bookmarkForProject
+    );
+
+    const project: PersistedProject = {
+      id: projectId,
+      name,
+      midiPath,
+      bookmark: bookmarkForProject,
+    };
     try {
-      return this.projectsRepository.getProjects();
+      const midiFiles = await this.startWorkspace(project);
+      const { bookmark: _bookmark, ...safeProject } = project;
+      return { project: safeProject, midiFiles };
     } catch (error) {
-      throw new Error("ProjectService: error getting projects" + error);
+      this.projectsRepository.deleteProject(projectId);
+      throw error;
     }
   }
 
-  async createProject(name: string, midiPath: string) {
-    try {
-      return this.projectsRepository.createProject(name, midiPath);
-    } catch (error) {
-      throw new Error("ProjectService: error creating project" + error);
+  async openProject(projectId: number): Promise<StartWorkspaceResult> {
+    const project = this.projectsRepository.getProjectById(projectId) as
+      | PersistedProject
+      | undefined;
+
+    if (!project) {
+      throw new Error(`ProjectService: Project ${projectId} not found`);
     }
+
+    const midiFiles = await this.startWorkspace(project);
+
+    const { bookmark: _bookmark, ...safeProject } = project;
+
+    return { project: safeProject, midiFiles };
+  }
+
+  async stopWatching() {
+    await this.teardownWatcher();
+    this.activeProject = null;
+    this.emitWatchStatusChanged(false);
+    this.emitWatchDirectory("");
+  }
+
+  cacheBookmark(directory: string, bookmark?: string) {
+    const bookmarkValue = bookmark ?? this.generateBookmarkFallback(directory);
+    this.pendingBookmarks.set(directory, bookmarkValue);
+  }
+
+  private async startWorkspace(
+    project: PersistedProject
+  ): Promise<ParsedMidiMeasures[]> {
+    await this.teardownWatcher();
+
+    this.activeProject = project;
+
+    this.maybeStartSecurityScopedAccess(project.bookmark);
+    try {
+      const midiFiles = await this.loadMidiFiles(project.midiPath);
+
+      this.emitWatchDirectory(project.midiPath);
+      this.emitMidiFiles(midiFiles);
+      this.emitWatchStatusChanged(true);
+
+      await this.setupWatcher(project.midiPath);
+
+      return midiFiles;
+    } catch (error) {
+      await this.teardownWatcher();
+      this.activeProject = null;
+      this.emitWatchStatusChanged(false);
+      throw error;
+    }
+  }
+
+  private async setupWatcher(directory: string) {
+    this.watcher = new FileWatcher(directory);
+
+    this.watcher.emitter.on("change", () => {
+      void this.refreshMidiDirectory();
+    });
+
+    this.watcher.emitter.on("add", () => {
+      void this.refreshMidiDirectory();
+    });
+
+    this.watcher.emitter.on("unlink", () => {
+      void this.refreshMidiDirectory();
+    });
+
+    this.watcher.emitter.on("ready", () => {
+      this.emitWatchStatusChanged(true);
+    });
+  }
+
+  private async refreshMidiDirectory() {
+    if (!this.activeProject) {
+      return;
+    }
+
+    try {
+      const midiFiles = await this.loadMidiFiles(this.activeProject.midiPath);
+      this.emitMidiFiles(midiFiles);
+    } catch (error) {
+      this.emitAppError(error);
+    }
+  }
+
+  private async teardownWatcher() {
+    if (this.watcher) {
+      await this.watcher.stop();
+      this.watcher = null;
+    }
+
+    if (this.stopAccessingSecurityScope) {
+      try {
+        this.stopAccessingSecurityScope();
+      } catch (error) {
+        console.warn("ProjectService: error stopping security scoped resource", error);
+      }
+      this.stopAccessingSecurityScope = null;
+    }
+  }
+
+  private maybeStartSecurityScopedAccess(bookmark: string) {
+    if (typeof app.startAccessingSecurityScopedResource !== "function") {
+      return;
+    }
+
+    try {
+      const stopAccessing = app.startAccessingSecurityScopedResource(bookmark);
+      if (typeof stopAccessing === "function") {
+        this.stopAccessingSecurityScope = () => {
+          stopAccessing();
+        };
+      }
+    } catch (error) {
+      console.warn("ProjectService: unable to start security scoped access", error);
+    }
+  }
+
+  private consumeBookmark(directory: string): string | undefined {
+    const bookmark = this.pendingBookmarks.get(directory);
+    if (bookmark) {
+      this.pendingBookmarks.delete(directory);
+      return bookmark;
+    }
+    return undefined;
+  }
+
+  private generateBookmarkFallback(directory: string): string {
+    return Buffer.from(directory).toString("base64");
+  }
+
+  private async loadMidiFiles(directory: string): Promise<ParsedMidiMeasures[]> {
+    const files = await readdir(directory);
+    const midiFiles = files.filter((file) => file.toLowerCase().endsWith(".mid"));
+
+    if (midiFiles.length === 0) {
+      throw new Error("ProjectService: No MIDI files found in directory");
+    }
+
+    const parsed = await Promise.all(
+      midiFiles.map(async (file) => {
+        const midi = await MidiFile.fromFile(join(directory, file));
+        return parseMidiToResolution(midi);
+      })
+    );
+
+    return parsed;
+  }
+
+  private emitMidiFiles(midiFiles: ParsedMidiMeasures[]) {
+    this.renderer?.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, midiFiles);
+  }
+
+  private emitWatchDirectory(directory: string) {
+    this.renderer?.send(IPC_CHANNELS.SET_WATCH_DIRECTORY, directory);
+  }
+
+  private emitWatchStatusChanged(status: boolean) {
+    this.renderer?.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, status);
+  }
+
+  private emitAppError(error: unknown) {
+    const normalizedError =
+      error instanceof Error
+        ? {
+            message: error.message,
+            stack: error.stack,
+            origin: "ProjectService",
+          }
+        : {
+            message: String(error),
+            origin: "ProjectService",
+          };
+
+    this.renderer?.send(IPC_CHANNELS.APP_ERROR, {
+      success: false,
+      error: normalizedError,
+    });
   }
 }
 
 export default ProjectService;
+
+export function parseMidiToResolution(midi: MidiFile): ParsedMidiMeasures {
+  const ppq = midi.header.ppq;
+  const [numerator, denominator] =
+    midi.header.timeSignatures[0]?.timeSignature ?? [4, 4];
+  const ticksPerBar = numerator * ppq * (4 / denominator);
+
+  const measures: Array<NoteSegment[] | undefined> = [];
+  const track = midi.tracks[0];
+
+  if (!track || track.notes.length === 0) {
+    return {
+      highestNoteInMidi: 0,
+      lowestNoteInMidi: 0,
+      fileName: midi.fileName,
+      filePath: midi.filePath,
+      bars: [],
+      measures: [],
+      totalBars: 0,
+      ticksPerBar,
+      timeSig: [numerator, denominator],
+    };
+  }
+
+  const highestNoteInMidi = Math.max(...track.notes.map((note) => note.midi));
+  const lowestNoteInMidi = Math.min(...track.notes.map((note) => note.midi));
+
+  track.notes.forEach((note) => {
+    const durationTicksTotal = note.durationTicks;
+    let remainingTicks = durationTicksTotal;
+    let currentBar = Math.floor(note.ticks / ticksPerBar);
+    let offsetTicksInBar = note.ticks % ticksPerBar;
+
+    while (remainingTicks > 0) {
+      if (!measures[currentBar]) {
+        measures[currentBar] = [];
+      }
+
+      const ticksLeftInBar = ticksPerBar - offsetTicksInBar;
+      const chunkTicks = Math.min(remainingTicks, ticksLeftInBar);
+
+      const segment: NoteSegment = {
+        midi: note.midi,
+        name: note.name,
+        velocity: note.velocity,
+        offsetTicksInBar,
+        durationTicksInBar: chunkTicks,
+        startTick: note.ticks + (durationTicksTotal - remainingTicks),
+        endTick: note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
+        originalNote: note,
+      };
+
+      measures[currentBar]?.push(segment);
+
+      remainingTicks -= chunkTicks;
+      currentBar += 1;
+      offsetTicksInBar = 0;
+    }
+  });
+
+  measures.forEach((measure) => {
+    measure?.sort(
+      (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
+    );
+  });
+
+  const bars = measures.map((measure, index) => (measure ? index : undefined));
+  const totalBars = measures.filter((measure) => measure && measure.length > 0)
+    .length;
+
+  return {
+    highestNoteInMidi,
+    lowestNoteInMidi,
+    fileName: midi.fileName,
+    filePath: midi.filePath,
+    bars,
+    measures,
+    totalBars,
+    ticksPerBar,
+    timeSig: [numerator, denominator],
+  };
+}

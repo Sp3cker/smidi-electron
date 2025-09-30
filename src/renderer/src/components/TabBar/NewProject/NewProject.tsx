@@ -10,6 +10,7 @@ type NewProjectDropdownProps = {
 const NewProjectDropdown = ({ onClose, onCreate }: NewProjectDropdownProps) => {
   const [projectName, setProjectName] = useState("");
   const [inputDirectory, setInputDirectory] = useState("");
+  const projectNameIsValid = projectName.trim().length > 0;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -17,15 +18,18 @@ const NewProjectDropdown = ({ onClose, onCreate }: NewProjectDropdownProps) => {
     inputRef.current?.focus();
   }, []);
   const handleBrowse = () => {
-    window.api.promptMidiDirectory().then((directory) => {
-      if (directory) {
-        setInputDirectory(directory);
+    window.api.promptMidiDirectory().then((result) => {
+      if (!result?.success) {
+        console.error("Failed to select directory", result?.error);
+        return;
       }
+
+      setInputDirectory(result.data.directory);
     });
   };
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!projectName.trim() || !inputDirectory.trim()) {
+    if (!projectNameIsValid || !inputDirectory.trim()) {
       return;
     }
     onCreate(projectName.trim(), inputDirectory.trim());
@@ -59,10 +63,15 @@ const NewProjectDropdown = ({ onClose, onCreate }: NewProjectDropdownProps) => {
             label="Directory to watch"
             placeholder="No directory selected"
             value={inputDirectory ?? ""}
-            onChange={(e) => setInputDirectory(e.target.value)}
+            disabled={!projectNameIsValid}
+            readOnly
           />
           <div className="flex flex-row gap-2">
-            <Button variant="secondary" onMouseDown={handleBrowse}>
+            <Button
+              variant="secondary"
+              onMouseDown={handleBrowse}
+              disabled={!projectNameIsValid}
+            >
               Browse
             </Button>
           </div>
@@ -77,7 +86,7 @@ const NewProjectDropdown = ({ onClose, onCreate }: NewProjectDropdownProps) => {
           </Button>
           <Button
             type="submit"
-            disabled={!projectName.trim() || !inputDirectory.trim()}
+            disabled={!projectNameIsValid || !inputDirectory.trim()}
             className="rounded-md py-1 bg-[var(--yatsugi-blue-600)] text-[var(--yatsugi-white-1)]">
             Create
           </Button>

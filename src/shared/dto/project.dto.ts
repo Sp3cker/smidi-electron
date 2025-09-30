@@ -3,6 +3,7 @@ type Project = {
   name: string;
   midiPath: string;
   createdAt?: string;
+  bookmark?: string;
 };
 
 export type { Project };

@@ -1,10 +1,13 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
-import { VoicegroupResponse, Project } from "@shared/dto";
+import {
+  VoicegroupResponse,
+  Project,
+  ParsedMidiMeasures,
+} from "@shared/dto";
+type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
 type API = {
   getVoiceGroups: () => Promise<VoicegroupResponse>;
-  getProjects: () => Promise<
-    { success: true; data: Project[] } | { success: false; error: string }
-  >;
+  getProjects: () => Promise<ApiResult<Project[]>>;
   browseExpansionDirectory: () => Promise<void>;
   /**
    * Creates a new project.
@@ -15,9 +18,18 @@ type API = {
   createProject: (
     name: string,
     midiPath: string
-  ) => Promise<{ success: boolean; data?: number; error?: string }>;
+  ) => Promise<
+    ApiResult<{ project: Project; midiFiles: ParsedMidiMeasures[] }>
+  >;
+  openProject: (
+    projectId: number
+  ) => Promise<
+    ApiResult<{ project: Project; midiFiles: ParsedMidiMeasures[] }>
+  >;
   requestStream: (id?: string) => Promise<{ id: string; port: MessagePort }>;
-  promptMidiDirectory: () => Promise<string | null>;
+  promptMidiDirectory: () => Promise<
+    ApiResult<{ directory: string }>
+  >;
 };
 declare global {
   interface Window {

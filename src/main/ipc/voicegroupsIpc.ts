@@ -1,15 +1,8 @@
 import { ipcMain } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
 import type VoicegroupsService from "../services/Voicegroups/VoicegroupsService";
-type SendToStreamFunction = (
-  id: string,
-  message: any,
-  transfer?: any[]
-) => void;
-export const setVoicegroupsIpc = (
-  voicegroupsService: VoicegroupsService,
-  sendToStream: SendToStreamFunction
-) => {
+
+export const setVoicegroupsIpc = (voicegroupsService: VoicegroupsService) => {
   ipcMain.handle(IPC_CHANNELS.VOICEGROUPS.GET_VOICEGROUPS, async (_) => {
     try {
       const voiceGroups = await voicegroupsService.getVoiceGroups();
