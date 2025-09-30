@@ -3,11 +3,7 @@ import { readdir } from "fs/promises";
 import { join } from "path";
 import FileWatcher from "../../lib/FileWatcher";
 import type ProjectsRepository from "../../repos/Projects/ProjectsRepository";
-import type {
-  NoteSegment,
-  ParsedMidiMeasures,
-  Project,
-} from "@shared/dto";
+import type { NoteSegment, ParsedMidiTrack, Project } from "@shared/dto";
 import { MidiFile } from "@shared/MidiFile";
 import { IPC_CHANNELS } from "../../../shared/ipc";
 
@@ -19,7 +15,7 @@ type CreateProjectPayload = {
 
 type StartWorkspaceResult = {
   project: Project;
-  midiFiles: ParsedMidiMeasures[];
+  midiFiles: ParsedMidiTrack[];
 };
 
 type PersistedProject = Project & { bookmark: string };
@@ -100,7 +96,7 @@ class ProjectService {
 
   private async startWorkspace(
     project: PersistedProject
-  ): Promise<ParsedMidiMeasures[]> {
+  ): Promise<ParsedMidiTrack[]> {
     await this.teardownWatcher();
 
     this.activeProject = project;
@@ -203,7 +199,7 @@ class ProjectService {
     return Buffer.from(directory).toString("base64");
   }
 
-  private async loadMidiFiles(directory: string): Promise<ParsedMidiMeasures[]> {
+  private async loadMidiFiles(directory: string): Promise<ParsedMidiTrack[]> {
     const files = await readdir(directory);
     const midiFiles = files.filter((file) => file.toLowerCase().endsWith(".mid"));
 
@@ -221,7 +217,7 @@ class ProjectService {
     return parsed;
   }
 
-  private emitMidiFiles(midiFiles: ParsedMidiMeasures[]) {
+  private emitMidiFiles(midiFiles: ParsedMidiTrack[]) {
     this.renderer?.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, midiFiles);
   }
 
@@ -255,44 +251,44 @@ class ProjectService {
 
 export default ProjectService;
 
-export function parseMidiToResolution(midi: MidiFile): ParsedMidiMeasures {
+export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
   const ppq = midi.header.ppq;
   const [numerator, denominator] =
     midi.header.timeSignatures[0]?.timeSignature ?? [4, 4];
-  const ticksPerBar = numerator * ppq * (4 / denominator);
-
-  const measures: Array<NoteSegment[] | undefined> = [];
+  const ticksPerMeasure = numerator * ppq * (4 / denominator);
   const track = midi.tracks[0];
 
   if (!track || track.notes.length === 0) {
     return {
-      highestNoteInMidi: 0,
-      lowestNoteInMidi: 0,
-      fileName: midi.fileName,
-      filePath: midi.filePath,
-      bars: [],
+      trackName: midi.fileName,
+      sourcePath: midi.filePath,
+      pitchRange: { lowest: 0, highest: 0 },
       measures: [],
-      totalBars: 0,
-      ticksPerBar,
-      timeSig: [numerator, denominator],
+      measureCount: 0,
+      lastMeasureIndex: -1,
+      ticksPerMeasure,
+      timeSignature: {
+        beatsPerBar: numerator,
+        beatUnit: denominator,
+      },
     };
   }
 
   const highestNoteInMidi = Math.max(...track.notes.map((note) => note.midi));
   const lowestNoteInMidi = Math.min(...track.notes.map((note) => note.midi));
-
+  const measureSegments = new Map<number, NoteSegment[]>();
   track.notes.forEach((note) => {
     const durationTicksTotal = note.durationTicks;
     let remainingTicks = durationTicksTotal;
-    let currentBar = Math.floor(note.ticks / ticksPerBar);
-    let offsetTicksInBar = note.ticks % ticksPerBar;
+    let currentMeasure = Math.floor(note.ticks / ticksPerMeasure);
+    let offsetTicksInBar = note.ticks % ticksPerMeasure;
 
     while (remainingTicks > 0) {
-      if (!measures[currentBar]) {
-        measures[currentBar] = [];
+      if (!measureSegments.has(currentMeasure)) {
+        measureSegments.set(currentMeasure, []);
       }
 
-      const ticksLeftInBar = ticksPerBar - offsetTicksInBar;
+      const ticksLeftInBar = ticksPerMeasure - offsetTicksInBar;
       const chunkTicks = Math.min(remainingTicks, ticksLeftInBar);
 
       const segment: NoteSegment = {
@@ -306,33 +302,36 @@ export function parseMidiToResolution(midi: MidiFile): ParsedMidiMeasures {
         originalNote: note,
       };
 
-      measures[currentBar]?.push(segment);
+      measureSegments.get(currentMeasure)?.push(segment);
 
       remainingTicks -= chunkTicks;
-      currentBar += 1;
+      currentMeasure += 1;
       offsetTicksInBar = 0;
     }
   });
 
-  measures.forEach((measure) => {
-    measure?.sort(
-      (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
-    );
-  });
+  const measures = Array.from(measureSegments.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([index, segments]) => ({
+      index,
+      segments: segments.sort(
+        (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
+      ),
+    }));
 
-  const bars = measures.map((measure, index) => (measure ? index : undefined));
-  const totalBars = measures.filter((measure) => measure && measure.length > 0)
-    .length;
+  const lastMeasureIndex = measures.length ? measures[measures.length - 1].index : -1;
 
   return {
-    highestNoteInMidi,
-    lowestNoteInMidi,
-    fileName: midi.fileName,
-    filePath: midi.filePath,
-    bars,
+    trackName: midi.fileName,
+    sourcePath: midi.filePath,
+    pitchRange: { lowest: lowestNoteInMidi, highest: highestNoteInMidi },
     measures,
-    totalBars,
-    ticksPerBar,
-    timeSig: [numerator, denominator],
+    measureCount: measures.length,
+    lastMeasureIndex,
+    ticksPerMeasure,
+    timeSignature: {
+      beatsPerBar: numerator,
+      beatUnit: denominator,
+    },
   };
 }

@@ -6,7 +6,7 @@ import {
   onWatchStatusChanged,
   getVoicegroupDetails,
 } from "../ipcHandlers";
-import type { ParsedMidiMeasures, GroupVoice, Project } from "@shared/dto";
+import type { ParsedMidiTrack, GroupVoice, Project } from "@shared/dto";
 
 type WatchStore = {
   selectedProjectId: number | null;
@@ -14,14 +14,14 @@ type WatchStore = {
   projects: string[];
   directory: string;
   watching: boolean;
-  midiFiles: ParsedMidiMeasures[];
+  midiFiles: ParsedMidiTrack[];
 
   selectedVoicegroup: string | null;
   selectedVoicegroupDetails: GroupVoice | null;
   setDirectory: (directory: string) => void;
   setWatching: (watching: boolean) => void;
   stopWatch: () => void;
-  setMidiFiles: (midiFiles: ParsedMidiMeasures[]) => void;
+  setMidiFiles: (midiFiles: ParsedMidiTrack[]) => void;
 
   setSelectedVoicegroup: (voicegroup: string | null) => void;
   setSelectedProject: (project: Project) => void;

@@ -3,8 +3,8 @@ import type { Stage as KonvaStage } from "konva/lib/Stage";
 import { Text, Group, Layer, Line, Rect, Stage } from "react-konva";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MeasureGrid } from "../Konva/Grid";
-import { NoteSegment, ParsedMidiMeasures } from "@shared/dto";
-import { grey1, white2 } from "@renderer/ui";
+import { NoteSegment, ParsedMidiTrack } from "@shared/dto";
+import { white2 } from "@renderer/ui";
 import {
   useMeasureCalculation,
   useParentWidth,
@@ -26,17 +26,20 @@ const MidiNote = ({
   note,
   height,
   noteToY,
-  ticksPerBar,
+  ticksPerMeasure,
   pixelsPerMeasure,
 }: {
   note: NoteSegment;
   height: number;
   noteToY: (midi: number) => number;
-  ticksPerBar: number;
+  ticksPerMeasure: number;
   pixelsPerMeasure: number;
 }) => {
-  const xPosStart = (note.startTick / ticksPerBar) * pixelsPerMeasure;
-  const xPosEnd = (note.endTick / ticksPerBar) * pixelsPerMeasure;
+  const xPosStart =
+    (note.offsetTicksInBar / ticksPerMeasure) * pixelsPerMeasure;
+  const xPosEnd =
+    ((note.offsetTicksInBar + note.durationTicksInBar) / ticksPerMeasure) *
+    pixelsPerMeasure;
   return (
     <Line
       points={[xPosStart, noteToY(note.midi), xPosEnd, noteToY(note.midi)]}
@@ -50,104 +53,66 @@ const MidiMeasure = ({
   order,
   noteHeight,
   noteToY,
-  ticksPerBar,
+  ticksPerMeasure,
   pixelsPerMeasure,
 }: {
   measure: NoteSegment[];
   order: number;
   noteHeight: number;
   noteToY: (midi: number) => number;
-  ticksPerBar: number;
+  ticksPerMeasure: number;
   pixelsPerMeasure: number;
 }) => {
   const measureXPosition = order * pixelsPerMeasure;
 
   // Need to set X and Y of Group so Midi note knows correct vertical and horizontal position
   return (
-    <Group width={pixelsPerMeasure} height={96}>
+    <Group x={measureXPosition} width={pixelsPerMeasure} height={96}>
       <Rect
         width={pixelsPerMeasure}
+        x={0}
         height={96}
-        x={measureXPosition}
         // fill="rgba(80,160,255,0.25)"
         borderRadius={4}
         stroke={white2}
-        strokeWidth={0.5}></Rect>
-      <Group>
-        {measure.map((qtrNote, i) => {
-          if (qtrNote) {
-            return (
-              <MidiNote
-                note={qtrNote}
-                key={qtrNote.name + i}
-                height={noteHeight}
-                noteToY={noteToY}
-                ticksPerBar={ticksPerBar}
-                pixelsPerMeasure={pixelsPerMeasure}
-              />
-            );
-          }
-          return <Line key={i} points={[0, 0, 0, 96]} />;
-        })}
-      </Group>
+        strokeWidth={0.5}
+      ></Rect>
+
+      {measure.map((qtrNote, i) => {
+        if (qtrNote) {
+          return (
+            <MidiNote
+              note={qtrNote}
+              key={qtrNote.name + i}
+              height={noteHeight}
+              noteToY={noteToY}
+              ticksPerMeasure={ticksPerMeasure}
+              pixelsPerMeasure={pixelsPerMeasure}
+            />
+          );
+        }
+        return null;
+      })}
     </Group>
   );
 };
-// const MidiGroup = ({ measures }: { measures: NoteSegment[] }) => {
-//   const blocks = useMemo(() => {
-//     const out: { start: number; end: number; measures: NoteSegment[] }[] = [];
-//     let current: (typeof out)[number] | null = null;
 
-//     measures.forEach((m: NoteSegment) => {
-//       const hasData = m.events.length > 0;
-//       if (hasData) {
-//         if (!current)
-//           current = { start: m.x, end: m.x + m.width, measures: [m] };
-//         else {
-//           current.end = m.x + m.width;
-//           current.measures.push(m);
-//         }
-//       } else if (current) {
-//         out.push(current);
-//         current = null;
-//       }
-//     });
-//     if (current) out.push(current);
-//     return out;
-//   }, [measures]);
-
-//   return (
-//     <Group>
-//       {blocks.map((block) => (
-//         <Group key={block.start}>
-//           <Rect
-//             x={block.start - 4}
-//             y={trackTop}
-//             width={block.end - block.start + 8}
-//             height={96}
-//             fill="rgba(80,160,255,0.25)"
-//             cornerRadius={6}
-//             listening={false}
-//           />
-//           {block.measures.map((m) => (
-//             <MidiMeasure key={m.id} measure={m} />
-//           ))}
-//         </Group>
-//       ))}
-//     </Group>
-//   );
-// };
 const MidiTrack = ({
   midiTrack,
+  y,
   pixelsPerMeasure,
 }: {
-  midiTrack: ParsedMidiMeasures;
+  midiTrack: ParsedMidiTrack;
+  y: number;
   pixelsPerMeasure: number;
 }) => {
+  const { highest: highestNoteInMidi, lowest: lowestNoteInMidi } =
+    midiTrack.pitchRange;
+  const ticksPerMeasure = midiTrack.ticksPerMeasure;
+
   // Height of a track is actually static.
   // However, this is the best place to determine the vertical scale of the notes
   // from the delta between the highest and lowest note in the list of measures
-  const { highestNoteInMidi, lowestNoteInMidi } = midiTrack;
   const minVerticalNotes = 8;
   const verticalRange = Math.max(
     minVerticalNotes,
@@ -158,67 +123,71 @@ const MidiTrack = ({
   const measureBlocks = useMemo(() => {
     const blocks: {
       id: string;
-      startIndex: number;
+      startMeasure: number; // measure index where the block begins
       measures: NoteSegment[][];
     }[] = [];
     let current: (typeof blocks)[number] | null = null;
-
-    midiTrack.measures.forEach((measure, index) => {
-      const hasNotes = Array.isArray(measure) && measure.some(Boolean);
-      if (hasNotes === false) {
-        if (current) {
-          blocks.push(current);
-          current = null;
-        }
+    let lastMeasureIndex = -1;
+    midiTrack.measures.forEach(({ index, segments }) => {
+      if (!current) {
+        current = {
+          id: `${midiTrack.trackName}-${index}`,
+          startMeasure: index,
+          measures: [segments],
+        };
+        lastMeasureIndex = index;
         return;
       }
 
-      if (!current) {
-        current = {
-          id: `${midiTrack.fileName}-${index}`,
-          startIndex: index,
-          measures: [measure],
-        };
+      if (index === lastMeasureIndex + 1) {
+        current.measures.push(segments);
       } else {
-        current.measures.push(measure);
+        blocks.push(current);
+        current = {
+          id: `${midiTrack.trackName}-${index}`,
+          startMeasure: index,
+          measures: [segments],
+        };
       }
+      lastMeasureIndex = index;
     });
 
     if (current) blocks.push(current);
     return blocks;
-  }, [midiTrack.fileName, midiTrack.measures]);
+  }, [midiTrack.trackName, midiTrack.measures]);
 
   // Map MIDI pitch to Y so that lower pitches appear lower on screen
   // (Konva Y grows downward). Highest pitch -> y = 0, lowest -> max.
   const noteToY = (midi: number) => (highestNoteInMidi - midi) * scaledHeight;
-  debugger
+
   // For every octave between the highest and lowest note, we make midi notes 1/2 as big.
   return (
-    <Group >
+    <Group y={y}>
       <Text
-        text={midiTrack.fileName}
+        text={midiTrack.trackName}
         zIndex={1000}
         fontSize={14}
         fontWeight="bold"
         fontFamily="Neuebit"
       />
-      {measureBlocks.map((block, i) => (
-        <Group key={block.id} x={block.startIndex * pixelsPerMeasure}>
-          {/* <Rect
+      {measureBlocks.map((block) => (
+        <Group key={block.id} x={block.startMeasure * pixelsPerMeasure}>
+          <Rect
             width={block.measures.length * pixelsPerMeasure}
             height={96}
             fill="#0396A2"
             cornerRadius={4}
-            stroke={white2}
-            strokeWidth={1}
-          /> */}
+            // stroke={white2}
+            // strokeWidth={1}
+            opacity={0.5}
+          />
 
           {block.measures.map((measure, idx) => (
             <MidiMeasure
               key={`${block.id}-${idx}`}
               measure={measure}
               order={idx}
-              ticksPerBar={midiTrack.ticksPerBar}
+              ticksPerMeasure={ticksPerMeasure}
               pixelsPerMeasure={pixelsPerMeasure}
               noteHeight={scaledHeight}
               noteToY={noteToY}
@@ -229,7 +198,7 @@ const MidiTrack = ({
     </Group>
   );
 };
-const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
+const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiTrack[] }) => {
   const [totalMeasures, setTotalMeasures] = useState(0);
 
   const rowHeight = 96; // visual row height for the list in rem
@@ -256,11 +225,14 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
   useEffect(() => {
     if (midiFiles.length > 0) {
       const longestClip = midiFiles.reduce((max, midi) => {
-        return Math.max(max, midi.measures.length);
+        const totalMeasures = midi.lastMeasureIndex + 1;
+        return Math.max(max, totalMeasures);
       }, 0);
 
       // Convert beats to measures (assuming 4/4 time)
       setTotalMeasures(Math.ceil(longestClip));
+    } else {
+      setTotalMeasures(0);
     }
   }, [midiFiles]);
   return (
@@ -268,7 +240,8 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
       <Stage
         width={parentWidth || window.innerWidth}
         height={window.innerHeight}
-        ref={stageRef}>
+        ref={stageRef}
+      >
         <Layer>
           <MeasureGrid
             totalMeasures={totalMeasures}
@@ -278,9 +251,12 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiMeasures[] }) => {
           />
 
           {midiFiles.map((midi, index) => (
-            <Group key={midi.fileName} y={rowTop(index) + 20}>
-              <MidiTrack midiTrack={midi} pixelsPerMeasure={pixelsPerMeasure} />
-            </Group>
+            <MidiTrack
+              key={midi.trackName}
+              y={rowTop(index) + 20}
+              midiTrack={midi}
+              pixelsPerMeasure={pixelsPerMeasure}
+            />
           ))}
         </Layer>
       </Stage>

@@ -2,7 +2,7 @@ import { ElectronAPI } from "@electron-toolkit/preload";
 import {
   VoicegroupResponse,
   Project,
-  ParsedMidiMeasures,
+  ParsedMidiTrack,
 } from "@shared/dto";
 type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
 type API = {
@@ -19,12 +19,12 @@ type API = {
     name: string,
     midiPath: string
   ) => Promise<
-    ApiResult<{ project: Project; midiFiles: ParsedMidiMeasures[] }>
+    ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>
   >;
   openProject: (
     projectId: number
   ) => Promise<
-    ApiResult<{ project: Project; midiFiles: ParsedMidiMeasures[] }>
+    ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>
   >;
   requestStream: (id?: string) => Promise<{ id: string; port: MessagePort }>;
   promptMidiDirectory: () => Promise<

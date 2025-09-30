@@ -1,6 +1,6 @@
 import { toast } from "@renderer/ui";
 import { IPC_CHANNELS } from "../../../shared/ipc";
-import type { GroupVoice, ParsedMidiMeasures } from "@shared/dto";
+import type { GroupVoice, ParsedMidiTrack } from "@shared/dto";
 /** Mostly for *listening* for events from the server. */
 const createIPCListener = <T>(
   channel: string,
@@ -32,14 +32,14 @@ export const onWatchStatusChanged = (
 };
 
 export const onMidiFiles = (
-  callback: (midiFiles: ParsedMidiMeasures[]) => void
+  callback: (midiFiles: ParsedMidiTrack[]) => void
 ) => {
   return createIPCListener(
     IPC_CHANNELS.MIDI_MAN.MIDI_FILES,
     (_, midiFileData: any[]) => {
       // Convert serialized data back to MidiFile objects
 
-      callback(midiFileData as ParsedMidiMeasures[]);
+      callback(midiFileData as ParsedMidiTrack[]);
     }
   );
 };

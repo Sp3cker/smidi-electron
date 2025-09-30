@@ -37,16 +37,24 @@ export type NoteSegment = {
 };
 
 // Parsed MIDI structure returned by parseMidiToResolution
-export type ParsedMidiMeasures = {
-  highestNoteInMidi: number;
-  lowestNoteInMidi: number;
-  fileName: string;
-  filePath: string;
-  bars: Array<number | undefined>;
-  measures: Array<NoteSegment[] | undefined>;
-  totalBars: number;
-  ticksPerBar: number;
-  timeSig: [number, number];
+export type ParsedMidiTrack = {
+  trackName: string;
+  sourcePath: string;
+  pitchRange: {
+    lowest: number;
+    highest: number;
+  };
+  measures: Array<{
+    index: number;
+    segments: NoteSegment[];
+  }>;
+  measureCount: number;
+  lastMeasureIndex: number;
+  ticksPerMeasure: number;
+  timeSignature: {
+    beatsPerBar: number;
+    beatUnit: number;
+  };
 };
 
 // src/shared/dto/ConfigDTOs.ts
