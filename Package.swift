@@ -20,8 +20,8 @@ let package = Package(
       url: "https://github.com/kabiroberai/node-swift",
       branch: "main"
     ),
-        .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.4"),
-    .package(url: "https://github.com/sbooth/CSQLite.git", branch: "main")
+    .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.4"),
+    .package(url: "https://github.com/sbooth/CSQLite.git", branch: "main"),
   ],
   targets: [
 
@@ -88,7 +88,6 @@ let package = Package(
       name: "VoicegroupRunner",
       dependencies: ["Voicegroups", "Config", "Console"],
       path: "Sources/Instruments/VoicegroupRunner",
-      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
     .executableTarget(
       name: "KeysplitRunner",

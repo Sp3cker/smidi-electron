@@ -22,11 +22,12 @@ public actor Voicegroup {
     self.parser = Parser(rootDir: self.rootDir, onError: onError)
 
   }
+  @MainActor
   public func parseVoicegroupFile(voicegroup: String)
-    async throws -> Data
+    throws -> Data
   {
     do {
-      let root = try await self.parser.resolveGroup(
+      let root = try self.parser.resolveGroup(
         label: voicegroup,
       )
       let data = try JSONEncoder().encode(root)
@@ -370,7 +371,7 @@ public actor Voicegroup {
     }
 
     fileprivate func resolveVoicegroupReference(from nodes: inout [Node])
-      async throws
+      throws
     {
       for i in nodes.indices {
         switch nodes[i] {
@@ -380,7 +381,7 @@ public actor Voicegroup {
               KeysplitVoice(
                 voicegroup: Substring(v.voicegroupLabel),
                 keysplit: Substring(v.keysplitLabel),
-                voices: try await parseVoicegroupFile(
+                voices: try parseVoicegroupFile(
                   path: voicegroupPath(label: v.voicegroupLabel)),
                 commentLabel: v.commentLabel
               )
@@ -390,7 +391,7 @@ public actor Voicegroup {
             nodes[i] = .group(
               GroupVoice(
                 voicegroup: v.voicegroupLabel,
-                voices: try await parseVoicegroupFile(
+                voices: try parseVoicegroupFile(
                   path: voicegroupPath(label: v.voicegroupLabel),
                 )
               )
@@ -418,7 +419,7 @@ public actor Voicegroup {
 
     fileprivate func parseVoicegroupFile(
       path: URL,
-    ) async throws
+    ) throws
       -> [Node]
     {
       return try Data(contentsOf: path, options: .mappedIfSafe)
@@ -426,6 +427,7 @@ public actor Voicegroup {
           let voicePrefix: [UInt8] = [0x09, 118, 111, 105, 99, 101]  //\tvoice
           let newline: UInt8 = 0x0A
           var out: [Node] = []
+          out.reserveCapacity(128)
           for slice in raw.split(
             separator: newline,
             omittingEmptySubsequences: true
@@ -446,12 +448,12 @@ public actor Voicegroup {
 
     fileprivate func resolveGroup(
       label: String
-    ) async throws -> Node {
+    ) throws -> Node {
       let path = try voicegroupPath(label: label)
-      var entries = try await parseVoicegroupFile(
+      var entries = try parseVoicegroupFile(
         path: path,
       )
-      try await resolveVoicegroupReference(from: &entries)
+      try resolveVoicegroupReference(from: &entries)
 
       return .group(
         GroupVoice(
