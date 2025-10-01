@@ -5,7 +5,7 @@ import Foundation
 //
 //  Created by Spencer on 9/27/25.
 //
-import SQLite3
+import SQLite
 
 // Swift equivalents for SQLite destructor behaviors
 private let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)

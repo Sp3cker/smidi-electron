@@ -1,4 +1,4 @@
-import Bookmarks
+// import Bookmarks
 import Config
 import Console
 import Foundation
@@ -75,18 +75,18 @@ let instruments = Instruments()
       try! callback([error.localizedDescription], [])  // error, nil data
     }
   },
-  "readProjectFolder": try NodeFunction {
-    (midiFolder: String) async -> String? in
-    do {
+  // "readProjectFolder": try NodeFunction {
+  //   (midiFolder: String) async -> String? in
+  //   do {
       
-      let b64 = try  Bookmarks.createBookmark(for: midiFolder)
-      print("swift \(b64)")
-      return b64
-    } catch {
-      print(error)
-      return nil  // error, nil data
+  //     let b64 = try  Bookmarks.createBookmark(for: midiFolder)
+  //     print("swift \(b64)")
+  //     return b64
+  //   } catch {
+  //     print(error)
+  //     return nil  // error, nil data
 
-    }
-  },
+  //   }
+  // },
 ]
 )

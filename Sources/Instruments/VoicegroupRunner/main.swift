@@ -40,7 +40,7 @@ struct VoicegroupRunner {
         "[vgparse] PID \(getpid()) waiting \(seconds)s for attach...\n",
         stderr
       )
-      sleep(seconds)
+      
     }
 
     var timesMs: [Double] = []
@@ -96,13 +96,28 @@ struct VoicegroupRunner {
         }
       }
     }
+#if os(windows)
 
     let defaultRoot =
       homeDir
       .appendingPathComponent("dev")
-      .appendingPathComponent("nodeProjects")
-      .appendingPathComponent("pokeemerald-expansion")
+      .appendingPathComponent("pokeemerald-expansion-release")
       .path
+#else
+
+    // let defaultRoot =
+    //   homeDir
+    //   .appendingPathComponent("dev")
+    //   .appendingPathComponent("nodeProjects")
+    //   .appending(path: "pokeemerald-expansion")
+    //   .path
+    
+    let defaultRoot =
+      homeDir
+      .appendingPathComponent("dev")
+      .appendingPathComponent("pokeemerald-expansion-release")
+      .path
+  #endif
     let onError: @Sendable (any ConsoleProtocol) -> Void = { meme in
       print(meme)
     }

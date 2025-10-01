@@ -9,11 +9,14 @@ class Config {
     this.validateConfig();
   }
   isValidExpansionDirectory(path: string): boolean {
-    return (
-      /^((\/[a-zA-Z0-9-_]+)+|\/)$/.test(path) &&
-      this.configRepository.rootPathExists(path)
-    );
-  }
+  const hasInvalidChars = /[<>"|?*]/.test(path); // These are invalid on Windows
+  return (
+    path.length > 0 &&
+    !hasInvalidChars &&
+    this.configRepository.rootPathExists(path)
+  );
+}
+
 
   validateConfig() {
     const config = this.getConfig();
