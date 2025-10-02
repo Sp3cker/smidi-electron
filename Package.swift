@@ -11,7 +11,7 @@ let package = Package(
     //        .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Instruments", targets: ["Instruments"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
-    // .library(name: "Bookmarks", targets: ["Bookmarks"]),
+//    .library(name: "Bookmarks", targets: ["Bookmarks"]),
     .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
     .executable(name: "ksparse", targets: ["KeysplitRunner"]),
   ],
@@ -20,8 +20,10 @@ let package = Package(
       url: "https://github.com/kabiroberai/node-swift",
       branch: "main"
     ),
-    .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.4"),
-    .package(url: "https://github.com/sbooth/CSQLite.git", branch: "main"),
+    .package(
+      url: "https://github.com/groue/GRDB.swift.git", branch: "master"
+
+    ),
   ],
   targets: [
 
@@ -33,7 +35,7 @@ let package = Package(
         "Instruments",
         "Config",
         "Console",
-        // "Bookmarks"
+//        "Bookmarks",
       ],
       path: "Sources/module"
     ),
@@ -67,22 +69,22 @@ let package = Package(
       name: "Sweep",
       path: "Sources/Core/Sweep"
     ),
-    // .target(
-    //   name: "SmidiDatabase",
-    //   dependencies: [
-    //     .product(name: "SQLite", package: "SQLite.swift")
-    //   ],
-    //   path: "Sources/Core/Database",
-    //   // linkerSettings: [
-    //   //   .linkedLibrary("sqlite")
-    //   // ]
-    //   ),
-    // .target(
-    //   name: "Bookmarks",
-    //   dependencies: ["SmidiDatabase"],
-    //   path: "Sources/Core/Bookmarks",
-    //   swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
-    // ),
+//    .target(
+//      name: "SmidiDatabase",
+//      dependencies: [
+//        .product(name: "GRDB", package: "GRDB.swift")
+//      ],
+//      path: "Sources/Core/Database",
+//      // linkerSettings: [
+//      //   .linkedLibrary("sqlite")
+//      // ]
+//    ),
+//    .target(
+//      name: "Bookmarks",
+//      dependencies: ["SmidiDatabase"],
+//      path: "Sources/Core/Bookmarks",
+//      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
+//    ),
 
     .executableTarget(
       name: "VoicegroupRunner",

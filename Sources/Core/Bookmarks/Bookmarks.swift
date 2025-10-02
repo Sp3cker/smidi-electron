@@ -73,10 +73,7 @@ public struct Bookmarks {
   //  }
 
   public static func createBookmark(for path: String) throws -> String {
-    //    guard let db = self.db else {
-    //      throw NSError(
-    //        domain: "Error", code: 1, userInfo: [NSLocalizedDescriptionKey: "Database not initialized"])
-    //    }
+
     let dirURL = URL(fileURLWithPath: path, isDirectory: true)
     var isDir: ObjCBool = false
     guard FileManager.default.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue

@@ -96,27 +96,4 @@ export const useMeasureCalculation = (
   return result;
 };
 
-/**
- * Hook to get the parent container's width using ResizeObserver
- */
-export const useParentWidth = (ref: React.RefObject<HTMLElement>) => {
-  const [width, setWidth] = useState(0);
 
-  useEffect(() => {
-    if (!ref.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setWidth(entry.contentRect.width);
-      }
-    });
-
-    resizeObserver.observe(ref.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [ref]);
-
-  return width;
-};

@@ -9,6 +9,8 @@ import {
   useMeasureCalculation,
   useParentWidth,
 } from "../../hooks/useMeasureCalculation";
+import useTrackLayout from "@renderer/hooks/useTrackLayout";
+import { useWidth } from "@renderer/hooks/useWidth";
 
 /**
  * Convert pixels to rem values based on the root font size
@@ -35,8 +37,7 @@ const MidiNote = ({
   ticksPerMeasure: number;
   pixelsPerMeasure: number;
 }) => {
-  const xPosStart =
-    (note.offsetTicksInBar / ticksPerMeasure) * pixelsPerMeasure;
+  const xPosStart = (note.offsetTicksInBar / ticksPerMeasure) * pixelsPerMeasure;
   const xPosEnd =
     ((note.offsetTicksInBar + note.durationTicksInBar) / ticksPerMeasure) *
     pixelsPerMeasure;
@@ -75,8 +76,7 @@ const MidiMeasure = ({
         // fill="rgba(80,160,255,0.25)"
         borderRadius={4}
         stroke={white2}
-        strokeWidth={0.5}
-      ></Rect>
+        strokeWidth={0.5}></Rect>
 
       {measure.map((qtrNote, i) => {
         if (qtrNote) {
@@ -208,10 +208,8 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiTrack[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get the parent container width
-  const parentWidth = useParentWidth(
-    containerRef as React.RefObject<HTMLElement>
-  );
-
+  const parentWidth = useWidth(containerRef as React.RefObject<HTMLElement>);
+  // const { midiFiles } = useTrackLayout(parentWidth);
   // Calculate measures that fit on screen
   const measureCalculation = useMeasureCalculation(parentWidth, totalMeasures, {
     minPixelsPerBeat: 1,
@@ -240,8 +238,7 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiTrack[] }) => {
       <Stage
         width={parentWidth || window.innerWidth}
         height={window.innerHeight}
-        ref={stageRef}
-      >
+        ref={stageRef}>
         <Layer>
           <MeasureGrid
             totalMeasures={totalMeasures}

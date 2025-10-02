@@ -116,7 +116,7 @@ struct VoicegroupRunner {
       let defaultRoot =
         homeDir
         .appendingPathComponent("dev")
-        // .appendingPathComponent("nodeProjects")
+         .appendingPathComponent("nodeProjects")
         .appending(path: "pokeemerald-expansion")
         .path
     #endif
