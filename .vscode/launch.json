@@ -153,6 +153,24 @@
       "name": "Release ksparse",
       "program": "${workspaceFolder:smidi-electron}/.build/release/ksparse",
       "preLaunchTask": "swift: Build Release ksparse"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Debug midiparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/debug/midiparse",
+      "preLaunchTask": "swift: Build Debug midiparse"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:smidi-electron}",
+      "name": "Release midiparse",
+      "program": "${workspaceFolder:smidi-electron}/.build/release/midiparse",
+      "preLaunchTask": "swift: Build Release midiparse"
     }
   ],
   "compounds": [

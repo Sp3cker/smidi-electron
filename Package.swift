@@ -14,6 +14,7 @@ let package = Package(
 //    .library(name: "Bookmarks", targets: ["Bookmarks"]),
     .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
     .executable(name: "ksparse", targets: ["KeysplitRunner"]),
+    .executable(name: "midiparse", targets: ["MidiRunner"]),
   ],
   dependencies: [
     .package(
@@ -21,9 +22,9 @@ let package = Package(
       branch: "main"
     ),
     .package(
-      url: "https://github.com/groue/GRDB.swift.git", branch: "master"
-
+      url: "https://github.com/groue/GRDB.swift.git", branch: "master",
     ),
+    .package(url: "https://github.com/orchetect/MIDIKit", branch: "main")
   ],
   targets: [
 
@@ -95,6 +96,11 @@ let package = Package(
       name: "KeysplitRunner",
       dependencies: ["Keysplits", "Config"],
       path: "Sources/Instruments/KeysplitRunner",
+      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
+    ), .executableTarget(
+      name: "MidiRunner",
+      dependencies: ["MIDIKit"],
+      path: "Sources/Projects/MidiRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),
 

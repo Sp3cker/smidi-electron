@@ -1,5 +1,5 @@
 {
-  "originHash" : "ef1190e422a1c1a405a5ad408c043d2adc47dadb5989845f66cd4ee989857467",
+  "originHash" : "02de44ebf133bf47da90702c0a511181f61bbb5ff3c4c158abfe7a81281a1f3c",
   "pins" : [
     {
       "identity" : "grdb.swift",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "db695cf7dc2632c263bcf0b26f118074feb2697a"
+      }
+    },
+    {
+      "identity" : "midikit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/orchetect/MIDIKit",
+      "state" : {
+        "branch" : "main",
+        "revision" : "2fc8f7abf4213b9f595d0a9fe7e4d2247a10b045"
       }
     },
     {
@@ -26,6 +35,15 @@
       "state" : {
         "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
         "version" : "601.0.1"
+      }
+    },
+    {
+      "identity" : "timecodekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/orchetect/TimecodeKit",
+      "state" : {
+        "revision" : "957fdaeda020396d150ee1afc7c5172791cb0ad5",
+        "version" : "2.3.4"
       }
     }
   ],

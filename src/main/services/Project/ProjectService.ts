@@ -146,7 +146,9 @@ class ProjectService {
     }
 
     try {
+
       const midiFiles = await this.loadMidiFiles(this.activeProject.midiPath);
+
       this.emitMidiFiles(midiFiles);
     } catch (error) {
       this.emitAppError(error);
@@ -200,6 +202,7 @@ class ProjectService {
   }
 
   private async loadMidiFiles(directory: string): Promise<ParsedMidiTrack[]> {
+
     const files = await readdir(directory);
     const midiFiles = files.filter((file) => file.toLowerCase().endsWith(".mid"));
 
