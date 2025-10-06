@@ -40,6 +40,7 @@
     "midi-file": "^1.2.4",
     "motion": "^12.23.12",
     "node-swift": "^1.4.0",
+    "react-hotkeys-hook": "^5.1.0",
     "react-konva": "^19.0.7",
     "react-spring": "^10.0.1",
     "streamx": "^2.22.1",

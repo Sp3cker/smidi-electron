@@ -69,15 +69,15 @@ export const GridLabels = ({
 export const MeasureGrid = ({
   totalMeasures,
   pixelsPerBeat,
-  stageRef,
+  height,
   showMeasureLabels = true,
 }: {
   totalMeasures: number;
   pixelsPerBeat: number;
-  stageRef: React.RefObject<Stage | null>;
+  height: number;
   showMeasureLabels?: boolean;
 }) => {
-  const height = stageRef.current?.height() ?? 0;
+
   const pixelsPerMeasure = pixelsPerBeat * BEATS_PER_MEASURE;
 
   const gridLines = useMemo(() => {
