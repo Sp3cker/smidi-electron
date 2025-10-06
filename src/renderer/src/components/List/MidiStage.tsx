@@ -4,9 +4,8 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "react-konva";
 import { useSpring, animated } from "@react-spring/konva";
 import { clamp } from "motion";
-import { useHotkeys } from "react-hotkeys-hook";
+const AnimatedStage = animated(Stage);
 import { useAltKey } from "../../hooks/useAltKey";
-const AnimatedStage: any = animated(Stage);
 
 const MidiStage: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const stageStateRef = useRef({ scale: 1, x: 0, y: 0 });
@@ -21,9 +20,9 @@ const MidiStage: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const stageRef = useRef<KonvaStage | null>(null);
 
   const applyStageTransform = useCallback(
-    (scale: number, x: number, y: number) => {
-      stageStateRef.current = { scale, x, y };
-      api.start({ scaleX: scale, scaleY: scale, x, y });
+    (scale: number) => {
+      // stageStateRef.current = { scale, x, y };
+      api.start({ scaleX: scale, scaleY: scale });
     },
     [api]
   );
@@ -31,7 +30,8 @@ const MidiStage: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const handleWheel = useCallback(
     (evt: KonvaEventObject<WheelEvent>) => {
       if (!evt.evt.metaKey && !evt.evt.ctrlKey) return; // bail unless ⌘/Ctrl is held
-
+      // console.log(evt.currentTarget.scale());
+      console.log(evt.currentTarget);
       evt.evt.preventDefault();
       const stage = stageRef.current;
       if (!stage) return;
@@ -53,7 +53,8 @@ const MidiStage: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
         y: pointer.y - mousePointTo.y * nextScale,
       };
 
-      applyStageTransform(nextScale, nextPos.x, nextPos.y);
+      applyStageTransform(nextScale);
+      // applyStageTransform(nextScale, nextPos.x, nextPos.y);
     },
     [applyStageTransform]
   );
@@ -78,20 +79,20 @@ const MidiStage: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   }, []);
   useAltKey(handleAltHold, handleAltRelease);
   return (
-    <Stage
+    <AnimatedStage
       width={800}
       height={window.innerHeight}
       ref={stageRef}
       onMouseDown={(e) => console.log(e)}
       onClick={handleClick}
       draggable={canDrag}
-    
       onWheel={handleWheel}
+      scaleX={springs.scaleX}
       // onDragMove={handleDragMove}
-
+      // {...springs}
     >
       {children}
-    </Stage>
+    </AnimatedStage>
   );
 };
 
