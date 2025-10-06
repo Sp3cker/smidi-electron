@@ -1,17 +1,17 @@
 import useWatchStore from "../../store/watchStore";
 import type { Stage as KonvaStage } from "konva/lib/Stage";
 import { Text, Group, Layer, Line, Rect, Stage } from "react-konva";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MeasureGrid } from "../Konva/Grid";
 import { NoteSegment, ParsedMidiTrack } from "@shared/dto";
 import { white2 } from "@renderer/ui";
-import {
-  useMeasureCalculation,
-  useParentWidth,
-} from "../../hooks/useMeasureCalculation";
-import useTrackLayout from "@renderer/hooks/useTrackLayout";
-import { useWidth } from "@renderer/hooks/useWidth";
+import { useMeasureCalculation } from "../../hooks/useMeasureCalculation";
 
+import { useSpring, animated } from "@react-spring/konva";
+import { KonvaEventObject } from "konva/lib/Node";
+import { clamp } from "motion";
+
+const AnimatedStage = animated(Stage);
 /**
  * Convert pixels to rem values based on the root font size
  * @param pixels - The pixel value to convert
@@ -200,25 +200,84 @@ const MidiTrack = ({
 };
 const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiTrack[] }) => {
   const [totalMeasures, setTotalMeasures] = useState(0);
+  const stageStateRef = useRef({ scale: 1, x: 0, y: 0 });
+  const [springs, api] = useSpring(() => ({
+    scaleX: 1,
+    scaleY: 1,
+    x: 0,
+    y: 0,
+    config: { tension: 260, friction: 28 }, // tweak to taste
+  }));
 
   const rowHeight = 96; // visual row height for the list in rem
   const rowGap = pxToRem(30);
+  const rowTop = (rowIndex: number) => rowIndex * (rowHeight + rowGap);
 
   const stageRef = useRef<KonvaStage>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Get the parent container width
-  const parentWidth = useWidth(containerRef as React.RefObject<HTMLElement>);
+
   // const { midiFiles } = useTrackLayout(parentWidth);
   // Calculate measures that fit on screen
-  const measureCalculation = useMeasureCalculation(parentWidth, totalMeasures, {
-    minPixelsPerBeat: 1,
+  const measureCalculation = useMeasureCalculation(800, totalMeasures, {
+    minPixelsPerBeat: 10,
     maxPixelsPerBeat: 32,
-    pixelsPerMeasure: 1000,
+    pixelsPerMeasure: 500,
   });
   const pixelsPerMeasure = measureCalculation.pixelsPerBeat * 4;
+  const applyStageTransform = useCallback(
+    (scale: number, x: number, y: number) => {
+      stageStateRef.current = { scale, x, y };
+      api.start({ scaleX: scale, scaleY: scale, x, y });
+    },
+    [api]
+  );
 
-  const rowTop = (rowIndex: number) => rowIndex * (rowHeight + rowGap);
+  const handleWheel = useCallback(
+    (evt: KonvaEventObject<WheelEvent>) => {
+      if (!evt.evt.metaKey) return; // bail unless ⌘ is held (use ctrlKey on Windows)
+
+      evt.evt.preventDefault();
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const { scale, x, y } = stageStateRef.current;
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
+
+      const direction = evt.evt.deltaY > 0 ? -1 : 1;
+      const nextScale = clamp(0.25, 4, scale * Math.pow(1.05, direction));
+
+      const mousePointTo = {
+        x: (pointer.x - x) / scale,
+        y: (pointer.y - y) / scale,
+      };
+
+      const nextPos = {
+        x: pointer.x - mousePointTo.x * nextScale,
+        y: pointer.y - mousePointTo.y * nextScale,
+      };
+
+      applyStageTransform(nextScale, nextPos.x, nextPos.y);
+    },
+    [applyStageTransform]
+  );
+
+  // const handleDragMove = useCallback(
+  //   (evt: KonvaEventObject<DragEvent>) => {
+  //     if (evt.evt.button !== 1) return;
+  //     evt.evt.preventDefault();
+  //     const stage = stageRef.current;
+  //     if (!stage) return;
+  //     const next = evt.target.position();
+  //     // applyStageTransform(stageStateRef.current.scale, next.x, next.y);
+  //   },
+  //   [applyStageTransform]
+  // );
+  const handleClick = useCallback((evt: KonvaEventObject<MouseEvent>) => {
+    console.log("Stage clicked", evt);
+    // Deselect any selected note or item when clicking on empty space
+  }, []);
 
   useEffect(() => {
     if (midiFiles.length > 0) {
@@ -234,37 +293,41 @@ const MidiList = ({ midiFiles }: { midiFiles: ParsedMidiTrack[] }) => {
     }
   }, [midiFiles]);
   return (
-    <div ref={containerRef} className="space-y-6">
-      <Stage
-        width={parentWidth || window.innerWidth}
-        height={window.innerHeight}
-        ref={stageRef}>
-        <Layer>
-          <MeasureGrid
-            totalMeasures={totalMeasures}
-            pixelsPerBeat={measureCalculation.pixelsPerBeat}
-            stageRef={stageRef}
-            showMeasureLabels={true}
-          />
+    <AnimatedStage
+      width={800}
+      height={window.innerHeight}
+      ref={stageRef}
+      onMouseDown={(e) => console.log(e)}
+      onClick={handleClick}
+      draggable
+      onWheel={handleWheel}
+      // onDragMove={handleDragMove}
+      {...springs}>
+      <Layer>
+        <MeasureGrid
+          totalMeasures={totalMeasures}
+          pixelsPerBeat={measureCalculation.pixelsPerBeat}
+          stageRef={stageRef}
+          showMeasureLabels={true}
+        />
 
-          {midiFiles.map((midi, index) => (
-            <MidiTrack
-              key={midi.trackName}
-              y={rowTop(index) + 20}
-              midiTrack={midi}
-              pixelsPerMeasure={pixelsPerMeasure}
-            />
-          ))}
-        </Layer>
-      </Stage>
-    </div>
+        {midiFiles.map((midi, index) => (
+          <MidiTrack
+            key={midi.trackName}
+            y={rowTop(index) + 20}
+            midiTrack={midi}
+            pixelsPerMeasure={pixelsPerMeasure}
+          />
+        ))}
+      </Layer>
+    </AnimatedStage>
   );
 };
 
 const List = () => {
   const { midiFiles } = useWatchStore();
   return (
-    <div className="min-h-screen bg-[var(--white-rock)] p-6">
+    <div className="min-h-screen bg-[var(--white-rock)]">
       <div className="max-w-6xl mx-auto">
         {midiFiles.length > 0 ? (
           <MidiList midiFiles={midiFiles} />

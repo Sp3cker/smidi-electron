@@ -1,14 +1,16 @@
 import { List, VoiceGroups } from "./components";
 import { useLayoutEffect, useRef } from "react";
-import useConfigStore from "./store/useConfigStore";
 import { GlobalConfig } from "./components/GlobalConfig";
 import ToastContainer from "./ui/Toast/ToastContainer";
 import { TabBar } from "./components/TabBar";
 import { Console } from "./components/Console";
 import { Route, Router, Switch } from "wouter";
+import configStore from "./store/configStore";
 
 function App() {
-  const { isLoading, config, getConfig } = useConfigStore();
+  const getConfig = configStore((state) => state.getConfig);
+  const isLoading = configStore((state) => state.isLoading);
+  const config = configStore((state) => state.config);
   const hasRequestedConfig = useRef(false);
 
   useLayoutEffect(() => {

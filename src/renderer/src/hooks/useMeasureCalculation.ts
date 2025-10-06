@@ -29,7 +29,7 @@ export interface MeasureCalculationResult {
 export const useMeasureCalculation = (
   parentWidth: number,
   totalMeasures: number,
-  options: MeasureCalculationOptions = {}
+  options: MeasureCalculationOptions
 ) => {
   const {
     pixelsPerMeasure = 64,
@@ -71,8 +71,7 @@ export const useMeasureCalculation = (
     const measuresOnScreen = Math.floor(
       parentWidth / (constrainedPixelsPerBeat * beatsPerMeasure)
     );
-    const totalWidth =
-      totalMeasures * constrainedPixelsPerBeat * beatsPerMeasure;
+    const totalWidth = totalMeasures * constrainedPixelsPerBeat * beatsPerMeasure;
 
     setResult({
       measuresOnScreen,
@@ -95,5 +94,3 @@ export const useMeasureCalculation = (
 
   return result;
 };
-
-
