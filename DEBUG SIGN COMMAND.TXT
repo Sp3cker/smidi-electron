@@ -1,2 +1,9 @@
  codesign -s - -f --entitlements Entitlements.plist /Users/YOU/Library/Developer/Xcode/DerivedData/smidi-electron-gljbfbsqbdmagsdhdmtjgcgzmsqy/Build/Products/Debug/vgparse
  xcodebuild -scheme vgparse -destination 'platform=macOS'  CODE_SIGN_INJECT_BASE_ENTITLEMENTS=YES   
+
+             linkerSettings: [
+                .unsafeFlags([
+                    "-Xlinker", "-rpath", "-Xlinker",
+                    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx"
+                ])
+            ]
