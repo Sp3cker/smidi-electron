@@ -9,31 +9,7 @@ const createIPCListener = <T>(
   return window.electron.ipcRenderer.on(channel, callback);
 };
 
-// Hooked up to WatchStore
-export const onWatchDirectorySet = (callback: (directory: string) => void) => {
-  return createIPCListener(
-    IPC_CHANNELS.SET_WATCH_DIRECTORY,
-    (_, directory: string) => {
-      callback(directory);
-    }
-  );
-};
-
-// Hooked up to WatchStore
-export const onWatchStatusChanged = (
-  callback: (isWatching: boolean) => void
-) => {
-  return createIPCListener(
-    IPC_CHANNELS.WATCH_STATUS_CHANGED,
-    (_, isWatching: boolean) => {
-      callback(isWatching);
-    }
-  );
-};
-
-export const onMidiFiles = (
-  callback: (midiFiles: ParsedMidiTrack[]) => void
-) => {
+export const onMidiFiles = (callback: (midiFiles: ParsedMidiTrack[]) => void) => {
   return createIPCListener(
     IPC_CHANNELS.MIDI_MAN.MIDI_FILES,
     (_, midiFileData: any[]) => {

@@ -41,6 +41,21 @@ class ProjectService {
   attachEvents(events: ProjectServiceEvents) {
     this.events = events;
   }
+  private emitMidiFiles(midiFiles: ParsedMidiTrack[]) {
+    this.events?.onMidiFiles(midiFiles);
+  }
+
+  private emitWatchDirectory(directory: string) {
+    this.events?.onWatchDirectory(directory);
+  }
+
+  private emitWatchStatusChanged(status: boolean) {
+    this.events?.onWatchStatusChanged(status);
+  }
+
+  private emitAppError(error: unknown) {
+    this.events?.onAppError(error);
+  }
 
   async getProjects(): Promise<Project[]> {
     return this.projectsRepository.getProjects();
@@ -59,7 +74,7 @@ class ProjectService {
     const projectId = this.projectsRepository.createProject(
       name,
       midiPath,
-      bookmarkForProject,
+      bookmarkForProject
     );
 
     const project: PersistedProject = {
@@ -107,7 +122,7 @@ class ProjectService {
   }
 
   private async startWorkspace(
-    project: PersistedProject,
+    project: PersistedProject
   ): Promise<ParsedMidiTrack[]> {
     await this.teardownWatcher();
 
@@ -136,18 +151,22 @@ class ProjectService {
     this.watcher = new FileWatcher(directory);
 
     this.watcher.emitter.on("change", () => {
+      console.log("File changed, refreshing MIDI directory");
       void this.refreshMidiDirectory();
     });
 
     this.watcher.emitter.on("add", () => {
+      console.log("File added, refreshing MIDI directory");
       void this.refreshMidiDirectory();
     });
 
     this.watcher.emitter.on("unlink", () => {
+      console.log("File removed, refreshing MIDI directory");
       void this.refreshMidiDirectory();
     });
 
     this.watcher.emitter.on("ready", () => {
+      console.log("File watcher is ready");
       this.emitWatchStatusChanged(true);
     });
   }
@@ -178,7 +197,7 @@ class ProjectService {
       } catch (error) {
         console.warn(
           "ProjectService: error stopping security scoped resource",
-          error,
+          error
         );
       }
       this.stopAccessingSecurityScope = null;
@@ -200,7 +219,7 @@ class ProjectService {
     } catch (error) {
       console.warn(
         "ProjectService: unable to start security scoped access",
-        error,
+        error
       );
     }
   }
@@ -220,9 +239,7 @@ class ProjectService {
 
   private async loadMidiFiles(directory: string): Promise<ParsedMidiTrack[]> {
     const files = await readdir(directory);
-    const midiFiles = files.filter((file) =>
-      file.toLowerCase().endsWith(".mid"),
-    );
+    const midiFiles = files.filter((file) => file.toLowerCase().endsWith(".mid"));
 
     if (midiFiles.length === 0) {
       throw new Error("ProjectService: No MIDI files found in directory");
@@ -232,29 +249,13 @@ class ProjectService {
       midiFiles.map(async (file) => {
         const midi = await MidiFile.fromFile(join(directory, file));
         console.log(
-          `Loaded MIDI file: ${midi.fileName} (${midi.tracks.length} tracks)`,
+          `Loaded MIDI file: ${midi.fileName} (${midi.tracks.length} tracks)`
         );
         return parseMidiToResolution(midi);
-      }),
+      })
     );
 
     return parsed;
-  }
-
-  private emitMidiFiles(midiFiles: ParsedMidiTrack[]) {
-    this.events?.onMidiFiles(midiFiles);
-  }
-
-  private emitWatchDirectory(directory: string) {
-    this.events?.onWatchDirectory(directory);
-  }
-
-  private emitWatchStatusChanged(status: boolean) {
-    this.events?.onWatchStatusChanged(status);
-  }
-
-  private emitAppError(error: unknown) {
-    this.events?.onAppError(error);
   }
 }
 
@@ -307,8 +308,7 @@ export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
         offsetTicksInBar,
         durationTicksInBar: chunkTicks,
         startTick: note.ticks + (durationTicksTotal - remainingTicks),
-        endTick:
-          note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
+        endTick: note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
         originalNote: note,
       };
 
@@ -325,7 +325,7 @@ export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
     .map(([index, segments]) => ({
       index,
       segments: segments.sort(
-        (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi,
+        (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
       ),
     }));
 

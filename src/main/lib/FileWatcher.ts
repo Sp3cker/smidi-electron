@@ -11,6 +11,7 @@ class FileWatcher {
     this.watcher = watch(directory, {
       ignored: /(^|\/)\../,
       persistent: true,
+      binaryInterval: 500
     });
 
     this.watcher.on("add", (path) => {

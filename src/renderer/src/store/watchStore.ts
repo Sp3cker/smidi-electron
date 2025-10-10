@@ -1,26 +1,18 @@
 import { create } from "zustand";
 import { IPC_CHANNELS } from "../../../shared/ipc";
-import {
-  onMidiFiles,
-  onWatchDirectorySet,
-  onWatchStatusChanged,
-  getVoicegroupDetails,
-} from "../ipcHandlers";
+import { onMidiFiles, getVoicegroupDetails } from "../ipcHandlers";
 import type { ParsedMidiTrack, GroupVoice, Project } from "@shared/dto";
 
 type WatchStore = {
   selectedProjectId: number | null;
   selectedProjectName: string;
   projects: string[];
-  directory: string;
-  watching: boolean;
+
   midiFiles: ParsedMidiTrack[];
 
   selectedVoicegroup: string | null;
   selectedVoicegroupDetails: GroupVoice | null;
-  setDirectory: (directory: string) => void;
-  setWatching: (watching: boolean) => void;
-  stopWatch: () => void;
+
   setMidiFiles: (midiFiles: ParsedMidiTrack[]) => void;
 
   setSelectedVoicegroup: (voicegroup: string | null) => void;
@@ -31,14 +23,11 @@ const watchStore = create<WatchStore>((set) => ({
   selectedProjectId: null,
   selectedProjectName: "",
   projects: [],
-  directory: "",
-  watching: false,
+
   selectedVoicegroup: null,
   selectedVoicegroupDetails: null,
   midiFiles: [],
 
-  setDirectory: (directory) => set(() => ({ directory })),
-  setWatching: (watching) => set(() => ({ watching })),
   setMidiFiles: (midiFiles) => set(() => ({ midiFiles })),
 
   stopWatch: () => {
@@ -62,14 +51,7 @@ const watchStore = create<WatchStore>((set) => ({
 }));
 
 // Set up IPC listeners
-onWatchDirectorySet((directory) => {
-  console.log("directory", directory);
-  watchStore.getState().setDirectory(directory);
-});
 
-onWatchStatusChanged((isWatching) => {
-  watchStore.getState().setWatching(isWatching);
-});
 onMidiFiles((midiFiles) => {
   console.log("midiFiles", midiFiles);
   watchStore.getState().setMidiFiles(midiFiles);

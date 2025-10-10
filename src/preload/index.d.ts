@@ -1,10 +1,8 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
-import {
-  VoicegroupResponse,
-  Project,
-  ParsedMidiTrack,
-} from "@shared/dto";
-type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
+import { VoicegroupResponse, Project, ParsedMidiTrack } from "@shared/dto";
+type ApiResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 type API = {
   getVoiceGroups: () => Promise<VoicegroupResponse>;
   getProjects: () => Promise<ApiResult<Project[]>>;
@@ -18,18 +16,12 @@ type API = {
   createProject: (
     name: string,
     midiPath: string
-  ) => Promise<
-    ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>
-  >;
+  ) => Promise<ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>>;
   openProject: (
     projectId: number
-  ) => Promise<
-    ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>
-  >;
+  ) => Promise<ApiResult<{ project: Project; midiFiles: ParsedMidiTrack[] }>>;
   requestStream: (id?: string) => Promise<{ id: string; port: MessagePort }>;
-  promptMidiDirectory: () => Promise<
-    ApiResult<{ directory: string }>
-  >;
+  promptMidiDirectory: () => Promise<ApiResult<{ directory: string }>>;
 };
 declare global {
   interface Window {
