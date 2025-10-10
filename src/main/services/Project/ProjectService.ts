@@ -1,11 +1,10 @@
-import { app, type WebContents } from "electron";
+import { app } from "electron";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import FileWatcher from "../../lib/FileWatcher";
 import type ProjectsRepository from "../../repos/Projects/ProjectsRepository";
 import type { NoteSegment, ParsedMidiTrack, Project } from "@shared/dto";
 import { MidiFile } from "@shared/MidiFile";
-import { IPC_CHANNELS } from "../../../shared/ipc";
 
 type CreateProjectPayload = {
   name: string;
@@ -20,9 +19,16 @@ type StartWorkspaceResult = {
 
 type PersistedProject = Project & { bookmark: string };
 
+export interface ProjectServiceEvents {
+  onMidiFiles: (midiFiles: ParsedMidiTrack[]) => void;
+  onWatchDirectory: (directory: string) => void;
+  onWatchStatusChanged: (status: boolean) => void;
+  onAppError: (error: unknown) => void;
+}
+
 class ProjectService {
   private readonly projectsRepository: ProjectsRepository;
-  private renderer: WebContents | null = null;
+  private events: ProjectServiceEvents | null = null;
   private watcher: FileWatcher | null = null;
   private stopAccessingSecurityScope: (() => void) | null = null;
   private activeProject: PersistedProject | null = null;
@@ -32,22 +38,28 @@ class ProjectService {
     this.projectsRepository = projectsRepository;
   }
 
-  attachRenderer(webContents: WebContents) {
-    this.renderer = webContents;
+  attachEvents(events: ProjectServiceEvents) {
+    this.events = events;
   }
 
   async getProjects(): Promise<Project[]> {
     return this.projectsRepository.getProjects();
   }
 
-  async createProject({ name, midiPath, bookmark }: CreateProjectPayload): Promise<StartWorkspaceResult> {
+  async createProject({
+    name,
+    midiPath,
+    bookmark,
+  }: CreateProjectPayload): Promise<StartWorkspaceResult> {
     const bookmarkForProject =
-      bookmark ?? this.consumeBookmark(midiPath) ?? this.generateBookmarkFallback(midiPath);
+      bookmark ??
+      this.consumeBookmark(midiPath) ??
+      this.generateBookmarkFallback(midiPath);
 
     const projectId = this.projectsRepository.createProject(
       name,
       midiPath,
-      bookmarkForProject
+      bookmarkForProject,
     );
 
     const project: PersistedProject = {
@@ -95,7 +107,7 @@ class ProjectService {
   }
 
   private async startWorkspace(
-    project: PersistedProject
+    project: PersistedProject,
   ): Promise<ParsedMidiTrack[]> {
     await this.teardownWatcher();
 
@@ -146,7 +158,6 @@ class ProjectService {
     }
 
     try {
-
       const midiFiles = await this.loadMidiFiles(this.activeProject.midiPath);
 
       this.emitMidiFiles(midiFiles);
@@ -165,7 +176,10 @@ class ProjectService {
       try {
         this.stopAccessingSecurityScope();
       } catch (error) {
-        console.warn("ProjectService: error stopping security scoped resource", error);
+        console.warn(
+          "ProjectService: error stopping security scoped resource",
+          error,
+        );
       }
       this.stopAccessingSecurityScope = null;
     }
@@ -184,7 +198,10 @@ class ProjectService {
         };
       }
     } catch (error) {
-      console.warn("ProjectService: unable to start security scoped access", error);
+      console.warn(
+        "ProjectService: unable to start security scoped access",
+        error,
+      );
     }
   }
 
@@ -202,9 +219,10 @@ class ProjectService {
   }
 
   private async loadMidiFiles(directory: string): Promise<ParsedMidiTrack[]> {
-
     const files = await readdir(directory);
-    const midiFiles = files.filter((file) => file.toLowerCase().endsWith(".mid"));
+    const midiFiles = files.filter((file) =>
+      file.toLowerCase().endsWith(".mid"),
+    );
 
     if (midiFiles.length === 0) {
       throw new Error("ProjectService: No MIDI files found in directory");
@@ -213,42 +231,30 @@ class ProjectService {
     const parsed = await Promise.all(
       midiFiles.map(async (file) => {
         const midi = await MidiFile.fromFile(join(directory, file));
+        console.log(
+          `Loaded MIDI file: ${midi.fileName} (${midi.tracks.length} tracks)`,
+        );
         return parseMidiToResolution(midi);
-      })
+      }),
     );
 
     return parsed;
   }
 
   private emitMidiFiles(midiFiles: ParsedMidiTrack[]) {
-    this.renderer?.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, midiFiles);
+    this.events?.onMidiFiles(midiFiles);
   }
 
   private emitWatchDirectory(directory: string) {
-    this.renderer?.send(IPC_CHANNELS.SET_WATCH_DIRECTORY, directory);
+    this.events?.onWatchDirectory(directory);
   }
 
   private emitWatchStatusChanged(status: boolean) {
-    this.renderer?.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, status);
+    this.events?.onWatchStatusChanged(status);
   }
 
   private emitAppError(error: unknown) {
-    const normalizedError =
-      error instanceof Error
-        ? {
-            message: error.message,
-            stack: error.stack,
-            origin: "ProjectService",
-          }
-        : {
-            message: String(error),
-            origin: "ProjectService",
-          };
-
-    this.renderer?.send(IPC_CHANNELS.APP_ERROR, {
-      success: false,
-      error: normalizedError,
-    });
+    this.events?.onAppError(error);
   }
 }
 
@@ -256,8 +262,8 @@ export default ProjectService;
 
 export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
   const ppq = midi.header.ppq;
-  const [numerator, denominator] =
-    midi.header.timeSignatures[0]?.timeSignature ?? [4, 4];
+  const [numerator, denominator] = midi.header.timeSignatures[0]
+    ?.timeSignature ?? [4, 4];
   const ticksPerMeasure = numerator * ppq * (4 / denominator);
   const track = midi.tracks[0];
 
@@ -301,7 +307,8 @@ export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
         offsetTicksInBar,
         durationTicksInBar: chunkTicks,
         startTick: note.ticks + (durationTicksTotal - remainingTicks),
-        endTick: note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
+        endTick:
+          note.ticks + (durationTicksTotal - remainingTicks) + chunkTicks,
         originalNote: note,
       };
 
@@ -318,11 +325,13 @@ export function parseMidiToResolution(midi: MidiFile): ParsedMidiTrack {
     .map(([index, segments]) => ({
       index,
       segments: segments.sort(
-        (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi
+        (a, b) => a.offsetTicksInBar - b.offsetTicksInBar || b.midi - a.midi,
       ),
     }));
 
-  const lastMeasureIndex = measures.length ? measures[measures.length - 1].index : -1;
+  const lastMeasureIndex = measures.length
+    ? measures[measures.length - 1].index
+    : -1;
 
   return {
     trackName: midi.fileName,

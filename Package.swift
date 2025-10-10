@@ -11,7 +11,7 @@ let package = Package(
     //        .library(name: "Keysplits", targets: ["Keysplits"]),
     .library(name: "Instruments", targets: ["Instruments"]),
     .library(name: "Voicegroups", targets: ["Voicegroups"]),
-//    .library(name: "Bookmarks", targets: ["Bookmarks"]),
+    //    .library(name: "Bookmarks", targets: ["Bookmarks"]),
     .executable(name: "vgparse", targets: ["VoicegroupRunner"]),
     .executable(name: "ksparse", targets: ["KeysplitRunner"]),
     .executable(name: "midiparse", targets: ["MidiRunner"]),
@@ -24,10 +24,12 @@ let package = Package(
     .package(
       url: "https://github.com/groue/GRDB.swift.git", branch: "master",
     ),
-    .package(url: "https://github.com/orchetect/MIDIKit", branch: "main")
+    .package(
+      url: "file:///Users/spencer/dev/swiftProjects/MIDIKit", .upToNextMajor(from: "0.10.5")
+    ),
+    .package(url: "https://github.com/apple/swift-binary-parsing", .upToNextMajor(from: "0.0.1")),
   ],
   targets: [
-
     .target(
       name: "module",
       dependencies: [
@@ -36,7 +38,7 @@ let package = Package(
         "Instruments",
         "Config",
         "Console",
-//        "Bookmarks",
+        //        "Bookmarks",
       ],
       path: "Sources/module"
     ),
@@ -70,22 +72,23 @@ let package = Package(
       name: "Sweep",
       path: "Sources/Core/Sweep"
     ),
-//    .target(
-//      name: "SmidiDatabase",
-//      dependencies: [
-//        .product(name: "GRDB", package: "GRDB.swift")
-//      ],
-//      path: "Sources/Core/Database",
-//      // linkerSettings: [
-//      //   .linkedLibrary("sqlite")
-//      // ]
-//    ),
-//    .target(
-//      name: "Bookmarks",
-//      dependencies: ["SmidiDatabase"],
-//      path: "Sources/Core/Bookmarks",
-//      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
-//    ),
+
+    //    .target(
+    //      name: "SmidiDatabase",
+    //      dependencies: [
+    //        .product(name: "GRDB", package: "GRDB.swift")
+    //      ],
+    //      path: "Sources/Core/Database",
+    //      // linkerSettings: [
+    //      //   .linkedLibrary("sqlite")
+    //      // ]
+    //    ),
+    //    .target(
+    //      name: "Bookmarks",
+    //      dependencies: ["SmidiDatabase"],
+    //      path: "Sources/Core/Bookmarks",
+    //      swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
+    //    ),
 
     .executableTarget(
       name: "VoicegroupRunner",
@@ -97,9 +100,10 @@ let package = Package(
       dependencies: ["Keysplits", "Config"],
       path: "Sources/Instruments/KeysplitRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
-    ), .executableTarget(
+    ),
+    .executableTarget(
       name: "MidiRunner",
-      dependencies: ["MIDIKit"],
+      dependencies: ["MIDIKit", .product(name: "BinaryParsing", package: "swift-binary-parsing")],
       path: "Sources/Projects/MidiRunner",
       swiftSettings: [.enableUpcomingFeature("StrictConcurrency")],
     ),

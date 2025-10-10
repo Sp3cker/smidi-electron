@@ -1,10 +1,12 @@
-import { dialog, ipcMain } from "electron";
+import { dialog, ipcMain, type WebContents } from "electron";
 import { IPC_CHANNELS } from "../../shared/ipc";
 import type ProjectService from "../services/Project/ProjectService";
-import type { Project } from "@shared/dto";
+import type { ParsedMidiTrack, Project } from "@shared/dto";
+import type { ProjectServiceEvents } from "../services/Project/ProjectService";
 
 const withoutBookmark = <T extends Project>(project: T) => {
-  const { bookmark: _bookmark, ...rest } = project;
+  const { bookmark, ...rest } = project;
+  void bookmark;
   return rest;
 };
 
@@ -17,7 +19,44 @@ type OpenProjectIpcPayload = {
   projectId?: number;
 };
 
+const createProjectEvents = (
+  getRenderer: () => WebContents | undefined,
+): ProjectServiceEvents => ({
+  onMidiFiles: (midiFiles: ParsedMidiTrack[]) => {
+    getRenderer()?.send(IPC_CHANNELS.MIDI_MAN.MIDI_FILES, midiFiles);
+  },
+  onWatchDirectory: (directory: string) => {
+    getRenderer()?.send(IPC_CHANNELS.SET_WATCH_DIRECTORY, directory);
+  },
+  onWatchStatusChanged: (status: boolean) => {
+    getRenderer()?.send(IPC_CHANNELS.WATCH_STATUS_CHANGED, status);
+  },
+  onAppError: (error: unknown) => {
+    const normalizedError =
+      error instanceof Error
+        ? {
+            message: error.message,
+            stack: error.stack,
+            origin: "ProjectService",
+          }
+        : {
+            message: String(error),
+            origin: "ProjectService",
+          };
+
+    getRenderer()?.send(IPC_CHANNELS.APP_ERROR, {
+      success: false,
+      error: normalizedError,
+    });
+  },
+});
+
 export const setProjectsIpc = (projectService: ProjectService) => {
+  let currentRenderer: WebContents | undefined;
+
+  const getRenderer = () => currentRenderer;
+
+  projectService.attachEvents(createProjectEvents(getRenderer));
   ipcMain.handle(IPC_CHANNELS.PROJECTS.GET_PROJECTS, async () => {
     try {
       const projects = await projectService.getProjects();
@@ -43,7 +82,7 @@ export const setProjectsIpc = (projectService: ProjectService) => {
       }
 
       const directory = result.filePaths[0];
-      projectService.attachRenderer(event.sender);
+      currentRenderer = event.sender;
 
       const bookmark = result.bookmarks?.[0];
       projectService.cacheBookmark(directory, bookmark);
@@ -64,7 +103,7 @@ export const setProjectsIpc = (projectService: ProjectService) => {
     IPC_CHANNELS.PROJECTS.CREATE_PROJECT,
     async (event, payload: CreateProjectIpcPayload) => {
       try {
-        projectService.attachRenderer(event.sender);
+        currentRenderer = event.sender;
 
         if (!payload?.name || !payload?.midiPath) {
           return {
@@ -83,14 +122,14 @@ export const setProjectsIpc = (projectService: ProjectService) => {
         console.debug("ProjectsIpc: Error creating project", error);
         return { success: false, error: "Error creating project" };
       }
-    }
+    },
   );
 
   ipcMain.handle(
     IPC_CHANNELS.PROJECTS.OPEN_PROJECT,
     async (event, payload: OpenProjectIpcPayload) => {
       try {
-        projectService.attachRenderer(event.sender);
+        currentRenderer = event.sender;
 
         if (!payload?.projectId) {
           return {
@@ -106,7 +145,7 @@ export const setProjectsIpc = (projectService: ProjectService) => {
         console.debug("ProjectsIpc: Error opening project", error);
         return { success: false, error: "Error opening project" };
       }
-    }
+    },
   );
 
   ipcMain.on(IPC_CHANNELS.STOP_WATCHING, async () => {

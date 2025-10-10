@@ -1,5 +1,5 @@
 {
-  "originHash" : "02de44ebf133bf47da90702c0a511181f61bbb5ff3c4c158abfe7a81281a1f3c",
+  "originHash" : "72ee1ed60d19b96968128f49485318ffffea803ea16ccb8ca098b257d99eede3",
   "pins" : [
     {
       "identity" : "grdb.swift",
@@ -12,11 +12,11 @@
     },
     {
       "identity" : "midikit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/orchetect/MIDIKit",
+      "kind" : "localSourceControl",
+      "location" : "/Users/spencer/dev/swiftProjects/MIDIKit",
       "state" : {
-        "branch" : "main",
-        "revision" : "2fc8f7abf4213b9f595d0a9fe7e4d2247a10b045"
+        "revision" : "2e856b27af1ebdeb41017ec9e3ac0cd3ae1411a2",
+        "version" : "0.10.5"
       }
     },
     {
@@ -29,12 +29,21 @@
       }
     },
     {
+      "identity" : "swift-binary-parsing",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-binary-parsing",
+      "state" : {
+        "revision" : "2897231396f97c2ea151936e64b84f4e238c3ad9",
+        "version" : "0.0.1"
+      }
+    },
+    {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax.git",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {
